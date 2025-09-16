@@ -1,4 +1,4 @@
-type Props = { value: string }
+type Props = { value: string };
 
 export default function OutputPanel({ value }: Props) {
   return (
@@ -12,6 +12,5 @@ export default function OutputPanel({ value }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-        

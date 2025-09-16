@@ -1,51 +1,144 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import PromptEditor from "./PromptEditor";
 import OutputPanel from "./OutputPanel";
 import SubmissionList from "./SubmissionList";
-import type { StudentSubmission } from "./SubmissionViewer";
 import SubmissionViewer from "./SubmissionViewer";
+import type { StudentSubmission } from "../../types/admin";
+import { getSystemPrompt, getSubmissions, chat } from "../../services/adminApi";
 
 export default function Dashboard() {
-  // temp local state to simulate load/save/preview
+  // UI state
   const [model, setModel] = useState("Claude 3.7");
-  const [prompt, setPrompt] = useState(
-    "Evaluate the student's gout case workup focusing on diagnostic accuracy, treatment appropriateness, and patient counseling points. Provide specific, actionable feedback for improvement based on their demonstrated competency level."
-  );
-  const [output, setOutput] = useState<string>("");
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerData, setViewerData] = useState<StudentSubmission | null>(null)
-  
 
-  // submissions: pretend we fetched a page
-  const mockSubmissions = useMemo(
+  // system prompt
+  const [prompt, setPrompt] = useState<string>("");
+  const [loadingPrompt, setLoadingPrompt] = useState<boolean>(false);
+
+  // submissions
+  const [subs, setSubs] = useState<StudentSubmission[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(8); // keep 8 per page
+  const [total, setTotal] = useState<number>(0);
+  const [loadingSubs, setLoadingSubs] = useState<boolean>(false);
+
+  // selection
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  // viewer modal
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerData, setViewerData] = useState<StudentSubmission | null>(null);
+
+  // output from /chat
+  const [output, setOutput] = useState<string>("");
+  const [sending, setSending] = useState<boolean>(false);
+
+  // 1) load system prompt once
+  useEffect(() => {
+    let active = true;
+    setLoadingPrompt(true);
+    getSystemPrompt()
+      .then((r) => {
+        if (active) setPrompt(r.systemPrompt);
+      })
+      .catch((e) => {
+        console.error("System prompt load failed:", e);
+        if (active) setPrompt("(failed to load system prompt)");
+      })
+      .finally(() => active && setLoadingPrompt(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 2) load submissions whenever page changes
+  useEffect(() => {
+    let active = true;
+    setLoadingSubs(true);
+    getSubmissions({ page, limit })
+      .then((resp) => {
+        if (!active) return;
+        setSubs(resp.items);
+        setTotal(resp.total);
+        // clear selection if the selected id is not on this page
+        if (selectedId && !resp.items.some((s) => s.id === selectedId)) {
+          setSelectedId(null);
+        }
+      })
+      .catch((e) => {
+        console.error("Submissions load failed:", e);
+        if (active) {
+          setSubs([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => active && setLoadingSubs(false));
+    return () => {
+      active = false;
+    };
+  }, [page, limit]);
+
+  // list rows expected by SubmissionList (id/title/subtitle)
+  const listItems = useMemo(
     () =>
-      Array.from({ length: 20 }).map((_, i) => ({
-        id: i + 1,
-        title: `Submission #${i + 1}`,
-        subtitle: [
-          "Strong Diagnostic Reasoning",
-          "Adequate Assessment - Minor Gaps",
-          "Incomplete Workup - Missing Labs",
-          "Comprehensive Treatment Plan",
-          "Basic Treatment Approach",
-          "Detailed Medication Counseling",
-          "Monitoring Plan with Follow-up",
-          "Drug Interaction Assessment",
-        ][i],
+      subs.map((s) => ({
+        id: s.id,
+        title: `Submission #${s.id}`,
+        subtitle: s.synthetic ? "Synthetic" : "Student",
       })),
-    []
+    [subs]
   );
+
+  function errMsg(e: unknown): string {
+    if (e instanceof Error) return e.message;
+    if (typeof e === "string") return e;
+    return "Request failed";
+  }
+
+  // 3) send to /chat using current prompt and optional selected submission id
+  async function handleSend() {
+    // require a selection, since backend expects a full StudentSubmission
+    const sub =
+      selectedId != null ? subs.find((s) => s.id === selectedId) : undefined;
+    if (!sub) {
+      setOutput(
+        "Select a submission from the list on the right, then press Send."
+      );
+      return;
+    }
+
+    setSending(true);
+    setOutput("Processing…");
+    try {
+      const resp = await chat({
+        studentSubmission: sub,
+        systemPrompt: prompt,
+        // simple mapping: you can later split provider vs name if you standardize model labels
+        modelName: model,
+      });
+      setOutput(JSON.stringify(resp, null, 2));
+    } catch (e: unknown) {
+      setOutput(`Error: ${errMsg(e)}`);
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div className="grid grid-cols-12 gap-8 px-4 lg:px-6">
       <div className="col-span-12 xl:col-span-9 space-y-6">
+        {/* header + actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="text-xl">System Prompt</div>
+            <div className="text-xl font-semibold">System Prompt</div>
+            {loadingPrompt && (
+              <div className="text-sm text-gray-500">Loading…</div>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-600 font-semibold">Model:</label>
+            <label className="text-sm text-gray-600 font-semibold">
+              Model:
+            </label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
@@ -56,9 +149,12 @@ export default function Dashboard() {
               <option>GPT-4.1</option>
             </select>
 
-            <button className="h-10 rounded-md bg-orange-200 text-black px-4 text-sm hover:opacity-90">
+            <a
+              href="mailto:nirupomboseroy@uga.edu?cc=rpalmer@uga.edu"
+              className="h-10 inline-flex items-center rounded-md bg-orange-200 text-black px-4 text-sm hover:opacity-90"
+            >
               Complaints&nbsp;?
-            </button>
+            </a>
 
             <button className="h-10 rounded-md bg-gray-200 text-black px-4 text-sm hover:opacity-90">
               Save local
@@ -74,15 +170,8 @@ export default function Dashboard() {
         <PromptEditor
           value={prompt}
           onChange={setPrompt}
-          onSend={() => {
-            // simple fake "processing"
-            setOutput("Output will appear here after processing...");
-            setTimeout(() => {
-              setOutput(
-                "🧪 (mock) Generated feedback:\n- Diagnosis addresses gout flare\n- Treatment plan mentions ULT target < 360 µmol/L\n- Add counseling on alcohol and red meat moderation"
-              );
-            }, 600);
-          }}
+          onSend={handleSend}
+          sending={sending}
         />
 
         {/* Output panel */}
@@ -93,27 +182,28 @@ export default function Dashboard() {
       <aside className="col-span-12 xl:col-span-3 xl:pr-0">
         <div className="xl:sticky xl:top-16">
           <SubmissionList
-            items={mockSubmissions}
-            total={42}
-            page={1}
-            pageSize={8}
-            onSelect={(id) => console.log("selected submission", id)}
-            onPageChange={(p) => console.log("page ->", p)}
+            items={listItems}
+            total={total}
+            page={page}
+            pageSize={limit}
+            onSelect={(id) => setSelectedId(Number(id))}
+            onPageChange={(p) => setPage(p)}
             onView={(id) => {
-              // TODO replace with real fetch(`/admin/submissions/${id}`)
-              const mock: StudentSubmission = {
-                id: Number(id),
-                synthetic: false,
-                problems: [
-                  { name: "gout_flare", isPriority: true, identification: "…", explanation: "…", planRecommendation: "…", monitoring: "…" }
-                ]
+              const s = subs.find((x) => x.id === id);
+              if (s) {
+                setViewerData(s);
+                setViewerOpen(true);
               }
-              setViewerData(mock)
-              setViewerOpen(true)
             }}
           />
+          {loadingSubs && (
+            <div className="px-3 py-2 text-xs text-gray-500">
+              Loading submissions…
+            </div>
+          )}
         </div>
       </aside>
+
       {/* modal */}
       <SubmissionViewer
         open={viewerOpen}

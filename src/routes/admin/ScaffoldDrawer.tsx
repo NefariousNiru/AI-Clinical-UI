@@ -18,16 +18,32 @@ export default function ScaffoldDrawer({ open, onClose, sessions, histories }: P
     return () => window.removeEventListener("keydown", onKey)
   }, [open, onClose])
 
-  if (!open) return null
-
+  // Always render so we can animate out; disable interaction when closed
   return (
-    // container sits below the fixed header (h-14)
-    <div className="fixed inset-x-0 top-14 bottom-0 z-50">
-      {/* backdrop */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+    <div
+      className={[
+        "fixed inset-x-0 top-14 bottom-0 z-50",
+        open ? "pointer-events-auto" : "pointer-events-none"
+      ].join(" ")}
+      aria-hidden={open ? "false" : "true"}
+    >
+      {/* Backdrop with fade */}
+      <div
+        onClick={open ? onClose : undefined}
+        className={[
+          "absolute inset-0 bg-black/30 transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0"
+        ].join(" ")}
+      />
 
-      {/* panel */}
-      <div className="absolute left-0 top-0 h-full w-[320px] max-w-[90vw] bg-white shadow-xl border-r border-gray-200">
+      {/* Sliding panel */}
+      <div
+        className={[
+          "absolute left-0 top-0 h-full w-[320px] max-w-[90vw] bg-white shadow-xl border-r border-gray-200",
+          "transform transition-transform duration-300 ease-out",
+          open ? "translate-x-0" : "-translate-x-full"
+        ].join(" ")}
+      >
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <div className="text-sm font-semibold">Sessions & History</div>
           <button
@@ -56,7 +72,9 @@ export default function ScaffoldDrawer({ open, onClose, sessions, histories }: P
                     }}
                   >
                     <div className="text-sm font-medium">{s.title}</div>
-                    {s.subtitle && <div className="text-xs text-gray-500 truncate">{s.subtitle}</div>}
+                    {s.subtitle && (
+                      <div className="text-xs text-gray-500 truncate">{s.subtitle}</div>
+                    )}
                   </button>
                 ))
               )}
@@ -80,7 +98,9 @@ export default function ScaffoldDrawer({ open, onClose, sessions, histories }: P
                     }}
                   >
                     <div className="text-sm font-medium">{h.title}</div>
-                    {h.subtitle && <div className="text-xs text-gray-500 truncate">{h.subtitle}</div>}
+                    {h.subtitle && (
+                      <div className="text-xs text-gray-500 truncate">{h.subtitle}</div>
+                    )}
                   </button>
                 ))
               )}
