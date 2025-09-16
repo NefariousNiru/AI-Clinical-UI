@@ -1,3 +1,4 @@
+// src/routes/admin/SubmissionList.tsx
 import { useState } from "react";
 
 type Item = { id: number | string; title: string; subtitle?: string };

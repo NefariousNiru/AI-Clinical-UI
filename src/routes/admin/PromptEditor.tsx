@@ -1,3 +1,4 @@
+// src/routes/admin/PromptEditor.tsx
 type Props = {
   value: string;
   onChange: (v: string) => void;

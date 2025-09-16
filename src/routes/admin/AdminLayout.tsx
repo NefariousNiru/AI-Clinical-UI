@@ -1,3 +1,4 @@
+// src/routes/admin/AdminLayout.tsx
 import { useState, useMemo } from "react";
 import { Outlet } from "react-router-dom";
 import ScaffoldDrawer from "./ScaffoldDrawer";

@@ -1,10 +1,11 @@
+// src/services/adminApi.ts
 import { http } from "../lib/http"
 import { ADMIN_SYSTEM_PROMPT, ADMIN_SUBMISSION, ADMIN_CHAT } from "../lib/urls"
 import {
     SystemPromptResponse,
     StudentSubmissionResponse,
     ProblemFeedbackList,
-    type ChatRequest
+    type ChatRequest,
 } from "../types/admin"
 
 

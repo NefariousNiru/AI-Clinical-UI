@@ -1,81 +1,91 @@
-import { useState, useMemo, useEffect } from "react";
-import PromptEditor from "./PromptEditor";
-import OutputPanel from "./OutputPanel";
-import SubmissionList from "./SubmissionList";
-import SubmissionViewer from "./SubmissionViewer";
-import type { StudentSubmission } from "../../types/admin";
-import { getSystemPrompt, getSubmissions, chat } from "../../services/adminApi";
+// src/routes/admin/Dashboard.tsx
+import { useState, useMemo, useEffect } from "react"
+import PromptEditor from "./PromptEditor"
+import OutputPanel from "./OutputPanel"
+import SubmissionList from "./SubmissionList"
+import SubmissionViewer from "./SubmissionViewer"
+import type { StudentSubmission, ProblemFeedbackList } from "../../types/admin"
+import { getSystemPrompt, getSubmissions, chat } from "../../services/adminApi"
 
 export default function Dashboard() {
   // UI state
-  const [model, setModel] = useState("Claude 3.7");
+  const [model, setModel] = useState("gpt-5-nano")
 
   // system prompt
-  const [prompt, setPrompt] = useState<string>("");
-  const [loadingPrompt, setLoadingPrompt] = useState<boolean>(false);
+  const [prompt, setPrompt] = useState<string>("")
+  const [loadingPrompt, setLoadingPrompt] = useState<boolean>(false)
 
   // submissions
-  const [subs, setSubs] = useState<StudentSubmission[]>([]);
-  const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(8); // keep 8 per page
-  const [total, setTotal] = useState<number>(0);
-  const [loadingSubs, setLoadingSubs] = useState<boolean>(false);
+  const [subs, setSubs] = useState<StudentSubmission[]>([])
+  const [page, setPage] = useState<number>(1)
+  const [limit] = useState<number>(10) // keep 10 per page
+  const [total, setTotal] = useState<number>(0)
+  const [loadingSubs, setLoadingSubs] = useState<boolean>(false)
 
   // selection
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   // viewer modal
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerData, setViewerData] = useState<StudentSubmission | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerData, setViewerData] = useState<StudentSubmission | null>(null)
 
-  // output from /chat
-  const [output, setOutput] = useState<string>("");
-  const [sending, setSending] = useState<boolean>(false);
+  // output from /chat (structured)
+  const [feedback, setFeedback] = useState<ProblemFeedbackList | null>(null)
+  const [outputMsg, setOutputMsg] = useState<string>("")
+  const [sending, setSending] = useState<boolean>(false)
+
+  // helpers
+  function errMsg(e: unknown): string {
+    if (e instanceof Error) return e.message
+    if (typeof e === "string") return e
+    return "Request failed"
+  }
 
   // 1) load system prompt once
   useEffect(() => {
-    let active = true;
-    setLoadingPrompt(true);
+    let active = true
+    setLoadingPrompt(true)
     getSystemPrompt()
       .then((r) => {
-        if (active) setPrompt(r.systemPrompt);
+        if (active) setPrompt(r.systemPrompt)
       })
       .catch((e) => {
-        console.error("System prompt load failed:", e);
-        if (active) setPrompt("(failed to load system prompt)");
+        console.error("System prompt load failed:", e)
+        if (active) setPrompt("(failed to load system prompt)")
       })
-      .finally(() => active && setLoadingPrompt(false));
+      .finally(() => active && setLoadingPrompt(false))
     return () => {
-      active = false;
-    };
-  }, []);
+      active = false
+    }
+  }, [])
 
   // 2) load submissions whenever page changes
   useEffect(() => {
-    let active = true;
-    setLoadingSubs(true);
+    let active = true
+    setLoadingSubs(true)
     getSubmissions({ page, limit })
       .then((resp) => {
-        if (!active) return;
-        setSubs(resp.items);
-        setTotal(resp.total);
+        if (!active) return
+        setSubs(resp.items)
+        setTotal(resp.total)
         // clear selection if the selected id is not on this page
         if (selectedId && !resp.items.some((s) => s.id === selectedId)) {
-          setSelectedId(null);
+          setSelectedId(null)
         }
       })
       .catch((e) => {
-        console.error("Submissions load failed:", e);
+        console.error("Submissions load failed:", e)
         if (active) {
-          setSubs([]);
-          setTotal(0);
+          setSubs([])
+          setTotal(0)
         }
       })
-      .finally(() => active && setLoadingSubs(false));
+      .finally(() => active && setLoadingSubs(false))
     return () => {
-      active = false;
-    };
-  }, [page, limit]);
+      active = false
+    }
+    // NOTE: we intentionally do NOT depend on selectedId to avoid refetching when selecting
+  }, [page, limit])
 
   // list rows expected by SubmissionList (id/title/subtitle)
   const listItems = useMemo(
@@ -86,40 +96,34 @@ export default function Dashboard() {
         subtitle: s.synthetic ? "Synthetic" : "Student",
       })),
     [subs]
-  );
+  )
 
-  function errMsg(e: unknown): string {
-    if (e instanceof Error) return e.message;
-    if (typeof e === "string") return e;
-    return "Request failed";
-  }
-
-  // 3) send to /chat using current prompt and optional selected submission id
+  // 3) send to /chat using current prompt and selected submission
   async function handleSend() {
-    // require a selection, since backend expects a full StudentSubmission
-    const sub =
-      selectedId != null ? subs.find((s) => s.id === selectedId) : undefined;
+    const sub = selectedId != null ? subs.find((s) => s.id === selectedId) : undefined
     if (!sub) {
-      setOutput(
-        "Select a submission from the list on the right, then press Send."
-      );
-      return;
+      setFeedback(null)
+      setOutputMsg("Select a submission from the list on the right, then press Send.")
+      return
     }
 
-    setSending(true);
-    setOutput("Processing…");
+    setSending(true)
+    setFeedback(null)
+    setOutputMsg("Processing…")
     try {
       const resp = await chat({
         studentSubmission: sub,
         systemPrompt: prompt,
-        // simple mapping: you can later split provider vs name if you standardize model labels
+        modelProvider: "openai",
         modelName: model,
-      });
-      setOutput(JSON.stringify(resp, null, 2));
+      })
+      setFeedback(resp)   // structured data
+      setOutputMsg("")    // clear message
     } catch (e: unknown) {
-      setOutput(`Error: ${errMsg(e)}`);
+      setFeedback(null)
+      setOutputMsg(errMsg(e))
     } finally {
-      setSending(false);
+      setSending(false)
     }
   }
 
@@ -130,23 +134,21 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="text-xl font-semibold">System Prompt</div>
-            {loadingPrompt && (
-              <div className="text-sm text-gray-500">Loading…</div>
-            )}
+            {loadingPrompt && <div className="text-sm text-gray-500">Loading…</div>}
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-600 font-semibold">
-              Model:
-            </label>
+            <label className="text-sm text-gray-600 font-semibold">Model:</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
               className="h-10 rounded-md border border-gray-300 bg-white px-3 text-base"
             >
-              <option>Claude 3.7</option>
-              <option>Claude 3.5 Sonnet</option>
-              <option>GPT-4.1</option>
+              <option>gpt-5-nano</option>
+              <option>gpt-5-mini</option>
+              <option>gpt-5</option>
+              <option>gpt-4.1</option>
+              <option>gpt-4o-mini</option>
             </select>
 
             <a
@@ -167,15 +169,10 @@ export default function Dashboard() {
         </div>
 
         {/* Prompt editor */}
-        <PromptEditor
-          value={prompt}
-          onChange={setPrompt}
-          onSend={handleSend}
-          sending={sending}
-        />
+        <PromptEditor value={prompt} onChange={setPrompt} onSend={handleSend} sending={sending} />
 
         {/* Output panel */}
-        <OutputPanel value={output} />
+        <OutputPanel data={feedback} message={outputMsg} />
       </div>
 
       {/* Right sidebar flush to the edge. On tall screens it stays in view. */}
@@ -189,27 +186,19 @@ export default function Dashboard() {
             onSelect={(id) => setSelectedId(Number(id))}
             onPageChange={(p) => setPage(p)}
             onView={(id) => {
-              const s = subs.find((x) => x.id === id);
+              const s = subs.find((x) => x.id === Number(id))
               if (s) {
-                setViewerData(s);
-                setViewerOpen(true);
+                setViewerData(s)
+                setViewerOpen(true)
               }
             }}
           />
-          {loadingSubs && (
-            <div className="px-3 py-2 text-xs text-gray-500">
-              Loading submissions…
-            </div>
-          )}
+          {loadingSubs && <div className="px-3 py-2 text-xs text-gray-500">Loading submissions…</div>}
         </div>
       </aside>
 
       {/* modal */}
-      <SubmissionViewer
-        open={viewerOpen}
-        submission={viewerData}
-        onClose={() => setViewerOpen(false)}
-      />
+      <SubmissionViewer open={viewerOpen} submission={viewerData} onClose={() => setViewerOpen(false)} />
     </div>
-  );
+  )
 }

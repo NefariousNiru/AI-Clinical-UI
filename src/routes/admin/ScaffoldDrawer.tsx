@@ -1,3 +1,4 @@
+// src/routes/admin/ScaffoldDrawer.tsx
 import { useEffect } from "react"
 
 type Item = { id: string | number; title: string; subtitle?: string }

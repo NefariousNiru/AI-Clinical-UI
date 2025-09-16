@@ -1,3 +1,4 @@
+// src/types/admin.ts
 import { z } from "zod"
 
 /** enums */
