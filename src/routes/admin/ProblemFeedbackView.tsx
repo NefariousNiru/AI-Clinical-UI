@@ -22,10 +22,10 @@ function Section({
         )}
       </div>
       {sec.evaluation && (
-        <p className="mb-2 text-sm text-gray-800 whitespace-pre-wrap">{sec.evaluation}</p>
+        <p className="mb-2 text-sm text-gray-800 whitespace-pre-wrap"><b>Evaluation: </b><br/>{sec.evaluation}</p>
       )}
       {sec.feedback && (
-        <p className="text-sm text-gray-800 whitespace-pre-wrap">{sec.feedback}</p>
+        <p className="text-sm text-gray-800 whitespace-pre-wrap"><b>Feedback: </b><br/>{sec.feedback}</p>
       )}
     </div>
   )
