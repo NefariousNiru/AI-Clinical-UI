@@ -76,8 +76,7 @@ export type ChatRequest = {
     // camelCase to match your “everything goes out in camel case” rule
     studentSubmission: StudentSubmission
     systemPrompt: string
-    modelProvider?: string | null
-    modelName?: string | null
+    modelName: string
 }
 
 

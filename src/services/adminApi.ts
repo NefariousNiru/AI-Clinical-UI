@@ -1,6 +1,6 @@
 // src/services/adminApi.ts
 import { http } from "../lib/http"
-import { ADMIN_SYSTEM_PROMPT, ADMIN_SUBMISSION, ADMIN_CHAT } from "../lib/urls"
+import { ADMIN_SYSTEM_PROMPT, ADMIN_SUBMISSION, ADMIN_CHAT, ADMIN_AVAILABLE_MODELS } from "../lib/urls"
 import {
     SystemPromptResponse,
     StudentSubmissionResponse,
@@ -31,4 +31,10 @@ export async function getSubmissions(params: { page: number; limit: number }) {
 export async function chat(req: ChatRequest) {
     const data = await http.post<ProblemFeedbackList>(ADMIN_CHAT, req)
     return data
+}
+
+
+// GET /api/v1/admin/list/models -> string[]
+export async function getAvailableModels() {
+    return http.get<string[]>(ADMIN_AVAILABLE_MODELS)
 }

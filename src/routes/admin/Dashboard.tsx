@@ -5,12 +5,20 @@ import OutputPanel from "./OutputPanel";
 import SubmissionList from "./SubmissionList";
 import SubmissionViewer from "./SubmissionViewer";
 import type { StudentSubmission, ProblemFeedbackList } from "../../types/admin";
-import { getSystemPrompt, getSubmissions, chat } from "../../services/adminApi";
+import {
+  getSystemPrompt,
+  getSubmissions,
+  chat,
+  getAvailableModels,
+} from "../../services/adminApi";
 import { saveSession } from "../../lib/localSession";
 
 export default function Dashboard() {
   // UI state
-  const [model, setModel] = useState("default");
+  const [model, setModel] = useState("");
+  const [models, setModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState<boolean>(false);
+  const modelsUnavailable = models.length === 0;
 
   // system prompt
   const [prompt, setPrompt] = useState<string>("");
@@ -92,6 +100,26 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit]);
 
+  // 3) load available models once
+  useEffect(() => {
+    let active = true;
+    setModelsLoading(true);
+    getAvailableModels()
+      .then((list) => {
+        if (!active) return;
+        setModels(list);
+        setModel(list[0]);
+      })
+      .catch((e) => {
+        console.error("Available models load failed:", e);
+        if (active) setModels([]); // fallback: only "default" will be shown
+      })
+      .finally(() => active && setModelsLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // list rows expected by SubmissionList (id/title/subtitle)
   const listItems = useMemo(
     () =>
@@ -122,8 +150,7 @@ export default function Dashboard() {
       const resp = await chat({
         studentSubmission: sub,
         systemPrompt: prompt,
-        modelProvider: "openai",
-        modelName: model !== "default" ? model : null,
+        modelName: model,
       });
       setFeedback(resp); // structured data
       setOutputMsg(""); // clear message
@@ -146,6 +173,10 @@ export default function Dashboard() {
   }
 
   function handleSaveLocal() {
+    if (modelsUnavailable) {
+      setFeedback(null);
+      setOutputMsg("No models available");
+    }
     const v = canSave();
     if (!v.ok) {
       setSaveMsg(v.reason || "Invalid state");
@@ -184,12 +215,19 @@ export default function Dashboard() {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               className="h-10 rounded-md border border-gray-300 bg-white px-3 text-base"
+              disabled={modelsLoading || modelsUnavailable}
             >
-              <option>default</option>
-              <option>gpt-4.1</option>
-              <option>gpt-4o-mini</option>
-              <option>gpt-5-mini</option>
-              <option>gpt-5</option>
+              {modelsUnavailable ? (
+                <option value="" disabled>
+                  No models available
+                </option>
+              ) : (
+                models.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))
+              )}
             </select>
 
             <a
@@ -205,7 +243,6 @@ export default function Dashboard() {
             >
               Save local
             </button>
-
           </div>
         </div>
 
