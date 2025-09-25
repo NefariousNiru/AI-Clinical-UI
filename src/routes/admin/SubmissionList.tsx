@@ -23,7 +23,9 @@ export default function SubmissionList({
   onView,
 }: Props) {
   const [selected, setSelected] = useState<Item["id"] | null>(null);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePageSize = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 1;
+  const safeTotal = Number.isFinite(total) && total > 0 ? total : 0;
+  const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
 
   return (
     <div className="rounded-lg border border-gray-200">
@@ -32,11 +34,12 @@ export default function SubmissionList({
       </div>
 
       <div className="max-h-[75vh] overflow-auto">
-        {items.map((it) => {
+        {(Array.isArray(items) ? items : []).map((it, idx) => {
+          const sid = it?.id ?? null;
           const active = selected === it.id;
           return (
             <div
-              key={it.id}
+              key={String(sid ?? idx)}
               className={[
                 "flex items-center justify-between px-4 py-3.5 border-b border-gray-100",
                 active ? "bg-gray-900/5" : "hover:bg-gray-50",
@@ -50,8 +53,10 @@ export default function SubmissionList({
                 }}
                 className="text-left flex-1"
               >
-                <div className="text-sm font-medium">{it.title}</div>
-                {it.subtitle && (
+                <div className="text-sm font-medium">
+                  {(it.title ?? "").trim() || "(untitled)"}
+                </div>
+                {typeof it.subtitle === "string" && it.subtitle.trim() && (
                   <div className="truncate text-xs text-gray-500">
                     {it.subtitle}
                   </div>
@@ -62,6 +67,7 @@ export default function SubmissionList({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (sid == null) return;
                   onView(it.id);
                 }}
                 className="ml-3 h-8 shrink-0 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50"

@@ -10,7 +10,17 @@ export class ApiError extends Error {
     }
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ""
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL
+
+if (!rawBaseUrl || typeof rawBaseUrl !== "string" || !/^https?:\/\//.test(rawBaseUrl)) {
+    throw new Error(
+        "Invalid or missing VITE_API_BASE_URL. " +
+        "Set it in your .env file (must start with http:// or https://)."
+    )
+}
+
+
+const BASE_URL = rawBaseUrl.replace(/\/+$/, "")
 
 /* type guards and helpers */
 function isObject(v: unknown): v is Record<string, unknown> {

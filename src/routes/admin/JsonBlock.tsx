@@ -1,22 +1,34 @@
 // src/routes/admin/JsonBlock.tsx
-import { useMemo } from "react"
+import { useMemo } from "react";
 
-export default function JsonBlock({ data, filename = "submission.json" }: { data: unknown; filename?: string }) {
-  const pretty = useMemo(() => JSON.stringify(data, null, 2), [data])
+export default function JsonBlock({
+  data,
+  filename = "submission.json",
+}: {
+  data: unknown;
+  filename?: string;
+}) {
+  const pretty = useMemo(() => {
+    try {
+      return JSON.stringify(data ?? {}, null, 2);
+    } catch {
+      return '"[unserializable data]"';
+    }
+  }, [data]);
 
   function copy() {
-    void navigator.clipboard.writeText(pretty)
+    void navigator.clipboard.writeText(pretty);
   }
   function download() {
-    const blob = new Blob([pretty], { type: "application/json;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+    const blob = new Blob([pretty], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename && filename.trim() ? filename : "submission.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -24,10 +36,16 @@ export default function JsonBlock({ data, filename = "submission.json" }: { data
       <div className="flex items-center justify-between border-b bg-gray-50 px-3 py-2">
         <div className="text-sm font-medium text-gray-700">Raw JSON</div>
         <div className="flex items-center gap-2">
-          <button onClick={copy} className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50">
+          <button
+            onClick={copy}
+            className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50"
+          >
             Copy
           </button>
-          <button onClick={download} className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50">
+          <button
+            onClick={download}
+            className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50"
+          >
             Download
           </button>
         </div>
@@ -36,5 +54,5 @@ export default function JsonBlock({ data, filename = "submission.json" }: { data
         {pretty}
       </pre>
     </div>
-  )
+  );
 }

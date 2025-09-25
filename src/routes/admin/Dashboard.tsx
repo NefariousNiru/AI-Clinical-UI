@@ -13,6 +13,16 @@ import {
 } from "../../services/adminApi";
 import { saveSession } from "../../lib/localSession";
 
+// type-safe runtime guards
+const isString = (v: unknown): v is string => typeof v === "string";
+const isStringArray = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.every(isString);
+const isSubmissionArray = (v: unknown): v is StudentSubmission[] =>
+  Array.isArray(v) &&
+  v.every((s) => s && typeof (s as StudentSubmission).id === "number");
+const hasSystemPrompt = (v: unknown): v is { systemPrompt?: string | null } =>
+  typeof v === "object" && v !== null && "systemPrompt" in v;
+
 export default function Dashboard() {
   // UI state
   const [model, setModel] = useState("");
@@ -59,7 +69,10 @@ export default function Dashboard() {
     setLoadingPrompt(true);
     getSystemPrompt()
       .then((r) => {
-        if (active) setPrompt(r.systemPrompt);
+        if (!active) return;
+        const sp =
+          hasSystemPrompt(r) && isString(r.systemPrompt) ? r.systemPrompt : "";
+        setPrompt(sp);
       })
       .catch((e) => {
         console.error("System prompt load failed:", e);
@@ -78,10 +91,20 @@ export default function Dashboard() {
     getSubmissions({ page, limit })
       .then((resp) => {
         if (!active) return;
-        setSubs(resp.items);
-        setTotal(resp.total);
+        const items = isSubmissionArray(
+          (resp as unknown as { items?: unknown })?.items
+        )
+          ? (resp as { items: StudentSubmission[] }).items
+          : [];
+        const totalVal = (resp as unknown as { total?: unknown })?.total;
+        const total =
+          typeof totalVal === "number" && Number.isFinite(totalVal)
+            ? totalVal
+            : 0;
+        setSubs(items);
+        setTotal(total);
         // clear selection if the selected id is not on this page
-        if (selectedId && !resp.items.some((s) => s.id === selectedId)) {
+        if (selectedId != null && !items.some((s) => s.id === selectedId)) {
           setSelectedId(null);
         }
       })
@@ -107,8 +130,9 @@ export default function Dashboard() {
     getAvailableModels()
       .then((list) => {
         if (!active) return;
-        setModels(list);
-        setModel(list[0]);
+        const arr = isStringArray(list) ? list : [];
+        setModels(arr);
+        setModel(arr[0] ?? "");
       })
       .catch((e) => {
         console.error("Available models load failed:", e);
@@ -163,11 +187,12 @@ export default function Dashboard() {
   }
 
   function canSave(): { ok: boolean; reason?: string } {
-    if (!prompt.trim()) return { ok: false, reason: "System prompt is empty." };
+    if (!(prompt || "").trim())
+      return { ok: false, reason: "System prompt is empty." };
     if (selectedId == null)
       return { ok: false, reason: "No submission selected." };
     // we saved chat output as structured list; if you still use string JSON, adjust this check
-    if (!feedback || feedback.length === 0)
+    if (!Array.isArray(feedback) || feedback.length === 0)
       return { ok: false, reason: "No output to save." };
     return { ok: true };
   }
@@ -266,10 +291,16 @@ export default function Dashboard() {
             total={total}
             page={page}
             pageSize={limit}
-            onSelect={(id) => setSelectedId(Number(id))}
+            onSelect={(id) => {
+              const n = Number(id);
+              setSelectedId(Number.isFinite(n) ? n : null);
+            }}
             onPageChange={(p) => setPage(p)}
             onView={(id) => {
-              const s = subs.find((x) => x.id === Number(id));
+              const n = Number(id);
+              const s = Number.isFinite(n)
+                ? subs.find((x) => x.id === n)
+                : undefined;
               if (s) {
                 setViewerData(s);
                 setViewerOpen(true);
