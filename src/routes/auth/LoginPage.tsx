@@ -13,12 +13,15 @@ export default function LoginPage() {
   const nav = useNavigate();
   const loc = useLocation() as { state?: LocationState };
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [loading, setLoading] = useState(false);
+  // 0) Controlled fields + UI state
+  const [email, setEmail] = useState(""); // 0.1) controlled email
+  const [password, setPassword] = useState(""); // 0.2) controlled password
+  const [consent, setConsent] = useState(false); // 0.3) consent checkbox
+  const [triedSubmit, setTriedSubmit] = useState(false); // 0.4) show consent hint only after a failed submit
+  const [errors, setErrors] = useState<FieldErrors>({}); // 0.5) field + form errors
+  const [loading, setLoading] = useState(false); // 0.6) submit spinner flag
 
-  // already signed-in? route by role
+  // 1) If already signed in, route by role
   useEffect(() => {
     let alive = true;
     me()
@@ -26,23 +29,26 @@ export default function LoginPage() {
         if (!alive) return;
         nav(u.role === "admin" ? "/admin" : "/student", { replace: true });
       })
-      .catch(() => {});
+      .catch(() => {}); // 1.1) ignore 401 on first load
     return () => {
       alive = false;
     };
   }, [nav]);
 
+  // 2) Clear a single field error on change
   function clearFieldError(field: keyof FieldErrors) {
     setErrors((prev) => ({ ...prev, [field]: undefined, form: undefined }));
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  // 3) Submit flow: Zod -> consent gate -> network -> route or show normalized errors
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors({});
+    setTriedSubmit(true); // 3.0) from now on, we can show consent hint if missing
     setLoading(true);
 
     try {
-      // 1) Client-side validation (no network)
+      // 3.1) Zod validation (client-side, no network)
       const parsed = LoginRequest.safeParse({ email, password });
       if (!parsed.success) {
         const fieldErrs: FieldErrors = {};
@@ -54,23 +60,36 @@ export default function LoginPage() {
         return;
       }
 
-      // 2) Network: login then fetch role
-      await login(parsed.data); // should throw on non-2xx
+      // 3.2) Consent gate (custom - do not nag before a click)
+      if (!consent) {
+        setErrors({ form: "You must provide consent to continue." });
+        return;
+      }
+
+      // 3.3) Network: login (should throw on non-2xx)
+      await login(parsed.data);
+
+      // 3.4) Fetch role and route
       const u = await me();
       const dest =
         loc.state?.from || (u.role === "admin" ? "/admin" : "/student");
       nav(dest, { replace: true });
     } catch (err: unknown) {
+      // 3.5) Normalize server/transport errors to a user-friendly message
       setErrors({ form: await normalizeAuthError(err) });
     } finally {
+      // 3.6) Always release loading flag
       setLoading(false);
     }
   }
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 4) Uniform top bar with project title */}
       <Header title="AI Clinical Login" />
+
       <main className="px-4 py-10 grid place-items-center">
+        {/* 5) Use noValidate so we control messaging with Zod + consent gate */}
         <form
           onSubmit={onSubmit}
           noValidate
@@ -81,14 +100,14 @@ export default function LoginPage() {
           </div>
 
           <div className="p-5 space-y-4">
-            {/* form-level error (auth/server) */}
+            {/* 5.1) Form-level (auth/server/consent) errors */}
             {errors.form && (
               <div className="rounded-md border border-orange-300 bg-orange-100 px-3 py-2 text-sm text-orange-800">
                 {errors.form}
               </div>
             )}
 
-            {/* email */}
+            {/* 5.2) Email field (Zod messages) */}
             <div className="space-y-1">
               <label htmlFor="email" className="text-sm text-gray-600">
                 UGA Email
@@ -103,7 +122,7 @@ export default function LoginPage() {
                 }}
                 className={`w-full rounded-md border bg-white px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-gray-300 ${
                   errors.email ? "border-red-400" : "border-gray-300"
-                }`}
+                }`} // NOTE: w-full (fixed from w/full)
                 placeholder="netid@uga.edu"
                 autoFocus
                 aria-invalid={!!errors.email}
@@ -117,7 +136,7 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* password */}
+            {/* 5.3) Password field (Zod messages) */}
             <div className="space-y-1">
               <label htmlFor="password" className="text-sm text-gray-600">
                 Password
@@ -132,7 +151,7 @@ export default function LoginPage() {
                 }}
                 className={`w-full rounded-md border bg-white px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-gray-300 ${
                   errors.password ? "border-red-400" : "border-gray-300"
-                }`}
+                }`} // NOTE: w-full (fixed from w/full)
                 placeholder="••••••••"
                 aria-invalid={!!errors.password}
                 aria-describedby={
@@ -147,6 +166,31 @@ export default function LoginPage() {
               )}
             </div>
 
+            {/* 5.4) Consent checkbox (controlled; show hint only after a failed submit) */}
+            <div className="flex items-start gap-2">
+              <input
+                id="consent"
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                aria-describedby={
+                  !consent && triedSubmit ? "consent-help" : undefined
+                }
+              />
+              <label
+                htmlFor="consent"
+                className="text-xs text-gray-600 leading-snug"
+              >
+                By clicking “Sign in”, I acknowledge and give my consent that
+                any information I provide through this website may be evaluated
+                by third-party artificial intelligence systems, including but
+                not limited to OpenAI, for the purpose of generating feedback or
+                related services.
+              </label>
+            </div>
+
+            {/* 5.5) Submit button (enabled; we block in JS and show messages) */}
             <button
               type="submit"
               disabled={loading}
@@ -155,9 +199,11 @@ export default function LoginPage() {
               {loading ? "Signing in…" : "Sign in"}
             </button>
 
-            <div className="text-[11px] text-gray-500">
-              Use your assigned credentials. This site uses session cookies;
-              signing in implies consent to store a session on this device.
+            {/* 5.6) Cookie disclosure */}
+            <div className="text-[11px] text-gray-600">
+              &#9432; Use your assigned credentials. This site uses session
+              cookies; signing in implies consent to store a session on this
+              device.
             </div>
           </div>
         </form>
@@ -166,21 +212,20 @@ export default function LoginPage() {
   );
 }
 
-/* ---------- Strict helpers (no any) ---------- */
-
+/* 6) Error normalization: Zod -> Response JSON message/error -> status-based fallback */
 async function normalizeAuthError(err: unknown): Promise<string> {
+  // 6.1) Zod errors (shouldn't usually reach here because we safeParse before)
   if (err instanceof ZodError) {
     return err.issues[0]?.message ?? "Invalid input.";
   }
 
+  // 6.2) HTTP-style errors: direct Response or { response: Response }
   const res = extractResponse(err);
   if (res) {
-    // Prefer API-provided message
     const data = await tryParseJson(res.clone());
     if (data?.message) return data.message;
     if (data?.error) return data.error;
 
-    // Status-based fallbacks
     if (res.status === 401) return "Incorrect email or password.";
     if (res.status === 403) return "You do not have access to this resource.";
     if (res.status === 429) return "Too many attempts. Try again later.";
@@ -188,10 +233,12 @@ async function normalizeAuthError(err: unknown): Promise<string> {
     return `Request failed with status ${res.status}.`;
   }
 
+  // 6.3) Generic Error or unknown
   const msg = extractMessage(err);
   return msg ?? "Login failed.";
 }
 
+// 7) Safely extract Response from various error shapes
 function extractResponse(e: unknown): Response | null {
   if (e instanceof Response) return e;
   if (typeof e === "object" && e !== null) {
@@ -202,6 +249,7 @@ function extractResponse(e: unknown): Response | null {
   return null;
 }
 
+// 8) Parse JSON safely and pick typed string fields
 async function tryParseJson(
   res: Response
 ): Promise<{ message?: string; error?: string } | null> {
@@ -220,9 +268,11 @@ async function tryParseJson(
   }
 }
 
+// 9) Fallback message from Error-like shapes
 function extractMessage(e: unknown): string | null {
-  if (e instanceof Error && typeof e.message === "string" && e.message.trim())
+  if (e instanceof Error && typeof e.message === "string" && e.message.trim()) {
     return e.message;
+  }
   if (typeof e === "object" && e !== null) {
     const rec = e as Record<string, unknown>;
     const msg = rec["message"];
