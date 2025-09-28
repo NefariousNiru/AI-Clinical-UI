@@ -1,5 +1,4 @@
 // src/lib/http.ts
-
 export class ApiError extends Error {
     status?: number
     data?: unknown
