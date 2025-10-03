@@ -93,7 +93,7 @@ export default function LoginPage() {
         <form
           onSubmit={onSubmit}
           noValidate
-          className="w-[min(440px,95vw)] rounded-lg border border-gray-200 bg-white shadow-sm"
+          className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white shadow-sm"
         >
           <div className="border-b border-gray-200 px-5 py-3 text-base font-semibold">
             Sign in
