@@ -2,13 +2,11 @@
 import { z } from "zod"
 
 /** enums */
-export const ProblemName = z.enum(["gout_flare", "obesity"])
-export type ProblemName = z.infer<typeof ProblemName>
 
 
 /** DrugRelatedProblem (camelCase) */
 export const DrugRelatedProblem = z.object({
-    name: ProblemName,
+    name: z.string(),
     isPriority: z.boolean().default(false),
     identification: z.string().default(""),
     explanation: z.string().default(""),
@@ -56,7 +54,7 @@ export type FeedbackSection = z.infer<typeof FeedbackSection>
 
 /** ProblemFeedback (camelCase, matches API) */
 export const ProblemFeedback = z.object({
-    name: ProblemName,
+    name: z.string(),
     isPriority: z.boolean().default(false),
     identification: FeedbackSection,
     explanation: FeedbackSection,

@@ -260,13 +260,6 @@ export default function Dashboard() {
               )}
             </select>
 
-            <a
-              href="mailto:nirupomboseroy@uga.edu?cc=rpalmer@uga.edu"
-              className="h-10 inline-flex items-center rounded-md bg-orange-200 text-black px-4 text-sm hover:opacity-90"
-            >
-              Complaints&nbsp;?
-            </a>
-
             <button
               onClick={handleSaveLocal}
               className="h-10 rounded-md bg-gray-900 text-white px-4 text-sm hover:opacity-90"
