@@ -63,6 +63,11 @@ export default function Dashboard() {
     return "Request failed";
   }
 
+  const selectedSubmission = useMemo<StudentSubmission | null>(() => {
+    if (selectedId == null) return null;
+    return subs.find((s) => s.id === selectedId) ?? null;
+  }, [subs, selectedId]);
+
   // 1) load system prompt once
   useEffect(() => {
     let active = true;
@@ -221,7 +226,7 @@ export default function Dashboard() {
 
   return (
     <div className="grid grid-cols-12 gap-8 px-4 lg:px-6">
-      <div className="col-span-12 xl:col-span-9 space-y-6">
+      <div className="col-span-12 xl:col-span-10 space-y-6">
         {/* header + actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
@@ -280,11 +285,11 @@ export default function Dashboard() {
         />
 
         {/* Output panel */}
-        <OutputPanel data={feedback} message={outputMsg} />
+        <OutputPanel data={feedback} message={outputMsg} student={selectedSubmission}/>
       </div>
 
       {/* Right sidebar flush to the edge. On tall screens it stays in view. */}
-      <aside className="col-span-12 xl:col-span-3 xl:pr-0">
+      <aside className="col-span-12 xl:col-span-2 xl:pr-0">
         <div className="xl:sticky xl:top-16">
           <SubmissionList
             items={listItems}
