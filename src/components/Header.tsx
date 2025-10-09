@@ -44,6 +44,19 @@ export default function Header({
 
       {right ? <div className="flex items-center gap-2">{right}</div> : null}
 
+      <button
+        onClick={() =>
+          window.open(
+            "https://outlook.office.com/mail/deeplink/compose?to=nirupomboseroy@uga.edu&cc=rpalmer@uga.edu",
+            "_blank"
+          )
+        }
+        className="h-9 inline-flex items-center rounded-md bg-orange-200 text-black px-3 text-xs hover:opacity-90"
+        aria-label="Complaints"
+      >
+        Complaints&nbsp;?
+      </button>
+
       {showLogout ? (
         <button
           onClick={handleLogout}

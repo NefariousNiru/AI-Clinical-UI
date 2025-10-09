@@ -10,8 +10,13 @@ import {
   getSubmissions,
   chat,
   getAvailableModels,
+  getAvailableRubrics,
+  getRubric,
 } from "../../services/adminApi";
 import { saveSession } from "../../lib/localSession";
+import type { RubricPayload } from "../../types/rubric";
+import { titleize } from "../../lib/functions";
+import RubricViewer from "./RubricViewer";
 
 // type-safe runtime guards
 const isString = (v: unknown): v is string => typeof v === "string";
@@ -56,12 +61,13 @@ export default function Dashboard() {
   // save status message - local save
   const [saveMsg, setSaveMsg] = useState<string>("");
 
-  // helpers
-  function errMsg(e: unknown): string {
-    if (e instanceof Error) return e.message;
-    if (typeof e === "string") return e;
-    return "Request failed";
-  }
+  // rubric state
+  const [rubricIds, setRubricIds] = useState<string[]>([]);
+  const [rubricIdsLoading, setRubricIdsLoading] = useState(false);
+  const [selectedRubricId, setSelectedRubricId] = useState<string>("");
+  const [rubricOpen, setRubricOpen] = useState(false);
+  const [rubricLoading, setRubricLoading] = useState(false);
+  const [rubricData, setRubricData] = useState<RubricPayload | null>(null);
 
   // 1) load system prompt once
   useEffect(() => {
@@ -144,6 +150,27 @@ export default function Dashboard() {
     };
   }, []);
 
+  // 4) load rubric ids once
+  useEffect(() => {
+    let active = true;
+    setRubricIdsLoading(true);
+    getAvailableRubrics()
+      .then((ids) => {
+        if (!active) return;
+        const arr = Array.isArray(ids) ? ids : [];
+        setRubricIds(arr);
+        setSelectedRubricId(arr[0] ?? "");
+      })
+      .catch((e) => {
+        console.error("Available rubrics load failed:", e);
+        if (active) setRubricIds([]);
+      })
+      .finally(() => active && setRubricIdsLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // list rows expected by SubmissionList (id/title/subtitle)
   const listItems = useMemo(
     () =>
@@ -155,7 +182,13 @@ export default function Dashboard() {
     [subs]
   );
 
-  // 3) send to /chat using current prompt and selected submission
+  // select -> selected Submission using id
+  const selectedSubmission = useMemo<StudentSubmission | null>(() => {
+    if (selectedId == null) return null;
+    return subs.find((s) => s.id === selectedId) ?? null;
+  }, [subs, selectedId]);
+
+  // 1) send to /chat using current prompt and selected submission
   async function handleSend() {
     const sub =
       selectedId != null ? subs.find((s) => s.id === selectedId) : undefined;
@@ -186,6 +219,7 @@ export default function Dashboard() {
     }
   }
 
+  // 2) local save check
   function canSave(): { ok: boolean; reason?: string } {
     if (!(prompt || "").trim())
       return { ok: false, reason: "System prompt is empty." };
@@ -197,6 +231,7 @@ export default function Dashboard() {
     return { ok: true };
   }
 
+  // 3) local save action
   function handleSaveLocal() {
     if (modelsUnavailable) {
       setFeedback(null);
@@ -219,9 +254,34 @@ export default function Dashboard() {
     setTimeout(() => setSaveMsg(""), 1500);
   }
 
+  // 4) view rubric action
+  async function handleViewRubric() {
+    if (!selectedRubricId) return;
+    setRubricOpen(true);
+    setRubricLoading(true);
+    setRubricData(null);
+    try {
+      const r = await getRubric(selectedRubricId);
+      console.log(r)
+      setRubricData(r as RubricPayload);
+    } catch (e) {
+      console.error("Rubric fetch failed:", e);
+      setRubricData(null);
+    } finally {
+      setRubricLoading(false);
+    }
+  }
+
+  // helper functions
+  function errMsg(e: unknown): string {
+    if (e instanceof Error) return e.message;
+    if (typeof e === "string") return e;
+    return "Request failed";
+  }
+
   return (
     <div className="grid grid-cols-12 gap-8 px-4 lg:px-6">
-      <div className="col-span-12 xl:col-span-9 space-y-6">
+      <div className="col-span-12 xl:col-span-10 space-y-6">
         {/* header + actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
@@ -233,35 +293,103 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-600 font-semibold">
-              Model:
+            <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <span>Model:</span>
+              <div className="relative">
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  disabled={modelsLoading || modelsUnavailable}
+                  className="h-9 appearance-none rounded-md border border-orange-300 bg-white pl-3 pr-8 text-sm text-gray-800 shadow-sm 
+                 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300 
+                 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+                >
+                  {modelsUnavailable ? (
+                    <option value="" disabled>
+                      No models available
+                    </option>
+                  ) : (
+                    models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                {/* Custom arrow */}
+                <svg
+                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-base"
-              disabled={modelsLoading || modelsUnavailable}
-            >
-              {modelsUnavailable ? (
-                <option value="" disabled>
-                  No models available
-                </option>
-              ) : (
-                models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))
-              )}
-            </select>
 
-            <a
-              href="mailto:nirupomboseroy@uga.edu?cc=rpalmer@uga.edu"
-              className="h-10 inline-flex items-center rounded-md bg-orange-200 text-black px-4 text-sm hover:opacity-90"
-            >
-              Complaints&nbsp;?
-            </a>
+            <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <span>Rubric:</span>
+              <div className="relative">
+                <select
+                  value={selectedRubricId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedRubricId(val);
+                    handleViewRubric();
+                  }}
+                  onClick={(e) => {
+                    // if the same rubric is reselected, force re-fetch
+                    const val = (e.target as HTMLSelectElement).value;
+                    if (val === selectedRubricId) {
+                      handleViewRubric();
+                    }
+                  }}
+                  disabled={rubricIdsLoading || rubricIds.length === 0}
+                  className="h-9 appearance-none rounded-md border border-orange-300 bg-white pl-3 pr-8 text-sm text-gray-800 shadow-sm 
+                 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300 
+                 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+                >
+                  {rubricIds.length === 0 ? (
+                    <option value="" disabled>
+                      No rubrics
+                    </option>
+                  ) : (
+                    rubricIds.map((rid) => (
+                      <option key={rid} value={rid}>
+                        {titleize(rid)}
+                      </option>
+                    ))
+                  )}
+                </select>
 
+                {/* Custom arrow */}
+                <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                  <svg
+                    className="h-4 w-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </label>
+
+            {/* Save local button */}
             <button
               onClick={handleSaveLocal}
               className="h-10 rounded-md bg-gray-900 text-white px-4 text-sm hover:opacity-90"
@@ -280,11 +408,15 @@ export default function Dashboard() {
         />
 
         {/* Output panel */}
-        <OutputPanel data={feedback} message={outputMsg} />
+        <OutputPanel
+          data={feedback}
+          message={outputMsg}
+          student={selectedSubmission}
+        />
       </div>
 
       {/* Right sidebar flush to the edge. On tall screens it stays in view. */}
-      <aside className="col-span-12 xl:col-span-3 xl:pr-0">
+      <aside className="col-span-12 xl:col-span-2 xl:pr-0">
         <div className="xl:sticky xl:top-16">
           <SubmissionList
             items={listItems}
@@ -320,6 +452,15 @@ export default function Dashboard() {
         open={viewerOpen}
         submission={viewerData}
         onClose={() => setViewerOpen(false)}
+      />
+
+      {/* ✅ rubric modal */}
+      <RubricViewer
+        open={rubricOpen}
+        onClose={() => setRubricOpen(false)}
+        rubric={rubricData}
+        rubricId={selectedRubricId}
+        loading={rubricLoading}
       />
     </div>
   );

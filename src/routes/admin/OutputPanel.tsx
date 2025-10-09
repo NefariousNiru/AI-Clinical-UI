@@ -1,13 +1,14 @@
 // src/routes/admin/OutputPanel.tsx
-import type { ProblemFeedbackList } from "../../types/admin";
+import type { ProblemFeedbackList, StudentSubmission } from "../../types/admin";
 import ProblemFeedbackView from "./ProblemFeedbackView";
 
 type Props = {
   data?: ProblemFeedbackList | null;
   message?: string;
+  student?: StudentSubmission | null;
 };
 
-export default function OutputPanel({ data, message }: Props) {
+export default function OutputPanel({ data, message, student }: Props) {
   const hasData = Array.isArray(data) && data.length > 0;
   return (
     <div className="rounded-lg border border-orange-300 overflow-hidden">
@@ -18,7 +19,7 @@ export default function OutputPanel({ data, message }: Props) {
         {/* scrollable content area */}
         <div className="max-h-[70vh] overflow-auto rounded-md bg-orange-50 p-4 text-base">
           {hasData ? (
-            <ProblemFeedbackView data={data as ProblemFeedbackList} />
+            <ProblemFeedbackView data={data as ProblemFeedbackList} student={student ?? null}/>
           ) : (
             <div className="text-sm text-gray-800 whitespace-pre-wrap">
               {(message ?? "").trim() ||
