@@ -238,27 +238,47 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-600 font-semibold">
-              Model:
+            <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <span>Model:</span>
+              <div className="relative">
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  disabled={modelsLoading || modelsUnavailable}
+                  className="h-9 appearance-none rounded-md border border-orange-300 bg-white pl-3 pr-8 text-sm text-gray-800 shadow-sm 
+                 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300 
+                 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+                >
+                  {modelsUnavailable ? (
+                    <option value="" disabled>
+                      No models available
+                    </option>
+                  ) : (
+                    models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                {/* Custom arrow */}
+                <svg
+                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-base"
-              disabled={modelsLoading || modelsUnavailable}
-            >
-              {modelsUnavailable ? (
-                <option value="" disabled>
-                  No models available
-                </option>
-              ) : (
-                models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))
-              )}
-            </select>
 
             <button
               onClick={handleSaveLocal}
@@ -278,7 +298,11 @@ export default function Dashboard() {
         />
 
         {/* Output panel */}
-        <OutputPanel data={feedback} message={outputMsg} student={selectedSubmission}/>
+        <OutputPanel
+          data={feedback}
+          message={outputMsg}
+          student={selectedSubmission}
+        />
       </div>
 
       {/* Right sidebar flush to the edge. On tall screens it stays in view. */}
