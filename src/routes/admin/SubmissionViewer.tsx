@@ -2,17 +2,13 @@
 import { useState } from "react";
 import type { StudentSubmission } from "../../types/admin";
 import JsonBlock from "./JsonBlock";
+import { titleize } from "../../lib/functions";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   submission: StudentSubmission | null;
 };
-
-function titleize(s: unknown) {
-  const t = typeof s === "string" ? s : "";
-  return t.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
-}
 
 function TextSection({ label, value }: { label: string; value?: string }) {
   if (!value) return null;

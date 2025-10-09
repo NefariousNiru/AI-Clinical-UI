@@ -1,15 +1,11 @@
 // src/routes/admin/ProblemFeedbackView.tsx
+import { titleize } from "../../lib/functions";
 import type {
   ProblemFeedbackList,
   ProblemFeedback,
   StudentSubmission,
   DrugRelatedProblem,
 } from "../../types/admin";
-
-function titleize(s: unknown) {
-  const t = typeof s === "string" ? s : "";
-  return t.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
-}
 
 function StudentAnswer({
   label,
