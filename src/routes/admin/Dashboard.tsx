@@ -69,6 +69,9 @@ export default function Dashboard() {
   const [rubricLoading, setRubricLoading] = useState(false);
   const [rubricData, setRubricData] = useState<RubricPayload | null>(null);
 
+  const [gradedSubmission, setGradedSubmission] =
+    useState<StudentSubmission | null>(null);
+
   // 1) load system prompt once
   useEffect(() => {
     let active = true;
@@ -182,12 +185,6 @@ export default function Dashboard() {
     [subs]
   );
 
-  // select -> selected Submission using id
-  const selectedSubmission = useMemo<StudentSubmission | null>(() => {
-    if (selectedId == null) return null;
-    return subs.find((s) => s.id === selectedId) ?? null;
-  }, [subs, selectedId]);
-
   // 1) send to /chat using current prompt and selected submission
   async function handleSend() {
     const sub =
@@ -203,6 +200,7 @@ export default function Dashboard() {
     setSending(true);
     setFeedback(null);
     setOutputMsg("Processing…");
+    setGradedSubmission(sub);
     try {
       const resp = await chat({
         studentSubmission: sub,
@@ -228,6 +226,8 @@ export default function Dashboard() {
     // we saved chat output as structured list; if you still use string JSON, adjust this check
     if (!Array.isArray(feedback) || feedback.length === 0)
       return { ok: false, reason: "No output to save." };
+    if (gradedSubmission == null)
+      return { ok: false, reason: "No graded submission context." };
     return { ok: true };
   }
 
@@ -242,7 +242,8 @@ export default function Dashboard() {
       setSaveMsg(v.reason || "Invalid state");
       return;
     }
-    const sub = subs.find((s) => s.id === selectedId)!;
+
+    const sub = gradedSubmission!;
     saveSession({
       model,
       systemPrompt: prompt,
@@ -335,6 +336,7 @@ export default function Dashboard() {
               </div>
             </label>
 
+            {/* Rubric View button */}
             <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
               <span>Rubric:</span>
               <div className="relative">
@@ -411,7 +413,7 @@ export default function Dashboard() {
         <OutputPanel
           data={feedback}
           message={outputMsg}
-          student={selectedSubmission}
+          student={gradedSubmission}
         />
       </div>
 
