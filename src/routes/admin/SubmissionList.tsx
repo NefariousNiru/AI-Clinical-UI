@@ -42,7 +42,7 @@ export default function SubmissionList({
               key={String(sid ?? idx)}
               className={[
                 "flex items-center justify-between px-4 py-3.5 border-b border-gray-100",
-                active ? "bg-gray-900/5" : "hover:bg-gray-50",
+                active ? "bg-gray-200" : "hover:bg-gray-50",
               ].join(" ")}
             >
               {/* click anywhere on the left to select */}
