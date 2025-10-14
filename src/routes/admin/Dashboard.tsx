@@ -263,7 +263,6 @@ export default function Dashboard() {
     setRubricData(null);
     try {
       const r = await getRubric(selectedRubricId);
-      console.log(r)
       setRubricData(r as RubricPayload);
     } catch (e) {
       console.error("Rubric fetch failed:", e);
