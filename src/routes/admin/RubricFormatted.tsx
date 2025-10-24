@@ -23,20 +23,7 @@ function isSelectK(c: Criterion): c is CriterionSelectK {
 }
 
 export default function RubricFormatted({ rubric }: { rubric: RubricPayload }) {
-  // ✅ Defensive defaults in case backend omitted scoringInvariants
-  const si: ScoringInvariants = {
-    rounding:
-      rubric.scoringInvariants?.rounding === "0.5"
-        ? rubric.scoringInvariants.rounding
-        : "0.5",
-    requireSectionBlockSumsMatch:
-      rubric.scoringInvariants?.requireSectionBlockSumsMatch ?? true,
-    gradingStyle: rubric.scoringInvariants?.gradingStyle,
-    notes:
-      rubric.scoringInvariants?.notes === undefined
-        ? null
-        : rubric.scoringInvariants.notes,
-  };
+  const si: ScoringInvariants = rubric.scoringInvariants;
 
   const evidenceKeys = Array.isArray(rubric.evidenceKeys)
     ? rubric.evidenceKeys
@@ -52,10 +39,14 @@ export default function RubricFormatted({ rubric }: { rubric: RubricPayload }) {
             {titleize(rubric.rubricId)} v{rubric.rubricVersion} — Schema: {rubric.schemaVersion}
           </Title>
           <div className="text-xs text-gray-600">
-            rounding: {si.rounding} • require sums match:{" "}
-            {String(si.requireSectionBlockSumsMatch)}
-            {si.gradingStyle ? ` • style: ${si.gradingStyle}` : ""}
+            {si.rounding && <>rounding: {si.rounding} • </>}
+            {"requireSectionBlockSumsMatch" in si && si.requireSectionBlockSumsMatch !== undefined && (
+              <>require sums match: {String(si.requireSectionBlockSumsMatch)} • </>
+            )}
+            {si.gradingStyle && <>style: {si.gradingStyle}</>}
+            {si.evidenceScope && <> • evidenceScope: {si.evidenceScope}</>}
           </div>
+          {si.notes && <div className="text-xs text-gray-500 mt-1">{si.notes}</div>}
         </div>
 
         <div className="p-4">
