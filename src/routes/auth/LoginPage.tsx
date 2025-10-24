@@ -1,9 +1,27 @@
 // src/routes/auth/LoginPage.tsx
+
+/*
+1) Page goals:
+   - Validate inputs client-side with zod (no network).
+   - Require consent checkbox before calling the API.
+   - On success: fetch role and route user.
+   - On failure: show normalized, human-readable errors.
+
+2) UX rules:
+   - Never rely on browser validations (we use noValidate).
+   - Show field errors inline; show server/consent errors at top.
+   - Keep "Sign in" disabled only while a request is in flight.
+
+3) Security:
+   - Cookie-based session; fetch includes credentials.
+   - Optional CSRF header set in http client if cookie present.
+*/
+
+import { normalizeAuthError } from "../../lib/errors";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login, me } from "../../services/authApi";
 import { LoginRequest, type MeResponse } from "../../types/auth";
-import { ZodError } from "zod";
 import Header from "../../components/Header";
 
 type LocationState = { from?: string };
@@ -210,73 +228,4 @@ export default function LoginPage() {
       </main>
     </div>
   );
-}
-
-/* 6) Error normalization: Zod -> Response JSON message/error -> status-based fallback */
-async function normalizeAuthError(err: unknown): Promise<string> {
-  // 6.1) Zod errors (shouldn't usually reach here because we safeParse before)
-  if (err instanceof ZodError) {
-    return err.issues[0]?.message ?? "Invalid input.";
-  }
-
-  // 6.2) HTTP-style errors: direct Response or { response: Response }
-  const res = extractResponse(err);
-  if (res) {
-    const data = await tryParseJson(res.clone());
-    if (data?.message) return data.message;
-    if (data?.error) return data.error;
-
-    if (res.status === 401) return "Incorrect email or password.";
-    if (res.status === 403) return "You do not have access to this resource.";
-    if (res.status === 429) return "Too many attempts. Try again later.";
-    if (res.status >= 500) return "Server error. Please try again shortly.";
-    return `Request failed with status ${res.status}.`;
-  }
-
-  // 6.3) Generic Error or unknown
-  const msg = extractMessage(err);
-  return msg ?? "Login failed.";
-}
-
-// 7) Safely extract Response from various error shapes
-function extractResponse(e: unknown): Response | null {
-  if (e instanceof Response) return e;
-  if (typeof e === "object" && e !== null) {
-    const rec = e as Record<string, unknown>;
-    const maybe = rec["response"];
-    return maybe instanceof Response ? maybe : null;
-  }
-  return null;
-}
-
-// 8) Parse JSON safely and pick typed string fields
-async function tryParseJson(
-  res: Response
-): Promise<{ message?: string; error?: string } | null> {
-  try {
-    const parsed = (await res.json()) as unknown;
-    if (typeof parsed === "object" && parsed !== null) {
-      const rec = parsed as Record<string, unknown>;
-      const message =
-        typeof rec["message"] === "string" ? rec["message"] : undefined;
-      const error = typeof rec["error"] === "string" ? rec["error"] : undefined;
-      return { message, error };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// 9) Fallback message from Error-like shapes
-function extractMessage(e: unknown): string | null {
-  if (e instanceof Error && typeof e.message === "string" && e.message.trim()) {
-    return e.message;
-  }
-  if (typeof e === "object" && e !== null) {
-    const rec = e as Record<string, unknown>;
-    const msg = rec["message"];
-    if (typeof msg === "string" && msg.trim()) return msg;
-  }
-  return null;
 }

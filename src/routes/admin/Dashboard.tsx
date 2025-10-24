@@ -1,192 +1,97 @@
 // src/routes/admin/Dashboard.tsx
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useState } from "react";
 import PromptEditor from "./PromptEditor";
 import OutputPanel from "./OutputPanel";
 import SubmissionList from "./SubmissionList";
 import SubmissionViewer from "./SubmissionViewer";
 import type { StudentSubmission, ProblemFeedbackList } from "../../types/admin";
-import {
-  getSystemPrompt,
-  getSubmissions,
-  chat,
-  getAvailableModels,
-  getAvailableRubrics,
-  getRubric,
-} from "../../services/adminApi";
+import { chat } from "../../services/adminApi";
 import { saveSession } from "../../lib/localSession";
-import type { RubricPayload } from "../../types/rubric";
 import { titleize } from "../../lib/functions";
 import RubricViewer from "./RubricViewer";
+import { useSystemPrompt } from "./hooks/useSystemPrompt";
+import { useSubmissions } from "./hooks/useSubmissions";
+import { useModels } from "./hooks/useModels";
+import { useRubrics } from "./hooks/useRubrics";
+import { ApiError } from "../../lib/http";
 
-// type-safe runtime guards
-const isString = (v: unknown): v is string => typeof v === "string";
-const isStringArray = (v: unknown): v is string[] =>
-  Array.isArray(v) && v.every(isString);
-const isSubmissionArray = (v: unknown): v is StudentSubmission[] =>
-  Array.isArray(v) &&
-  v.every((s) => s && typeof (s as StudentSubmission).id === "number");
-const hasSystemPrompt = (v: unknown): v is { systemPrompt?: string | null } =>
-  typeof v === "object" && v !== null && "systemPrompt" in v;
+/*
+1) Page goals:
+   - Load: prompt, submissions (paged), models, rubric ids.
+   - Act: grade selected submission with current prompt + model.
+   - Store: save successful runs locally.
+   - Inspect: open viewers (submission, rubric).
+2) Typing rules:
+   - No `any` casts. Narrow unknown errors via `instanceof`.
+   - Avoid redundant type assertions when hooks/services are typed.
+*/
+
+// 3) Error normalization for this page only (UI-friendly)
+function errorMessage(e: unknown): string {
+  if (e instanceof ApiError) return e.message || "Request failed";
+  if (e instanceof Error) return e.message || "Request failed";
+  return "Request failed";
+}
 
 export default function Dashboard() {
-  // UI state
-  const [model, setModel] = useState("");
-  const [models, setModels] = useState<string[]>([]);
-  const [modelsLoading, setModelsLoading] = useState<boolean>(false);
-  const modelsUnavailable = models.length === 0;
-
   // system prompt
-  const [prompt, setPrompt] = useState<string>("");
-  const [loadingPrompt, setLoadingPrompt] = useState<boolean>(false);
+  const { prompt, setPrompt, loading: loadingPrompt } = useSystemPrompt();
 
   // submissions
-  const [subs, setSubs] = useState<StudentSubmission[]>([]);
-  const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(10); // keep 10 per page
-  const [total, setTotal] = useState<number>(0);
-  const [loadingSubs, setLoadingSubs] = useState<boolean>(false);
-
-  // selection
+  const {
+    items: subs,
+    total,
+    page,
+    limit,
+    loading: loadingSubs,
+    setPage,
+  } = useSubmissions(1, 10);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // viewer modal
-  const [viewerOpen, setViewerOpen] = useState(false);
+  // models
+  const { models, model, setModel, loading: modelsLoading } = useModels();
+  const modelsUnavailable = models.length === 0;
+
+  // rubric catalog + detail
+  const {
+    ids: rubricIds,
+    loading: rubricIdsLoading,
+    selectedId: selectedRubricId,
+    setSelectedId: setSelectedRubricId,
+    detail: rubricData,
+    loadingDetail: rubricLoading,
+    fetchOne: fetchRubric,
+  } = useRubrics();
+  const [rubricOpen, setRubricOpen] = useState<boolean>(false);
+
+  // submission viewer
+  const [viewerOpen, setViewerOpen] = useState<boolean>(false);
   const [viewerData, setViewerData] = useState<StudentSubmission | null>(null);
 
-  // output from /chat (structured)
+  // grading output
   const [feedback, setFeedback] = useState<ProblemFeedbackList | null>(null);
   const [outputMsg, setOutputMsg] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
 
-  // save status message - local save
+  // save status
   const [saveMsg, setSaveMsg] = useState<string>("");
-
-  // rubric state
-  const [rubricIds, setRubricIds] = useState<string[]>([]);
-  const [rubricIdsLoading, setRubricIdsLoading] = useState(false);
-  const [selectedRubricId, setSelectedRubricId] = useState<string>("");
-  const [rubricOpen, setRubricOpen] = useState(false);
-  const [rubricLoading, setRubricLoading] = useState(false);
-  const [rubricData, setRubricData] = useState<RubricPayload | null>(null);
 
   const [gradedSubmission, setGradedSubmission] =
     useState<StudentSubmission | null>(null);
 
-  // 1) load system prompt once
-  useEffect(() => {
-    let active = true;
-    setLoadingPrompt(true);
-    getSystemPrompt()
-      .then((r) => {
-        if (!active) return;
-        const sp =
-          hasSystemPrompt(r) && isString(r.systemPrompt) ? r.systemPrompt : "";
-        setPrompt(sp);
-      })
-      .catch((e) => {
-        console.error("System prompt load failed:", e);
-        if (active) setPrompt("(failed to load system prompt)");
-      })
-      .finally(() => active && setLoadingPrompt(false));
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 2) load submissions whenever page changes
-  useEffect(() => {
-    let active = true;
-    setLoadingSubs(true);
-    getSubmissions({ page, limit })
-      .then((resp) => {
-        if (!active) return;
-        const items = isSubmissionArray(
-          (resp as unknown as { items?: unknown })?.items
-        )
-          ? (resp as { items: StudentSubmission[] }).items
-          : [];
-        const totalVal = (resp as unknown as { total?: unknown })?.total;
-        const total =
-          typeof totalVal === "number" && Number.isFinite(totalVal)
-            ? totalVal
-            : 0;
-        setSubs(items);
-        setTotal(total);
-        // clear selection if the selected id is not on this page
-        if (selectedId != null && !items.some((s) => s.id === selectedId)) {
-          setSelectedId(null);
-        }
-      })
-      .catch((e) => {
-        console.error("Submissions load failed:", e);
-        if (active) {
-          setSubs([]);
-          setTotal(0);
-        }
-      })
-      .finally(() => active && setLoadingSubs(false));
-    return () => {
-      active = false;
-    };
-    // NOTE: we intentionally do NOT depend on selectedId to avoid refetching when selecting
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit]);
-
-  // 3) load available models once
-  useEffect(() => {
-    let active = true;
-    setModelsLoading(true);
-    getAvailableModels()
-      .then((list) => {
-        if (!active) return;
-        const arr = isStringArray(list) ? list : [];
-        setModels(arr);
-        setModel(arr[0] ?? "");
-      })
-      .catch((e) => {
-        console.error("Available models load failed:", e);
-        if (active) setModels([]); // fallback: only "default" will be shown
-      })
-      .finally(() => active && setModelsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 4) load rubric ids once
-  useEffect(() => {
-    let active = true;
-    setRubricIdsLoading(true);
-    getAvailableRubrics()
-      .then((ids) => {
-        if (!active) return;
-        const arr = Array.isArray(ids) ? ids : [];
-        setRubricIds(arr);
-        setSelectedRubricId(arr[0] ?? "");
-      })
-      .catch((e) => {
-        console.error("Available rubrics load failed:", e);
-        if (active) setRubricIds([]);
-      })
-      .finally(() => active && setRubricIdsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // list rows expected by SubmissionList (id/title/subtitle)
+  // 4) Adapt submissions to list row shape (typed)
   const listItems = useMemo(
     () =>
       subs.map((s) => ({
-        id: s.id,
+        id: s.id as number,
         title: `Submission #${s.id}`,
         subtitle: s.synthetic ? "Synthetic" : "Student",
       })),
     [subs]
   );
 
-  // 1) send to /chat using current prompt and selected submission
-  async function handleSend() {
+  // 5) Grade current selection
+  async function handleSend(): Promise<void> {
     const sub =
       selectedId != null ? subs.find((s) => s.id === selectedId) : undefined;
     if (!sub) {
@@ -201,29 +106,29 @@ export default function Dashboard() {
     setFeedback(null);
     setOutputMsg("Processing…");
     setGradedSubmission(sub);
+
     try {
       const resp = await chat({
         studentSubmission: sub,
         systemPrompt: prompt,
         modelName: model,
       });
-      setFeedback(resp); // structured data
-      setOutputMsg(""); // clear message
+      setFeedback(resp);
+      setOutputMsg("");
     } catch (e: unknown) {
       setFeedback(null);
-      setOutputMsg(errMsg(e));
+      setOutputMsg(errorMessage(e));
     } finally {
       setSending(false);
     }
   }
 
-  // 2) local save check
-  function canSave(): { ok: boolean; reason?: string } {
+  // 6) Local save guard
+  function canSave(): { ok: true } | { ok: false; reason: string } {
     if (!(prompt || "").trim())
       return { ok: false, reason: "System prompt is empty." };
     if (selectedId == null)
       return { ok: false, reason: "No submission selected." };
-    // we saved chat output as structured list; if you still use string JSON, adjust this check
     if (!Array.isArray(feedback) || feedback.length === 0)
       return { ok: false, reason: "No output to save." };
     if (gradedSubmission == null)
@@ -231,52 +136,37 @@ export default function Dashboard() {
     return { ok: true };
   }
 
-  // 3) local save action
-  function handleSaveLocal() {
+  // 7) Save local
+  function handleSaveLocal(): void {
     if (modelsUnavailable) {
       setFeedback(null);
       setOutputMsg("No models available");
     }
     const v = canSave();
     if (!v.ok) {
-      setSaveMsg(v.reason || "Invalid state");
+      setSaveMsg(v.reason);
       return;
     }
+    const sub = gradedSubmission as StudentSubmission; // safe due to guard
+    const fb = feedback as ProblemFeedbackList; // safe due to guard
 
-    const sub = gradedSubmission!;
     saveSession({
       model,
       systemPrompt: prompt,
       submissionId: sub.id,
       submission: sub,
-      feedback: feedback as ProblemFeedbackList,
+      feedback: fb,
     });
     setSaveMsg("Saved ✓");
-    setTimeout(() => setSaveMsg(""), 1500);
+    window.setTimeout(() => setSaveMsg(""), 1500);
   }
 
-  // 4) view rubric action
-  async function handleViewRubric() {
-    if (!selectedRubricId) return;
+  // 8) View rubric
+  async function handleViewRubric(nextId?: string): Promise<void> {
+    const rid = nextId ?? selectedRubricId;
+    if (!rid) return;
     setRubricOpen(true);
-    setRubricLoading(true);
-    setRubricData(null);
-    try {
-      const r = await getRubric(selectedRubricId);
-      setRubricData(r as RubricPayload);
-    } catch (e) {
-      console.error("Rubric fetch failed:", e);
-      setRubricData(null);
-    } finally {
-      setRubricLoading(false);
-    }
-  }
-
-  // helper functions
-  function errMsg(e: unknown): string {
-    if (e instanceof Error) return e.message;
-    if (typeof e === "string") return e;
-    return "Request failed";
+    await fetchRubric(rid);
   }
 
   return (
@@ -293,6 +183,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Model select */}
             <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
               <span>Model:</span>
               <div className="relative">
@@ -316,8 +207,6 @@ export default function Dashboard() {
                     ))
                   )}
                 </select>
-
-                {/* Custom arrow */}
                 <svg
                   className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
                   xmlns="http://www.w3.org/2000/svg"
@@ -335,7 +224,7 @@ export default function Dashboard() {
               </div>
             </label>
 
-            {/* Rubric View button */}
+            {/* Rubric select */}
             <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
               <span>Rubric:</span>
               <div className="relative">
@@ -344,14 +233,11 @@ export default function Dashboard() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setSelectedRubricId(val);
-                    handleViewRubric();
+                    handleViewRubric(val);
                   }}
                   onClick={(e) => {
-                    // if the same rubric is reselected, force re-fetch
                     const val = (e.target as HTMLSelectElement).value;
-                    if (val === selectedRubricId) {
-                      handleViewRubric();
-                    }
+                    if (val === selectedRubricId) handleViewRubric(val);
                   }}
                   disabled={rubricIdsLoading || rubricIds.length === 0}
                   className="h-9 appearance-none rounded-md border border-orange-300 bg-white pl-3 pr-8 text-sm text-gray-800 shadow-sm 
@@ -370,8 +256,6 @@ export default function Dashboard() {
                     ))
                   )}
                 </select>
-
-                {/* Custom arrow */}
                 <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
                   <svg
                     className="h-4 w-4 text-gray-500"
@@ -390,7 +274,7 @@ export default function Dashboard() {
               </div>
             </label>
 
-            {/* Save local button */}
+            {/* Save local */}
             <button
               onClick={handleSaveLocal}
               className="h-10 rounded-md bg-gray-900 text-white px-4 text-sm hover:opacity-90"
@@ -416,7 +300,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Right sidebar flush to the edge. On tall screens it stays in view. */}
+      {/* Right sidebar: submissions list */}
       <aside className="col-span-12 xl:col-span-2 xl:pr-0">
         <div className="xl:sticky xl:top-16">
           <SubmissionList
@@ -448,14 +332,12 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* modal */}
+      {/* modals */}
       <SubmissionViewer
         open={viewerOpen}
         submission={viewerData}
         onClose={() => setViewerOpen(false)}
       />
-
-      {/* ✅ rubric modal */}
       <RubricViewer
         open={rubricOpen}
         onClose={() => setRubricOpen(false)}
