@@ -1,4 +1,12 @@
 // src/services/adminApi.ts
+
+/*
+1) Purpose: API layer functions that:
+   - Call http client
+   - Validate response shape with zod
+   - Return typed objects to the rest of the app
+*/
+
 import { http } from "../lib/http"
 import { ADMIN_SYSTEM_PROMPT, ADMIN_SUBMISSION, ADMIN_CHAT, ADMIN_AVAILABLE_MODELS, ADMIN_AVAILABLE_RUBRICS, ADMIN_RUBRIC } from "../lib/urls"
 import {
