@@ -47,7 +47,7 @@ export default function Header({
       <button
         onClick={() =>
           window.open(
-            "https://outlook.office.com/mail/deeplink/compose?to=nirupomboseroy@uga.edu&cc=rpalmer@uga.edu",
+            "https://outlook.office.com/mail/deeplink/compose?to=nirupomboseroy@uga.edu,rpalmer@uga.edu",
             "_blank"
           )
         }
