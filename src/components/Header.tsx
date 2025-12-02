@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authApi";
+import { useTheme } from "./ui/useTheme"; 
 
 type HeaderProps = {
   title: string;
@@ -20,6 +21,7 @@ export default function Header({
 }: HeaderProps) {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   async function handleLogout() {
     if (busy) return;
@@ -43,6 +45,16 @@ export default function Header({
       <div className="flex-1" />
 
       {right ? <div className="flex items-center gap-2">{right}</div> : null}
+      {/* Theme toggle */}
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="mr-2 h-9 inline-flex items-center rounded-md border border-subtle bg-surface-subtle px-3 text-xs text-muted hover:bg-surface"
+        aria-label="Toggle color theme"
+      >
+        {theme === "light" ? "Dark" : "Light"} mode
+      </button>
 
       <button
         onClick={() =>

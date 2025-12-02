@@ -1,5 +1,133 @@
+/* file: src/index.css */
 @import "tailwindcss";
 
-html, body, #root {
+/* Full-height root */
+html,
+body,
+#root {
   height: 100%;
+}
+
+/* --------------- THEME TOKENS (LIGHT DEFAULT) --------------- */
+
+:root {
+  /* backgrounds */
+  --color-bg: #f3f4f6;               /* app background */
+  --color-surface: #ffffff;          /* cards / panels / header */
+  --color-surface-subtle: #f9fafb;   /* soft background */
+
+  /* borders */
+  --color-border-subtle: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* text */
+  --color-text-primary: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-on-accent: #111827;
+
+  /* accent (your orange) */
+  --color-accent: #fb923c;
+  --color-accent-soft: #ffedd5;
+  --color-accent-border: #fdba74;
+
+  /* danger */
+  --color-danger-bg: #fee2e2;
+  --color-danger-border: #fecaca;
+  --color-danger-text: #b91c1c;
+
+  /* inputs */
+  --color-input-bg: #ffffff;
+}
+
+/* --------------- DARK THEME OVERRIDES --------------- */
+/* This kicks in when .theme-dark is on <html> (or <body>) */
+
+.theme-dark {
+  --color-bg: #020617;               /* slate-950 style */
+  --color-surface: #020617;          /* keep fairly flat */
+  --color-surface-subtle: #020617;
+
+  --color-border-subtle: #1f2937;
+  --color-border-strong: #374151;
+
+  --color-text-primary: #e5e7eb;
+  --color-text-muted: #9ca3af;
+  --color-text-on-accent: #111827;
+
+  --color-accent: #fb923c;
+  --color-accent-soft: #4b280f;      /* warm dark orange */
+  --color-accent-border: #fb923c;
+
+  --color-danger-bg: #451a1a;
+  --color-danger-border: #b91c1c;
+  --color-danger-text: #fecaca;
+
+  --color-input-bg: #020617;
+}
+
+/* --------------- SEMANTIC UTILITY CLASSES --------------- */
+/* These are what your JSX should use instead of raw gray/orange */
+
+.app-bg {
+  background-color: var(--color-bg);
+}
+
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-surface-subtle {
+  background-color: var(--color-surface-subtle);
+}
+
+.border-subtle {
+  border-color: var(--color-border-subtle);
+}
+
+.border-strong {
+  border-color: var(--color-border-strong);
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.bg-accent-soft {
+  background-color: var(--color-accent-soft);
+}
+
+.border-accent {
+  border-color: var(--color-accent-border);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+.text-on-accent {
+  color: var(--color-text-on-accent);
+}
+
+.bg-danger-soft {
+  background-color: var(--color-danger-bg);
+}
+
+.border-danger {
+  border-color: var(--color-danger-border);
+}
+
+.text-danger {
+  color: var(--color-danger-text);
+}
+
+.bg-input {
+  background-color: var(--color-input-bg);
 }

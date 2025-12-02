@@ -5,9 +5,9 @@ export const API_V1 = "/api/v1"
 
 
 // ---------------------- user ----------------------
-export const AUTH_LOGIN = `${API_V1}/auth/login`
-export const AUTH_LOGOUT = `${API_V1}/auth/logout`
-export const ME = `${API_V1}/me`
+export const AUTH_LOGIN = `${API_V1}/public/auth/login`
+export const AUTH_LOGOUT = `${API_V1}/public/auth/logout`
+export const ME = `${API_V1}/shared/user/me`
 
 
 // ---------------------- admin ----------------------

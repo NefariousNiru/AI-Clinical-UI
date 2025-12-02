@@ -31,7 +31,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen app-bg text-gray-900">
       <Header title="AI Clinical Admin" left={menuBtn} showLogout />
 
       <div className="py-6">
