@@ -1,0 +1,13 @@
+// file: src/lib/constants/urls.ts
+
+// Public auth endpoints
+export const AUTH_LOGIN = "/api/v1/public/auth/login";
+export const AUTH_LOGOUT = "/api/v1/public/auth/logout";
+
+// Shared user endpoints
+export const ME = "/api/v1/shared/user/me";
+
+// Admin Endpoints
+export const ADMIN_TEST_POPULATE_UI = "/api/v1/admin/test/populate_ui";
+export const ADMIN_TEST_SUBMISSION = "/api/v1/admin/test/submission";
+export const ADMIN_TEST_CHAT = "/api/v1/admin/test/chat";

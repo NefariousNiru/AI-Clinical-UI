@@ -1,16 +1,15 @@
-// src/main.tsx
+// file: src/main.tsx
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-import { ThemeProvider } from "./components/ui/ThemeProvider.tsx";
+import ThemeProvider from "./providers/theme/ThemeProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <div className="app-bg text-primary min-h-full">
-        <App />
-      </div>
+      <App />
     </ThemeProvider>
   </StrictMode>
 );

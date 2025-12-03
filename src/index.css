@@ -1,4 +1,5 @@
 /* file: src/index.css */
+
 @import "tailwindcss";
 
 /* Full-height root */
@@ -8,68 +9,84 @@ body,
   height: 100%;
 }
 
+/* Tell the browser what themes we have */
+:root {
+  color-scheme: light;
+}
+
+.theme-dark {
+  color-scheme: dark;
+}
+
+/* Base body wiring, no transitions */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
 /* --------------- THEME TOKENS (LIGHT DEFAULT) --------------- */
 
 :root {
   /* backgrounds */
-  --color-bg: #f3f4f6;               /* app background */
-  --color-surface: #ffffff;          /* cards / panels / header */
-  --color-surface-subtle: #f9fafb;   /* soft background */
+  --color-bg: #ffffff;
+  --color-surface-subtle: #f3f4f6;              /* gray-100 */
+  --color-surface: #f9fafb;  /* gray-50 */
 
   /* borders */
-  --color-border-subtle: #e5e7eb;
-  --color-border-strong: #d1d5db;
+  --color-border-subtle: #e5e7eb;   /* gray-200 */
+  --color-border-strong: #d1d5db;   /* gray-300 */
 
   /* text */
-  --color-text-primary: #111827;
-  --color-text-muted: #6b7280;
-  --color-text-on-accent: #111827;
+  --color-text-primary: #020617;    /* slate-950 */
+  --color-text-muted: #6b7280;      /* gray-500 */
+  --color-text-on-accent: #ffffff;  /* white on blue */
 
-  /* accent (your orange) */
-  --color-accent: #fb923c;
-  --color-accent-soft: #ffedd5;
-  --color-accent-border: #fdba74;
+  /* accent (modern sky blue) */
+  --color-accent: #0ea5e9;          /* sky-500 */
+  --color-accent-soft: #e0f2fe;     /* sky-100 */
+  --color-accent-border: #38bdf8;   /* sky-400 */
 
   /* danger */
-  --color-danger-bg: #fee2e2;
-  --color-danger-border: #fecaca;
-  --color-danger-text: #b91c1c;
+  --color-danger-bg: #fee2e2;       /* red-100 */
+  --color-danger-border: #fecaca;   /* red-200 */
+  --color-danger-text: #b91c1c;     /* red-700 */
 
   /* inputs */
   --color-input-bg: #ffffff;
 }
 
 /* --------------- DARK THEME OVERRIDES --------------- */
-/* This kicks in when .theme-dark is on <html> (or <body>) */
+/* Applied when .theme-dark is on a parent element (html, body, or a container) */
 
 .theme-dark {
-  --color-bg: #020617;               /* slate-950 style */
-  --color-surface: #020617;          /* keep fairly flat */
-  --color-surface-subtle: #020617;
+  /* backgrounds: neutral, AMOLED-like, no blue tint */
+  --color-bg: #0E0F11;
+  --color-surface-subtle: #101113;
+  --color-surface: #1B1C1F;
 
-  --color-border-subtle: #1f2937;
-  --color-border-strong: #374151;
+  --color-border-subtle: #2C2D32;
+  --color-border-strong: #3A3B42;
 
-  --color-text-primary: #e5e7eb;
-  --color-text-muted: #9ca3af;
-  --color-text-on-accent: #111827;
+  --color-text-primary: #F2F2F5;
+  --color-text-muted: #B3B3BD;
+  --color-text-on-accent: #ffffff;  /* white on blue */
 
-  --color-accent: #fb923c;
-  --color-accent-soft: #4b280f;      /* warm dark orange */
-  --color-accent-border: #fb923c;
+  --color-accent: #0ea5e9;          /* sky-500 */
+  --color-accent-soft: #294666;
+  --color-accent-border: #38bdf8;   /* sky-400 */
 
-  --color-danger-bg: #451a1a;
-  --color-danger-border: #b91c1c;
-  --color-danger-text: #fecaca;
+  --color-danger-bg: #4b1a1f;       /* deep but visible red card */
+  --color-danger-border: #fb7185;   /* bright red/salmon border */
+  --color-danger-text: #fecaca;     /* light red text */
 
-  --color-input-bg: #020617;
+  --color-input-bg: #0E0F11;
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */
-/* These are what your JSX should use instead of raw gray/orange */
 
 .app-bg {
   background-color: var(--color-bg);
+  color: var(--color-text-primary);
 }
 
 .bg-surface {
@@ -130,4 +147,40 @@ body,
 
 .bg-input {
   background-color: var(--color-input-bg);
+}
+
+
+/* --------------- ACCESSIBILITY: FOCUS + SKIP LINK --------------- */
+
+/* Global focus-visible outline for keyboard users */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Skip link: only visible when focused */
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 50;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  transform: translateY(-160%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 120ms ease-out,
+    opacity 120ms ease-out;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
