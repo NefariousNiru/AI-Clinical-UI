@@ -1,5 +1,5 @@
 // src/routes/admin/SubmissionList.tsx
-import { useState } from "react";
+import {useState} from "react";
 
 type Item = { id: number | string; title: string; subtitle?: string };
 
@@ -28,8 +28,8 @@ export default function SubmissionList({
     const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
 
     return (
-        <div className="rounded-lg border border-gray-200">
-            <div className="border-b border-gray-200 px-4 py-2 text-sm font-medium">
+        <div className="rounded-lg border border-subtle">
+            <div className="border-b border-subtle px-4 py-2 text-sm font-medium">
                 Student Submissions
             </div>
 
@@ -41,8 +41,8 @@ export default function SubmissionList({
                         <div
                             key={String(sid ?? idx)}
                             className={[
-                                "flex items-center justify-between px-4 py-3.5 border-b border-gray-100",
-                                active ? "bg-gray-200" : "hover:bg-gray-50",
+                                "row-item flex items-center justify-between px-4 py-3.5 border-b border-subtle",
+                                active ? "bg-accent-soft is-active" : "btn-hover",
                             ].join(" ")}
                         >
                             {/* click anywhere on the left to select */}
@@ -57,7 +57,7 @@ export default function SubmissionList({
                                     {(it.title ?? "").trim() || "(untitled)"}
                                 </div>
                                 {typeof it.subtitle === "string" && it.subtitle.trim() && (
-                                    <div className="truncate text-xs text-gray-500">
+                                    <div className="truncate text-xs text-muted">
                                         {it.subtitle}
                                     </div>
                                 )}
@@ -70,7 +70,7 @@ export default function SubmissionList({
                                     if (sid == null) return;
                                     onView(it.id);
                                 }}
-                                className="ml-3 h-8 shrink-0 rounded-md border border-gray-300 bg-white px-2 text-xs hover:bg-gray-50"
+                                className="ml-3 h-8 shrink-0 rounded-md border border-strong app-bg px-2 text-xs btn-hover"
                             >
                                 View
                             </button>
@@ -81,21 +81,21 @@ export default function SubmissionList({
 
             {/* pagination */}
             <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-accent">
                     Page {page} of {totalPages}
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         disabled={page <= 1}
                         onClick={() => onPageChange(page - 1)}
-                        className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs disabled:opacity-50"
+                        className="h-8 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
                     >
                         Prev
                     </button>
                     <button
                         disabled={page >= totalPages}
                         onClick={() => onPageChange(page + 1)}
-                        className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs disabled:opacity-50"
+                        className="h-8 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
                     >
                         Next
                     </button>
