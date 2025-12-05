@@ -27,79 +27,79 @@ body {
 /* --------------- THEME TOKENS (LIGHT DEFAULT) --------------- */
 
 :root {
-    /* ☀️ LIGHT THEME: Flipped for Layered Depth */
+    /* ☀️ LIGHT THEME */
 
     /* BACKGROUNDS */
-    --color-bg: #ffffff;           /* Pure White (Ocean/Canvas) */
-    --color-surface-subtle: #f9fafb; /* gray-50 (e.g., sidebar or header) */
-    --color-surface: #f1f5f9;      /* slate-100 (The Card/Island - **THIS IS THE KEY CHANGE**) */
+    --color-bg: #ffffff;              /* Canvas */
+    --color-surface-subtle: #f9fafb;  /* Light shell / header */
+    --color-surface: #f3f4f6;         /* Card / surface */
 
-    /* borders */
-    --color-border-subtle: #e2e8f0; /* slate-200 */
-    --color-border-strong: #cbd5e1; /* slate-300 */
+    /* BORDERS (neutral, aligned) */
+    --color-border-subtle: #e5e7eb;   /* gray-200 */
+    --color-border-strong: #cbd5e1;   /* slate-300 */
 
-    /* text (unchanged) */
-    --color-text-primary: #334155;
-    --color-text-muted: #94a3b8;
+    /* TEXT */
+    --color-text-primary: #101828;    /* Also doubles as brand accent */
+    --color-text-muted: #6b7280;      /* gray-500 */
     --color-text-on-accent: #ffffff;
     --color-text-on-secondary: #ffffff;
 
-    /* primary accent (unchanged) */
-    --color-accent: #6366f1;
-    --color-accent-soft: #e0e7ff;
-    --color-accent-border: #818cf8;
+    /* PRIMARY ACCENT (brand) */
+    --color-accent: #101828;          /* Deep navy on white */
+    --color-accent-soft: #e5e7eb;     /* Very light neutral tint */
+    --color-accent-border: #101828;   /* Strong outline / focus */
 
-    /* secondary accent (unchanged) */
-    --color-secondary: #f43f5e;
-    --color-secondary-soft: #ffe4e6;
-    --color-secondary-border: #fb7185;
+    /* SECONDARY ACCENT (moved blue here) */
+    --color-secondary: #6366f1;       /* indigo-500 */
+    --color-secondary-soft: #e0e7ff;  /* indigo-100 */
+    --color-secondary-border: #818cf8;/* indigo-400 */
 
-    /* danger (unchanged) */
+    /* DANGER (kept for errors only) */
     --color-danger-bg: #fef2f2;
     --color-danger-border: #fecaca;
     --color-danger-text: #dc2626;
 
-    /* INPUTS: Pure White (The slot) */
-    /* This makes inputs look bright and defined against the grey surface. */
+    /* INPUTS */
     --color-input-bg: #ffffff;
 }
 
 /* --------------- DARK THEME OVERRIDES --------------- */
 
 .theme-dark {
-    /* 🌑 DARK THEME: AMOLED, pastel neon */
+    /* 🌑 DARK THEME: AMOLED with neutral/indigo accents */
 
-    /* backgrounds */
-    --color-bg: #000000;
-    --color-surface-subtle: #111111;
-    --color-surface: #1a1a1a;
+    /* BACKGROUNDS */
+    --color-bg: #000000;              /* Pure black */
+    --color-surface-subtle: #09090b;  /* near-black shell */
+    --color-surface: #111827;         /* slate-like card */
 
-    /* borders */
-    --color-border-subtle: #27272a;
-    --color-border-strong: #3f3f46;
+    /* BORDERS */
+    --color-border-subtle: #1f2937;   /* slate-800 */
+    --color-border-strong: #374151;   /* slate-700 */
 
-    /* text */
-    --color-text-primary: #e2e8f0;
-    --color-text-muted: #71717a;
-    --color-text-on-accent: #000000; /* on pastel accent */
-    --color-text-on-secondary: #000000; /* on pastel secondary */
+    /* TEXT */
+    --color-text-primary: #e5e7eb;    /* slate-200 */
+    --color-text-muted: #9ca3af;      /* gray-400 */
+    --color-text-on-accent: #000000;  /* accent is light */
+    --color-text-on-secondary: #ffffff;
 
-    /* primary accent: pastel lavender */
-    --color-accent: #a5b4fc; /* indigo-300 */
-    --color-accent-soft: #1e1b4b; /* deep indigo tint */
-    --color-accent-border: #6366f1;
+    /* PRIMARY ACCENT (light neutral complement on black) */
+    --color-accent: #e5e7eb;          /* very light neutral */
+    --color-accent-soft: #111827;     /* subtle halo/background */
+    --color-accent-border: #e5e7eb;
 
-    /* secondary accent: pastel rose */
-    --color-secondary: #fda4af; /* rose-300 */
-    --color-secondary-soft: #4c0519; /* deep rose tint */
-    --color-secondary-border: #f43f5e;
+    /* SECONDARY ACCENT (blue family, same as light) */
+    --color-secondary: #6366f1;
+    --color-secondary-soft: #312e81;  /* indigo-900 */
+    --color-secondary-border: #818cf8;
 
-    /* danger */
-    --color-danger-bg: #2b0808;
+    /* DANGER */
+    --color-danger-bg: #2b0b0b;
     --color-danger-border: #7f1d1d;
-    --color-danger-text: #fca5a5;
+    --color-danger-text: #fecaca;
 
-    --color-input-bg: #09090b;
+    /* INPUTS */
+    --color-input-bg: #020617;        /* slate-950-like, above pure black */
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */
@@ -158,7 +158,7 @@ body {
     color: var(--color-text-on-accent);
 }
 
-/* secondary accent utilities (for secondary buttons, tags, chips) */
+/* secondary accent utilities (blue) */
 .bg-secondary {
     background-color: var(--color-secondary);
 }
@@ -197,6 +197,44 @@ body {
     background-color: var(--color-input-bg);
 }
 
+/* btn base + hover using theme tokens */
+.btn-hover {
+    transition: opacity 120ms ease-out;
+}
+
+.btn-hover:hover {
+    opacity: 0.9;
+}
+
+/* Row base + hover using theme tokens */
+.row-item {
+    transition: background-color 120ms ease-out;
+}
+
+.row-item:not(.is-active):hover {
+    background-color: var(--color-surface-subtle);
+}
+
+
+.textarea-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-subtle) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+.textarea-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.textarea-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.textarea-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-subtle);
+    border-radius: 999px;
+}
+
 /* --------------- ACCESSIBILITY: FOCUS + SKIP LINK --------------- */
 
 /* Global focus-visible outline for keyboard users */
@@ -221,8 +259,9 @@ body {
     transform: translateY(-160%);
     opacity: 0;
     pointer-events: none;
-    transition: transform 120ms ease-out,
-    opacity 120ms ease-out;
+    transition:
+            transform 120ms ease-out,
+            opacity 120ms ease-out;
 }
 
 .skip-link:focus-visible {
