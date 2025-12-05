@@ -1,5 +1,7 @@
 // file: src/pages/admin/tests/PromptEditor.tsx
 
+import {Send} from "lucide-react";
+
 type Props = {
     value: string;
     onChange: (value: string) => void;
@@ -17,41 +19,64 @@ export default function PromptEditor({
 
     return (
         <section
-            className="rounded-lg border border-subtle shadow-sm"
             aria-labelledby="system-prompt-editor-title"
+            className="relative rounded-3xl border border-subtle bg-surface shadow-sm overflow-hidden focus-within:border-strong"
         >
-            <div className="p-3 space-y-2">
-                <textarea
-                    id="system-prompt-editor"
-                    value={value ?? ""}
-                    onChange={(ev) => onChange(ev.target.value)}
-                    placeholder="Type or paste the system prompt..."
-                    className="w-full min-h-[400px] resize-y rounded-md border border-subtle bg-surface p-4 text-sm md:text-base"
-                    aria-describedby={helpTextId}
-                />
-            </div>
+        <textarea
+            id="system-prompt-editor"
+            value={value ?? ""}
+            onChange={(ev) => onChange(ev.target.value)}
+            placeholder="Type or paste the system prompt..."
+            className="
+                textarea-scroll
+                w-full
+                min-h-[500px]
+                resize-y
+                border-none
+                bg-transparent
+                p-4
+                pr-28      /* space for button on the right */
+                pb-16      /* space for button at the bottom */
+                text-sm
+                md:text-base
+                focus:outline-none
+                focus-visible:outline-none
+            "
+            aria-describedby={helpTextId}
+        />
 
-            <div className="flex flex-col gap-3 px-3 pb-3 md:flex-row md:items-center md:justify-between">
-                <p className="text-[12px] text-muted md:max-w-xl">
-                    We store the exact <b>“Prompt + Submission + Model + Output”</b>{" "}
-                    for each run locally on your system when you click{" "}
-                    <b>“Save local”</b>. If you like a particular prompt, you can
-                    share it with the course team.
-                </p>
-
-                <div className="flex items-center justify-end">
-                    <button
-                        type="button"
-                        onClick={onSend}
-                        disabled={sending}
-                        className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:opacity-90 disabled:opacity-60"
-                        aria-label="Send prompt and grade current submission"
-                        aria-busy={sending}
-                    >
-                        {sending ? "Sending…" : "Send"}
-                    </button>
-                </div>
-            </div>
+            <button
+                type="button"
+                onClick={onSend}
+                disabled={sending}
+                className="
+                absolute
+                bottom-4
+                right-4
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                rounded-full
+                bg-accent
+                px-3 py-2          /* tighter on mobile */
+                sm:px-6 sm:py-2    /* larger on bigger screens */
+                text-sm
+                font-medium
+                text-on-accent
+                shadow-sm
+                transition-opacity
+                hover:opacity-90
+                disabled:opacity-60
+            "
+                aria-label="Send prompt and grade current submission"
+                aria-busy={sending}
+            >
+                <Send className="h-4 w-4" aria-hidden="true"/>
+                <span className="hidden sm:inline">
+                    {sending ? "Sending…" : "Send"}
+                </span>
+            </button>
         </section>
     );
 }

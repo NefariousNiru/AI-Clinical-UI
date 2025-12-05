@@ -1,5 +1,6 @@
 // src/routes/admin/SubmissionList.tsx
 import {useState} from "react";
+import {ChevronLeft, ChevronRight} from "lucide-react";
 
 type Item = { id: number | string; title: string; subtitle?: string };
 
@@ -88,16 +89,19 @@ export default function SubmissionList({
                     <button
                         disabled={page <= 1}
                         onClick={() => onPageChange(page - 1)}
-                        className="h-8 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
+                        className="h-8 inline-flex items-center gap-1 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
                     >
-                        Prev
+                        <ChevronLeft className="h-3 w-3" />
+                        <span>Prev</span>
                     </button>
+
                     <button
                         disabled={page >= totalPages}
                         onClick={() => onPageChange(page + 1)}
-                        className="h-8 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
+                        className="h-8 inline-flex items-center gap-1 rounded-md border btn-hover border-strong app-bg px-2 text-xs disabled:opacity-50"
                     >
-                        Next
+                        <span>Next</span>
+                        <ChevronRight className="h-3 w-3" />
                     </button>
                 </div>
             </div>
