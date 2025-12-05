@@ -3,9 +3,9 @@
 import { NavLink } from "react-router-dom";
 import {
   CalendarRange,
-  ClipboardList,
+  BookLock,
   Users2,
-  FileText,
+  TestTube2,
   BarChart3,
 } from "lucide-react";
 
@@ -24,9 +24,9 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   { label: "Week", to: "/admin/week", icon: CalendarRange },
-  { label: "Rubric", to: "/admin/rubric", icon: ClipboardList },
+  { label: "Rubric", to: "/admin/rubric", icon: BookLock },
   { label: "Students", to: "/admin/students", icon: Users2 },
-  { label: "Tests", to: "/admin/tests", icon: FileText },
+  { label: "Tests", to: "/admin/tests", icon: TestTube2 },
   { label: "Statistics", to: "/admin/statistics", icon: BarChart3 },
 ];
 
