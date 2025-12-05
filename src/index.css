@@ -6,181 +6,227 @@
 html,
 body,
 #root {
-  height: 100%;
+    height: 100%;
 }
 
 /* Tell the browser what themes we have */
 :root {
-  color-scheme: light;
+    color-scheme: light;
 }
 
 .theme-dark {
-  color-scheme: dark;
+    color-scheme: dark;
 }
 
-/* Base body wiring, no transitions */
+/* Base body wiring */
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
 }
 
 /* --------------- THEME TOKENS (LIGHT DEFAULT) --------------- */
 
 :root {
-  /* backgrounds */
-  --color-bg: #ffffff;
-  --color-surface-subtle: #f3f4f6;              /* gray-100 */
-  --color-surface: #f9fafb;  /* gray-50 */
+    /* ☀️ LIGHT THEME: Flipped for Layered Depth */
 
-  /* borders */
-  --color-border-subtle: #e5e7eb;   /* gray-200 */
-  --color-border-strong: #d1d5db;   /* gray-300 */
+    /* BACKGROUNDS */
+    --color-bg: #ffffff;           /* Pure White (Ocean/Canvas) */
+    --color-surface-subtle: #f9fafb; /* gray-50 (e.g., sidebar or header) */
+    --color-surface: #f1f5f9;      /* slate-100 (The Card/Island - **THIS IS THE KEY CHANGE**) */
 
-  /* text */
-  --color-text-primary: #020617;    /* slate-950 */
-  --color-text-muted: #6b7280;      /* gray-500 */
-  --color-text-on-accent: #ffffff;  /* white on blue */
+    /* borders */
+    --color-border-subtle: #e2e8f0; /* slate-200 */
+    --color-border-strong: #cbd5e1; /* slate-300 */
 
-  /* accent (modern sky blue) */
-  --color-accent: #0ea5e9;          /* sky-500 */
-  --color-accent-soft: #e0f2fe;     /* sky-100 */
-  --color-accent-border: #38bdf8;   /* sky-400 */
+    /* text (unchanged) */
+    --color-text-primary: #334155;
+    --color-text-muted: #94a3b8;
+    --color-text-on-accent: #ffffff;
+    --color-text-on-secondary: #ffffff;
 
-  /* danger */
-  --color-danger-bg: #fee2e2;       /* red-100 */
-  --color-danger-border: #fecaca;   /* red-200 */
-  --color-danger-text: #b91c1c;     /* red-700 */
+    /* primary accent (unchanged) */
+    --color-accent: #6366f1;
+    --color-accent-soft: #e0e7ff;
+    --color-accent-border: #818cf8;
 
-  /* inputs */
-  --color-input-bg: #ffffff;
+    /* secondary accent (unchanged) */
+    --color-secondary: #f43f5e;
+    --color-secondary-soft: #ffe4e6;
+    --color-secondary-border: #fb7185;
+
+    /* danger (unchanged) */
+    --color-danger-bg: #fef2f2;
+    --color-danger-border: #fecaca;
+    --color-danger-text: #dc2626;
+
+    /* INPUTS: Pure White (The slot) */
+    /* This makes inputs look bright and defined against the grey surface. */
+    --color-input-bg: #ffffff;
 }
 
 /* --------------- DARK THEME OVERRIDES --------------- */
-/* Applied when .theme-dark is on a parent element (html, body, or a container) */
 
 .theme-dark {
-  /* backgrounds: neutral, AMOLED-like, no blue tint */
-  --color-bg: #0E0F11;
-  --color-surface-subtle: #101113;
-  --color-surface: #1B1C1F;
+    /* 🌑 DARK THEME: AMOLED, pastel neon */
 
-  --color-border-subtle: #2C2D32;
-  --color-border-strong: #3A3B42;
+    /* backgrounds */
+    --color-bg: #000000;
+    --color-surface-subtle: #111111;
+    --color-surface: #1a1a1a;
 
-  --color-text-primary: #F2F2F5;
-  --color-text-muted: #B3B3BD;
-  --color-text-on-accent: #ffffff;  /* white on blue */
+    /* borders */
+    --color-border-subtle: #27272a;
+    --color-border-strong: #3f3f46;
 
-  --color-accent: #0ea5e9;          /* sky-500 */
-  --color-accent-soft: #294666;
-  --color-accent-border: #38bdf8;   /* sky-400 */
+    /* text */
+    --color-text-primary: #e2e8f0;
+    --color-text-muted: #71717a;
+    --color-text-on-accent: #000000; /* on pastel accent */
+    --color-text-on-secondary: #000000; /* on pastel secondary */
 
-  --color-danger-bg: #4b1a1f;       /* deep but visible red card */
-  --color-danger-border: #fb7185;   /* bright red/salmon border */
-  --color-danger-text: #fecaca;     /* light red text */
+    /* primary accent: pastel lavender */
+    --color-accent: #a5b4fc; /* indigo-300 */
+    --color-accent-soft: #1e1b4b; /* deep indigo tint */
+    --color-accent-border: #6366f1;
 
-  --color-input-bg: #0E0F11;
+    /* secondary accent: pastel rose */
+    --color-secondary: #fda4af; /* rose-300 */
+    --color-secondary-soft: #4c0519; /* deep rose tint */
+    --color-secondary-border: #f43f5e;
+
+    /* danger */
+    --color-danger-bg: #2b0808;
+    --color-danger-border: #7f1d1d;
+    --color-danger-text: #fca5a5;
+
+    --color-input-bg: #09090b;
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */
 
+/* page background + base text */
 .app-bg {
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
 }
 
+/* cards and panels */
 .bg-surface {
-  background-color: var(--color-surface);
+    background-color: var(--color-surface);
 }
 
 .bg-surface-subtle {
-  background-color: var(--color-surface-subtle);
+    background-color: var(--color-surface-subtle);
 }
 
+/* borders */
 .border-subtle {
-  border-color: var(--color-border-subtle);
+    border-color: var(--color-border-subtle);
 }
 
 .border-strong {
-  border-color: var(--color-border-strong);
+    border-color: var(--color-border-strong);
 }
 
+/* text */
 .text-primary {
-  color: var(--color-text-primary);
+    color: var(--color-text-primary);
 }
 
 .text-muted {
-  color: var(--color-text-muted);
+    color: var(--color-text-muted);
+}
+
+/* primary accent utilities (for main actions, chips, etc.) */
+.bg-accent {
+    background-color: var(--color-accent);
 }
 
 .bg-accent-soft {
-  background-color: var(--color-accent-soft);
+    background-color: var(--color-accent-soft);
 }
 
 .border-accent {
-  border-color: var(--color-accent-border);
+    border-color: var(--color-accent-border);
 }
 
 .text-accent {
-  color: var(--color-accent);
-}
-
-.bg-accent {
-  background-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .text-on-accent {
-  color: var(--color-text-on-accent);
+    color: var(--color-text-on-accent);
 }
 
+/* secondary accent utilities (for secondary buttons, tags, chips) */
+.bg-secondary {
+    background-color: var(--color-secondary);
+}
+
+.bg-secondary-soft {
+    background-color: var(--color-secondary-soft);
+}
+
+.border-secondary {
+    border-color: var(--color-secondary-border);
+}
+
+.text-secondary {
+    color: var(--color-secondary);
+}
+
+.text-on-secondary {
+    color: var(--color-text-on-secondary);
+}
+
+/* danger states */
 .bg-danger-soft {
-  background-color: var(--color-danger-bg);
+    background-color: var(--color-danger-bg);
 }
 
 .border-danger {
-  border-color: var(--color-danger-border);
+    border-color: var(--color-danger-border);
 }
 
 .text-danger {
-  color: var(--color-danger-text);
+    color: var(--color-danger-text);
 }
 
+/* inputs */
 .bg-input {
-  background-color: var(--color-input-bg);
+    background-color: var(--color-input-bg);
 }
-
 
 /* --------------- ACCESSIBILITY: FOCUS + SKIP LINK --------------- */
 
 /* Global focus-visible outline for keyboard users */
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+    outline: 2px solid var(--color-accent-border);
+    outline-offset: 3px;
 }
 
 /* Skip link: only visible when focused */
 .skip-link {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 50;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  background-color: var(--color-accent);
-  color: var(--color-text-on-accent);
-  font-size: 0.75rem;
-  font-weight: 500;
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 50;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: var(--color-text-on-accent);
+    font-size: 0.75rem;
+    font-weight: 500;
 
-  transform: translateY(-160%);
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform 120ms ease-out,
+    transform: translateY(-160%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 120ms ease-out,
     opacity 120ms ease-out;
 }
 
 .skip-link:focus-visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
 }
