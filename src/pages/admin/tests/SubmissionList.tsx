@@ -29,8 +29,8 @@ export default function SubmissionList({
     const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
 
     return (
-        <div className="rounded-lg border border-subtle">
-            <div className="border-b border-subtle px-4 py-2 text-sm font-medium">
+        <div className="rounded-3xl border border-subtle">
+            <div className="border-b border-subtle px-4 py-3 text-sm font-medium">
                 Student Submissions
             </div>
 

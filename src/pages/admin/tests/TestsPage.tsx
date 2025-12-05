@@ -16,6 +16,7 @@ import { chat } from "../../../lib/api/admin/test";
 import { ApiError } from "../../../lib/api/http";
 // import { saveSession } from "../../../lib/localSession";
 import * as React from "react";
+import { BrainCircuit } from "lucide-react";
 
 /**
  * Normalize errors for this page into a user-facing string.
@@ -151,6 +152,7 @@ export default function TestsPage() {
         const v = canSave();
         if (!v.ok) {
             setSaveMsg(v.reason);
+            window.setTimeout(() => setSaveMsg(""), 5000)
             return;
         }
 
@@ -173,16 +175,73 @@ export default function TestsPage() {
         <div className="grid grid-cols-12 gap-8 px-4 lg:px-6 text-primary">
             {/* Main column */}
             <section className="col-span-12 xl:col-span-10 space-y-6">
-                <header className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-xl font-semibold">System Prompt</h1>
+                <header className="space-y-3">
+                    {/* Top row: title + actions (stack on small, row on md+) */}
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        {/* Title */}
+                        <div>
+                            <h1 className="text-xl font-semibold">System Prompt</h1>
+                        </div>
 
+                        {/* Actions: model select + save local */}
+                        <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
+                            {/* Model select */}
+                            <label className="flex items-center gap-2 text-sm font-medium text-primary">
+                                <BrainCircuit className="h-4 w-4" aria-hidden="true" />
+                                <span>Model:</span>
+                                <div className="relative">
+                                    <select
+                                        value={selectedModel}
+                                        onChange={(ev: React.ChangeEvent<HTMLSelectElement>) =>
+                                            setSelectedModel(ev.target.value)
+                                        }
+                                        disabled={loadingUi || modelsUnavailable}
+                                        className={[
+                                            "h-9 rounded-lg border border-secondary bg-input pl-3 pr-8 text-sm",
+                                            "focus-visible:outline focus-visible:outline-offset-2",
+                                        ].join(" ")}
+                                        aria-label="Select model"
+                                    >
+                                        {modelsUnavailable ? (
+                                            <option value="" disabled>
+                                                No models available
+                                            </option>
+                                        ) : (
+                                            modelNames.map((name: string) => (
+                                                <option key={name} value={name}>
+                                                    {name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                </div>
+                            </label>
+
+                            {/* Save local */}
+                            <button
+                                type="button"
+                                onClick={handleSaveLocal}
+                                className={[
+                                    "h-10 rounded-md px-4 text-sm font-medium bg-accent text-on-accent",
+                                    "hover:opacity-90 disabled:opacity-60",
+                                ].join(" ")}
+                            >
+                                Save local
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Status / error messages: always below actions */}
+                    <div className="space-y-1">
                         {loadingUi && (
                             <p className="text-sm text-muted">Loading configuration…</p>
                         )}
 
                         {uiError && (
-                            <p className="text-xs text-danger" role="alert">
+                            <p
+                                className="text-xs text-danger max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                role="alert"
+                            >
                                 {uiError}
                             </p>
                         )}
@@ -193,58 +252,8 @@ export default function TestsPage() {
                             </p>
                         )}
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                        {/* Model select */}
-                        <label className="flex items-center gap-2 text-sm font-medium text-primary">
-                            <span>Model:</span>
-                            <div className="relative">
-                                <select
-                                    value={selectedModel}
-                                    onChange={(ev: React.ChangeEvent<HTMLSelectElement>) =>
-                                        setSelectedModel(ev.target.value)
-                                    }
-                                    disabled={loadingUi || modelsUnavailable}
-                                    className={[
-                                        "h-9 rounded-md border border-subtle bg-input pl-3 pr-8 text-sm",
-                                        "focus-visible:outline focus-visible:outline-offset-2",
-                                    ].join(" ")}
-                                    aria-label="Select model"
-                                >
-                                    {modelsUnavailable ? (
-                                        <option value="" disabled>
-                                            No models available
-                                        </option>
-                                    ) : (
-                                        modelNames.map((name: string) => (
-                                            <option key={name} value={name}>
-                                                {name}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <span
-                                    aria-hidden="true"
-                                    className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted text-xs"
-                                >
-                  ▾
-                </span>
-                            </div>
-                        </label>
-
-                        {/* Save local */}
-                        <button
-                            type="button"
-                            onClick={handleSaveLocal}
-                            className={[
-                                "h-10 rounded-md px-4 text-sm font-medium",
-                                "bg-accent text-on-accent hover:opacity-90 disabled:opacity-60",
-                            ].join(" ")}
-                        >
-                            Save local
-                        </button>
-                    </div>
                 </header>
+
 
                 <PromptEditor
                     value={systemPrompt}

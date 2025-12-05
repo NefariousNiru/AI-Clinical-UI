@@ -119,24 +119,6 @@ body {
     background-color: var(--color-surface-subtle);
 }
 
-/* borders */
-.border-subtle {
-    border-color: var(--color-border-subtle);
-}
-
-.border-strong {
-    border-color: var(--color-border-strong);
-}
-
-/* text */
-.text-primary {
-    color: var(--color-text-primary);
-}
-
-.text-muted {
-    color: var(--color-text-muted);
-}
-
 /* primary accent utilities (for main actions, chips, etc.) */
 .bg-accent {
     background-color: var(--color-accent);
@@ -144,18 +126,6 @@ body {
 
 .bg-accent-soft {
     background-color: var(--color-accent-soft);
-}
-
-.border-accent {
-    border-color: var(--color-accent-border);
-}
-
-.text-accent {
-    color: var(--color-accent);
-}
-
-.text-on-accent {
-    color: var(--color-text-on-accent);
 }
 
 /* secondary accent utilities (blue) */
@@ -167,8 +137,52 @@ body {
     background-color: var(--color-secondary-soft);
 }
 
+/* inputs */
+.bg-input {
+    background-color: var(--color-input-bg);
+}
+
+/* danger states */
+.bg-danger-soft {
+    background-color: var(--color-danger-bg);
+}
+
+/* borders */
+.border-subtle {
+    border-color: var(--color-border-subtle);
+}
+
+.border-strong {
+    border-color: var(--color-border-strong);
+}
+
+.border-accent {
+    border-color: var(--color-accent-border);
+}
+
 .border-secondary {
     border-color: var(--color-secondary-border);
+}
+
+.border-danger {
+    border-color: var(--color-danger-border);
+}
+
+/* text */
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-accent {
+    color: var(--color-accent);
+}
+
+.text-on-accent {
+    color: var(--color-text-on-accent);
 }
 
 .text-secondary {
@@ -179,22 +193,8 @@ body {
     color: var(--color-text-on-secondary);
 }
 
-/* danger states */
-.bg-danger-soft {
-    background-color: var(--color-danger-bg);
-}
-
-.border-danger {
-    border-color: var(--color-danger-border);
-}
-
 .text-danger {
     color: var(--color-danger-text);
-}
-
-/* inputs */
-.bg-input {
-    background-color: var(--color-input-bg);
 }
 
 /* btn base + hover using theme tokens */

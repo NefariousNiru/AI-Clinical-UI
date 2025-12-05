@@ -59,7 +59,7 @@ export default function Modal({
             {/* Dialog panel */}
             <div
                 className={[
-                    "relative mx-auto rounded-lg border border-subtle bg-surface shadow-xl",
+                    "relative mx-auto rounded-xl border border-subtle app-bg shadow-xl",
                     className,
                 ].join(" ")}
                 role="dialog"

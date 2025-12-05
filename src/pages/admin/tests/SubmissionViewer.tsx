@@ -85,8 +85,8 @@ export default function SubmissionViewer({
                     <p className="mb-3 text-sm text-muted">
                         Problems:{" "}
                         <span className="font-medium text-primary">
-              {problems.length}
-            </span>
+                          {problems.length}
+                        </span>
                     </p>
 
                     {problems.length > 0 ? (
@@ -94,16 +94,16 @@ export default function SubmissionViewer({
                             {problems.map((p, idx) => (
                                 <article
                                     key={`${p.name}-${idx}`}
-                                    className="rounded-lg border border-subtle bg-surface overflow-hidden"
+                                    className="rounded-lg border border-subtle  overflow-hidden"
                                 >
                                     <header className="flex items-center justify-between border-b border-subtle bg-surface-subtle px-4 py-2">
                                         <h3 className="text-sm font-semibold text-primary">
                                             {titleize(p.name)}
                                         </h3>
                                         {p.isPriority && (
-                                            <span className="inline-flex items-center rounded-md bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-                        Priority
-                      </span>
+                                            <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">
+                                            Priority
+                                          </span>
                                         )}
                                     </header>
 

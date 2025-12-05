@@ -20,7 +20,7 @@ export default function PromptEditor({
     return (
         <section
             aria-labelledby="system-prompt-editor-title"
-            className="relative rounded-3xl border border-subtle bg-surface shadow-sm overflow-hidden focus-within:border-strong"
+            className="relative rounded-3xl border border-subtle bg-surface-subtle shadow-sm overflow-hidden focus-within:border-strong"
         >
         <textarea
             id="system-prompt-editor"

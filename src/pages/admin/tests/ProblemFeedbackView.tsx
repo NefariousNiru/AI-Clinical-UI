@@ -19,8 +19,8 @@ function StudentAnswer({ label, value }: StudentAnswerProps) {
     if (!v) return null;
 
     return (
-        <section className="mb-3 rounded-md border border-subtle bg-surface-subtle p-3">
-            <h4 className="mb-1 text-xs font-semibold text-muted">{label}</h4>
+        <section className="mb-3 rounded-xl border border-subtle bg-secondary-soft p-3">
+            <h4 className="mb-1 text-xs font-semibold text-primary">{label}</h4>
             <pre className="whitespace-pre-wrap text-sm text-primary">{v}</pre>
         </section>
     );
@@ -40,12 +40,12 @@ function Section({ label, studentAnswer, sec }: SectionProps) {
         typeof sec?.feedback === "string" ? sec.feedback.trim() : "";
 
     return (
-        <section className="rounded-md border border-subtle bg-surface-subtle p-3">
+        <section className="app-bg p-3">
             <header className="mb-2 flex items-center justify-between gap-2">
                 <h3 className="text-sm font-medium text-primary">{label}</h3>
                 {score && (
-                    <span className="inline-flex items-center rounded-md border border-subtle bg-surface px-2 py-0.5 text-xs font-medium text-muted">
-            Score: <span className="ml-1 text-primary">{score}</span>
+                    <span className="inline-flex items-center rounded-4xl border border-subtle bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">
+            Score: <span className="ml-1 text-on-secondary">{score}</span>
           </span>
                 )}
             </header>
@@ -109,18 +109,18 @@ export default function ProblemFeedbackView({
                 return (
                     <article
                         key={problemName || idx}
-                        className="rounded-lg border border-subtle overflow-hidden bg-surface"
+                        className="rounded-2xl border border-subtle overflow-hidden app-bg"
                         aria-label={`Feedback for ${titleize(problemName)}`}
                     >
                         {/* Header */}
-                        <header className="flex items-center justify-between border-b border-subtle bg-surface-subtle px-4 py-2">
-                            <h2 className="text-sm font-semibold text-primary">
-                                {titleize(problemName)}
+                        <header className="flex items-center justify-between border-b border-subtle px-4 py-3">
+                            <h2 className="text-sm font-semibold text-on-accent-soft">
+                                {(idx + 1) + ". " +  titleize(problemName)}
                             </h2>
                             {p.isPriority && (
-                                <span className="inline-flex items-center rounded-md bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-                  Priority
-                </span>
+                                <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">
+                                  Priority
+                                </span>
                             )}
                         </header>
 
