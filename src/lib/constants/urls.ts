@@ -14,3 +14,5 @@ export const ADMIN_TEST_POPULATE_UI = "/api/v1/admin/test/populate_ui";
 export const ADMIN_TEST_SUBMISSION = "/api/v1/admin/test/submission";
 export const ADMIN_TEST_CHAT = "/api/v1/admin/test/chat";
 export const ADMIN_MRP_TOOL = "/api/v1/admin/settings/mrp_tool_status"
+export const ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE = "/api/v1/admin/rubric/search"
+export const ADMIN_ADD_DISEASE = "/api/v1/admin/disease"

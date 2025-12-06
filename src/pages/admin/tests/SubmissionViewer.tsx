@@ -1,8 +1,8 @@
 // file: src/pages/admin/tests/SubmissionViewer.tsx
 
 import { useState } from "react";
-import type { TestSubmission } from "../../../lib/types/adminTest";
-import { titleize } from "../../../lib/functions";
+import type { TestSubmission } from "../../../lib/types/test.ts";
+import { titleizeDiseaseName } from "../../../lib/functions";
 import Modal from "../../../components/Modal";
 import Tabs from "../../../components/Tabs";
 import JsonPanel from "./JsonPanel";
@@ -98,7 +98,7 @@ export default function SubmissionViewer({
                                 >
                                     <header className="flex items-center justify-between border-b border-subtle bg-surface-subtle px-4 py-2">
                                         <h3 className="text-sm font-semibold text-primary">
-                                            {titleize(p.name)}
+                                            {titleizeDiseaseName(p.name)}
                                         </h3>
                                         {p.isPriority && (
                                             <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">

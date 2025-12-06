@@ -1,4 +1,4 @@
-// file: src/lib/types/adminTest.ts
+// file: src/lib/types/test.ts
 
 import { z } from "zod";
 import { ProblemFeedbackSchema, DrugRelatedProblemSchema } from "./feedback";

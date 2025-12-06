@@ -10,7 +10,7 @@ import { useSubmissions } from "../hooks/useSubmissions";
 import { useTestUI } from "../hooks/useTestUI.ts";
 
 import type { ProblemFeedback } from "../../../lib/types/feedback";
-import type { TestSubmission } from "../../../lib/types/adminTest";
+import type { TestSubmission } from "../../../lib/types/test.ts";
 
 import { chat } from "../../../lib/api/admin/test";
 import { ApiError } from "../../../lib/api/http";

@@ -5,7 +5,7 @@
  *
  * "abc_def_gh" -> "Abc Def"
  */
-export function titleize(input: string): string {
+export function titleizeDiseaseName(input: string): string {
     // Drop everything after the last underscore
     const trimmed = input.replace(/_[^_]*$/, "");
 

@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { titleize } from "../../../lib/functions.ts";
+import { titleizeDiseaseName } from "../../../lib/functions.ts";
 import type {
     ProblemFeedback,
     ProblemFeedbackList,
     DrugRelatedProblem,
     FeedbackSection,
 } from "../../../lib/types/feedback.ts";
-import type { TestSubmission } from "../../../lib/types/adminTest.ts";
+import type { TestSubmission } from "../../../lib/types/test.ts";
 
 type StudentAnswerProps = {
     label: string;
@@ -169,13 +169,13 @@ function ProblemTile({ idx, feedback, studentProblem }: ProblemTileProps) {
         typeof feedback.name === "string"
             ? feedback.name
             : `Problem ${idx + 1}`;
-    const title = `${idx + 1}. ${titleize(problemName)}`;
+    const title = `${idx + 1}. ${titleizeDiseaseName(problemName)}`;
     const summary = scoreSummary(feedback);
 
     return (
         <article
             className="rounded-2xl border border-subtle overflow-hidden app-bg"
-            aria-label={`Feedback for ${titleize(problemName)}`}
+            aria-label={`Feedback for ${titleizeDiseaseName(problemName)}`}
         >
             {/* Header */}
             <header className="flex items-center justify-between border-b border-subtle px-4 py-3">

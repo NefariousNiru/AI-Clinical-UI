@@ -1,6 +1,6 @@
 // src/lib/localSession.ts
 
-import type { TestSubmission } from "./types/adminTest"
+import type { TestSubmission } from "./types/test.ts"
 import type {ProblemFeedbackList} from "./types/feedback.ts";
 import {LOCAL_STORAGE_TEST_SESSION_KEY} from "./constants/localStorageKeys.ts";
 import {downloadJSON} from "./functions.ts";

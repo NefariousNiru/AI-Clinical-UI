@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { listStudentSubmissions } from "../../../lib/api/admin/test";
-import type { TestSubmission } from "../../../lib/types/adminTest";
+import type { TestSubmission } from "../../../lib/types/test.ts";
 
 type UseSubmissionsResult = {
     items: TestSubmission[];

@@ -11,13 +11,13 @@ import {
     TestSubmissionResponseSchema,
     TestChatRequestSchema,
     TestChatResponseSchema,
-} from "../../types/adminTest";
+} from "../../types/test.ts";
 import type {
     PopulateUI,
     TestSubmissionResponse,
     TestChatRequest,
     TestChatResponse
-} from "../../types/adminTest"
+} from "../../types/test.ts"
 
 /**
  * GET /api/v1/admin/test/populate_ui

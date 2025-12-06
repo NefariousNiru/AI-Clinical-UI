@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchTestUiConfig } from "../../../lib/api/admin/test";
-import type { PopulateUI } from "../../../lib/types/adminTest";
+import type { PopulateUI } from "../../../lib/types/test.ts";
 
 type UseTestUiResult = {
     systemPrompt: string;

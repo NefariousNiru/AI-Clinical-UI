@@ -1,6 +1,6 @@
 // file: src/pages/shared/feedback/OutputPanel.tsx
 
-import type { TestSubmission } from "../../../lib/types/adminTest.ts";
+import type { TestSubmission } from "../../../lib/types/test.ts";
 import type { ProblemFeedbackList } from "../../../lib/types/feedback.ts";
 import ProblemFeedbackView from "./ProblemFeedbackView.tsx";
 
