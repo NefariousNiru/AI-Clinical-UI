@@ -7,6 +7,7 @@ export const AUTH_LOGOUT = "/api/v1/public/auth/logout";
 // Shared user endpoints
 export const ME = "/api/v1/shared/user/me";
 export const PROFILE = "/api/v1/shared/user/profile";
+export const SHARED_MRP_TOOL = "/api/v1/shared/settings/mrp_tool_status"
 
 // Admin Endpoints
 export const ADMIN_TEST_POPULATE_UI = "/api/v1/admin/test/populate_ui";

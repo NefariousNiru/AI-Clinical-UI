@@ -26,3 +26,22 @@ export function capitalizeFirst(str: string): string {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+/**
+ * Download JSON by passing a JSON string and filename
+ * @param jsonString The JSON String
+ * @param filename The filename of the file
+*/
+export function downloadJSON(jsonString: string, filename: string) {
+    const blob = new Blob([jsonString], {
+        type: "application/json;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename.trim() || "submission.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}

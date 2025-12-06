@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import PromptEditor from "./PromptEditor";
-import OutputPanel from "./OutputPanel";
+import OutputPanel from "../../shared/feedback/OutputPanel.tsx";
 import SubmissionList from "./SubmissionList";
 import SubmissionViewer from "./SubmissionViewer";
 
@@ -17,6 +17,8 @@ import { ApiError } from "../../../lib/api/http";
 // import { saveSession } from "../../../lib/localSession";
 import * as React from "react";
 import { BrainCircuit } from "lucide-react";
+import {saveSession} from "../../../lib/localSession.ts";
+import LocalSessionsModal from "./LocalSessionsModal.tsx";
 
 /**
  * Normalize errors for this page into a user-facing string.
@@ -62,6 +64,9 @@ export default function TestsPage() {
 
     // 5) Local save status
     const [saveMsg, setSaveMsg] = useState<string>("");
+
+    // 6) Local Modal to view sessions
+    const [localModalOpen, setLocalModalOpen] = useState(false);
 
     const [gradedSubmission, setGradedSubmission] =
         useState<TestSubmission | null>(null);
@@ -156,16 +161,16 @@ export default function TestsPage() {
             return;
         }
 
-        // const sub = gradedSubmission as TestSubmission;
-        // const fb = feedback as ProblemFeedback[];
+        const sub = gradedSubmission as TestSubmission;
+        const fb = feedback as ProblemFeedback[];
 
-        // saveSession({
-        //     model: selectedModel,
-        //     systemPrompt,
-        //     submissionId: sub.id,
-        //     submission: sub,
-        //     feedback: fb,
-        // });
+        saveSession({
+            model: selectedModel,
+            systemPrompt,
+            submissionId: sub.id,
+            submission: sub,
+            feedback: fb,
+        });
 
         setSaveMsg("Saved ✓");
         window.setTimeout(() => setSaveMsg(""), 1500);
@@ -227,6 +232,18 @@ export default function TestsPage() {
                                 ].join(" ")}
                             >
                                 Save local
+                            </button>
+
+                            {/* View Local */}
+                            <button
+                                type="button"
+                                onClick={() => setLocalModalOpen(true)}
+                                className={[
+                                    "h-10 rounded-md px-4 text-sm font-medium border border-subtle bg-surface",
+                                    "hover:bg-surface-subtle",
+                                ].join(" ")}
+                            >
+                                View local
                             </button>
                         </div>
                     </div>
@@ -315,6 +332,12 @@ export default function TestsPage() {
                 open={viewerOpen}
                 submission={viewerData}
                 onClose={() => setViewerOpen(false)}
+            />
+
+            {/* Local sessions modal */}
+            <LocalSessionsModal
+                open={localModalOpen}
+                onClose={() => setLocalModalOpen(false)}
             />
         </div>
     );

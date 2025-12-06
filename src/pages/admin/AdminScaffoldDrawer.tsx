@@ -11,6 +11,9 @@ type AdminScaffoldDrawerProps = {
   onOpenSettings?: () => void;
 };
 
+/**
+ * This is a hamburger menu used on mobile
+ * */
 export function AdminScaffoldDrawer({
   open,
   onClose,

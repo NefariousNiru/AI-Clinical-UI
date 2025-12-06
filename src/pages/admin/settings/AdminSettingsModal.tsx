@@ -4,9 +4,11 @@ import {type JSX, useEffect, useState} from "react";
 import type {UserProfile} from "../../../lib/types/user";
 import SettingsModalShared from "../../shared/SettingsModalShared.tsx";
 import {
-    fetchMrpToolStatus,
     toggleMrpToolStatus,
 } from "../../../lib/api/admin/settings";
+import {
+    fetchMrpToolStatus
+} from "../../../lib/api/shared/settings.ts";
 
 type SettingsModalProps = {
     open: boolean;

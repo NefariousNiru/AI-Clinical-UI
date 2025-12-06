@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import hljs from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
 import "highlight.js/styles/atom-one-dark-reasonable.css";
+import {downloadJSON} from "../../../lib/functions.ts";
 
 hljs.registerLanguage("json", json);
 
@@ -50,17 +51,8 @@ export default function JsonPanel({
     }
 
     function handleDownload(): void {
-        const blob = new Blob([pretty], {
-            type: "application/json;charset=utf-8",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename.trim() || "submission.json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        let name: string = filename.trim() || "submission.json"
+        downloadJSON(pretty, name)
     }
 
     return (

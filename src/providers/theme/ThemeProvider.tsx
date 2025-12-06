@@ -1,12 +1,13 @@
 // file: src/providers/theme/ThemeProvider.tsx
 import { type ReactNode, useEffect, useState } from "react";
 import { ThemeContext, type Theme } from "./themeContext";
+import {LOCAL_STORAGE_THEME_KEY} from "../../lib/constants/localStorageKeys.ts";
 
 type ThemeProviderProps = {
   children: ReactNode;
 };
 
-const STORAGE_KEY = "aiClinicalUI:theme";
+const STORAGE_KEY = LOCAL_STORAGE_THEME_KEY
 
 function getInitialTheme(): Theme {
   // 1) LocalStorage wins if present

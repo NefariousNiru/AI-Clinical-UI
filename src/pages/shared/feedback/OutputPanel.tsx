@@ -1,7 +1,7 @@
-// file: src/routes/admin/OutputPanel.tsx
+// file: src/pages/shared/feedback/OutputPanel.tsx
 
-import type { TestSubmission } from "../../../lib/types/adminTest";
-import type { ProblemFeedbackList } from "../../../lib/types/feedback";
+import type { TestSubmission } from "../../../lib/types/adminTest.ts";
+import type { ProblemFeedbackList } from "../../../lib/types/feedback.ts";
 import ProblemFeedbackView from "./ProblemFeedbackView.tsx";
 
 type OutputPanelProps = {

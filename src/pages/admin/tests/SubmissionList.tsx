@@ -1,4 +1,4 @@
-// src/routes/admin/SubmissionList.tsx
+// file: src/pages/admin/SubmissionList.tsx
 import {useState} from "react";
 import {ChevronLeft, ChevronRight} from "lucide-react";
 
