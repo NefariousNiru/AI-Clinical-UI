@@ -17,3 +17,12 @@ export function titleize(input: string): string {
         .map((part) => part[0]?.toUpperCase() + part.slice(1))
         .join(" ");
 }
+
+/**
+ * Capitalise first letter
+ * @param str
+ */
+export function capitalizeFirst(str: string): string {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
