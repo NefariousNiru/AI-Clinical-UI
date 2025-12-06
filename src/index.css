@@ -52,6 +52,7 @@ body {
     /* SECONDARY ACCENT (moved blue here) */
     --color-secondary: #6366f1;       /* indigo-500 */
     --color-secondary-soft: #e0e7ff;  /* indigo-100 */
+    --color-secondary-soft-alt: #eef2ff;   /* lighter indigo with text as indigo */
     --color-secondary-border: #818cf8;/* indigo-400 */
 
     /* DANGER (kept for errors only) */
@@ -135,6 +136,10 @@ body {
 
 .bg-secondary-soft {
     background-color: var(--color-secondary-soft);
+}
+
+.bg-secondary-soft-alt {
+    background-color: var(--color-secondary-soft-alt);
 }
 
 /* inputs */
