@@ -1,6 +1,6 @@
 // file: src/pages/admin/tests/LocalSessionsModal.tsx
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import Modal from "../../../components/Modal";
 import {
     getAllSessions,
@@ -34,6 +34,7 @@ export default function LocalSessionsModal({
             const list = getAllSessions();
             setSessions(Array.isArray(list) ? list : []);
         }
+
         load();
         const handler = () => load();
         window.addEventListener("local-sessions:changed", handler);
@@ -98,15 +99,15 @@ export default function LocalSessionsModal({
                                                     }
                                                 >
                                                     <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-muted">
-                              • {timeLabel(s.createdAt)}
-                            </span>
+                                                        <span className="text-[11px] text-muted">
+                                                          • {timeLabel(s.createdAt)}
+                                                        </span>
                                                     </div>
                                                     <div className="mt-1 text-[11px] text-muted">
                                                         Model:{" "}
                                                         <span className="font-medium text-primary">
-                              {s.model}
-                            </span>{" "}
+                                                          {s.model}
+                                                        </span>{" "}
                                                         • Submission #{s.submissionId}
                                                     </div>
                                                 </button>
@@ -148,8 +149,8 @@ export default function LocalSessionsModal({
                                 <div className="rounded-md border border-subtle bg-surface-subtle p-3">
                                     <div className="text-xs font-medium mb-1">System prompt</div>
                                     <pre className="whitespace-pre-wrap break-words text-xs text-primary">
-                    {selectedSession.systemPrompt}
-                  </pre>
+                                        {selectedSession.systemPrompt}
+                                    </pre>
                                 </div>
 
                                 <div className="rounded-md border border-accent-soft bg-accent-soft/40 p-3">
@@ -157,7 +158,7 @@ export default function LocalSessionsModal({
                                         Output (feedback)
                                     </div>
                                     <div className="max-h-[40vh] overflow-auto">
-                                        <ProblemFeedbackView data={selectedSession.feedback} />
+                                        <ProblemFeedbackView data={selectedSession.feedback}/>
                                     </div>
                                 </div>
                             </>

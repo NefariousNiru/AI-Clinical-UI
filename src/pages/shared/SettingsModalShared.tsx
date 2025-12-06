@@ -1,12 +1,12 @@
 // file: src/pages/shared/SettingsModalShared.tsx
 
-import { useEffect, useState, type ReactNode } from "react";
+import {type ReactNode, useState} from "react";
 import Modal from "../../components/Modal";
-import { logout } from "../../lib/api/public/auth";
-import { userProfile } from "../../lib/api/shared/user";
-import type { UserProfile } from "../../lib/types/user";
-import {Flag, LogOut} from 'lucide-react';
-import {capitalizeFirst} from "../../lib/functions.ts";
+import {logout} from "../../lib/api/public/auth";
+import type {UserProfile} from "../../lib/types/user";
+import {Flag, LogOut} from "lucide-react";
+import {capitalizeFirst} from "../../lib/functions";
+import {useSettingsProfile} from "./hooks/settings";
 
 type SharedSettingsModalProps = {
     open: boolean;
@@ -26,39 +26,9 @@ export default function SettingsModalShared({
                                                 renderExtraSections,
                                             }: SharedSettingsModalProps) {
     const [busyLogout, setBusyLogout] = useState(false);
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [loadingProfile, setLoadingProfile] = useState(false);
-    const [profileError, setProfileError] = useState<string | null>(null);
 
-    // Fetch user profile when modal first opens
-    useEffect(() => {
-        if (!open) return;
-
-        let cancelled = false;
-        setLoadingProfile(true);
-        setProfileError(null);
-
-        userProfile()
-            .then((p) => {
-                if (!cancelled) {
-                    setProfile(p);
-                }
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setProfileError("Could not load profile");
-                }
-            })
-            .finally(() => {
-                if (!cancelled) {
-                    setLoadingProfile(false);
-                }
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [open]);
+    // Centralized profile fetch logic
+    const {profile, loading, error} = useSettingsProfile(open);
 
     async function handleLogout() {
         if (busyLogout) return;
@@ -86,30 +56,26 @@ export default function SettingsModalShared({
                         Account
                     </h2>
 
-                    {loadingProfile && (
-                        <p className="text-muted">Loading profile…</p>
-                    )}
+                    {loading && <p className="text-muted">Loading profile…</p>}
 
-                    {!loadingProfile && profile && (
+                    {!loading && profile && (
                         <div className="rounded-lg border border-subtle bg-surface-subtle px-3 py-2">
-                            <div className="font-medium text-primary">
-                                {profile.name}
-                            </div>
+                            <div className="font-medium text-primary">{profile.name}</div>
                             <div className="text-xs text-muted">{profile.email}</div>
-                            <div className="mt-2 inline-flex items-center rounded-full border border-subtle bg-secondary text-on-secondary px-2 py-0.5 text-[11px] text-muted">
+                            <div
+                                className="mt-2 inline-flex items-center rounded-full border border-subtle bg-secondary text-on-secondary px-2 py-0.5 text-[11px]">
                                 Role: {capitalizeFirst(profile.role)}
                             </div>
                         </div>
                     )}
 
-                    {!loadingProfile && profileError && (
-                        <p className="text-xs text-danger">{profileError}</p>
+                    {!loading && error && (
+                        <p className="text-xs text-danger">{error}</p>
                     )}
                 </section>
 
-                {/* Role- / feature-specific extra sections (e.g., admin-only card) */}
-                {renderExtraSections?.(profile)}
-
+                {/* Role-/feature-specific extra sections (e.g., admin-only card) */}
+                {renderExtraSections?.(profile ?? null)}
 
                 {/* Actions section: complaints + logout */}
                 <section className="space-y-2">
@@ -128,7 +94,9 @@ export default function SettingsModalShared({
                             className="inline-flex flex-1 items-center justify-center rounded-4xl bg-secondary text-on-secondary px-3 py-2 text-xs font-medium"
                         >
                             Complaints?
-                            <span><Flag className="px-1"></Flag></span>
+                            <span>
+                <Flag className="px-1"/>
+              </span>
                         </button>
 
                         <button
@@ -138,7 +106,9 @@ export default function SettingsModalShared({
                             className="inline-flex flex-1 items-center justify-center rounded-4xl border border-subtle bg-surface px-3 py-2 text-xs font-medium text-primary hover:bg-surface disabled:opacity-60"
                         >
                             {busyLogout ? "Logging out…" : "Logout"}
-                            <span><LogOut className="px-1"></LogOut></span>
+                            <span>
+                <LogOut className="px-1"/>
+              </span>
                         </button>
                     </div>
                 </section>

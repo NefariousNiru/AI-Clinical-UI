@@ -43,11 +43,19 @@ export default function PromptEditor({
                 focus-visible:outline-none
             "
             aria-describedby={helpTextId}
+            onKeyDown={(ev) => {
+            if ((ev.ctrlKey || ev.metaKey) && ev.key === "Enter" && !sending) {
+                ev.preventDefault();
+                onSend();
+            }
+        }}
         />
 
             <button
                 type="button"
-                onClick={onSend}
+                onClick={() => {
+                    if (!sending) onSend();
+                }}
                 disabled={sending}
                 className="
                 absolute

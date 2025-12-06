@@ -1,34 +1,33 @@
 // file: src/pages/admin/tests/TestsPage.tsx
 
-import { useMemo, useState } from "react";
+import {useMemo, useState} from "react";
 import PromptEditor from "./PromptEditor";
-import OutputPanel from "../../shared/feedback/OutputPanel.tsx";
+import OutputPanel from "../../shared/feedback/OutputPanel";
 import SubmissionList from "./SubmissionList";
 import SubmissionViewer from "./SubmissionViewer";
 
-import { useSubmissions } from "../hooks/useSubmissions";
-import { useTestUI } from "../hooks/useTestUI.ts";
+import {
+    useTestSubmissions,
+    useTestUI,
+    useTestGrader,
+} from "../hooks/tests";
 
-import type { ProblemFeedback } from "../../../lib/types/feedback";
-import type { TestSubmission } from "../../../lib/types/test.ts";
+import type {ProblemFeedback} from "../../../lib/types/feedback";
+import type {TestSubmission} from "../../../lib/types/test";
 
-import { chat } from "../../../lib/api/admin/test";
-import { ApiError } from "../../../lib/api/http";
-// import { saveSession } from "../../../lib/localSession";
 import * as React from "react";
-import { BrainCircuit } from "lucide-react";
-import {saveSession} from "../../../lib/localSession.ts";
-import LocalSessionsModal from "./LocalSessionsModal.tsx";
+import {BrainCircuit} from "lucide-react";
+import {saveSession} from "../../../lib/localSession";
+import LocalSessionsModal from "./LocalSessionsModal";
 
 /**
- * Normalize errors for this page into a user-facing string.
+ * Admin Tests Page
+ *
+ * - Config UI (system prompt, models) via useTestUI
+ * - Paginated submissions via useTestSubmissions
+ * - Grading flow via useTestGrader
+ * - Local session save/view via localSession helpers + LocalSessionsModal
  */
-function errorMessage(e: unknown): string {
-    if (e instanceof ApiError) return e.message || "Request failed.";
-    if (e instanceof Error) return e.message || "Request failed.";
-    return "Request failed.";
-}
-
 export default function TestsPage() {
     // 1) UI config from /api/v1/admin/test/populate_ui
     const {
@@ -49,7 +48,7 @@ export default function TestsPage() {
         limit,
         loading: loadingSubs,
         setPage,
-    } = useSubmissions(1, 10);
+    } = useTestSubmissions(1, 10);
 
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -57,23 +56,24 @@ export default function TestsPage() {
     const [viewerOpen, setViewerOpen] = useState<boolean>(false);
     const [viewerData, setViewerData] = useState<TestSubmission | null>(null);
 
-    // 4) Grading output
-    const [feedback, setFeedback] = useState<ProblemFeedback[] | null>(null);
-    const [outputMsg, setOutputMsg] = useState<string>("");
-    const [sending, setSending] = useState<boolean>(false);
+    // 4) Grading hook (owns feedback/outputMsg/sending/gradedSubmission)
+    const {
+        sending,
+        feedback,
+        outputMsg,
+        gradedSubmission,
+        grade,
+    } = useTestGrader();
 
     // 5) Local save status
     const [saveMsg, setSaveMsg] = useState<string>("");
 
-    // 6) Local Modal to view sessions
+    // 6) Local sessions modal
     const [localModalOpen, setLocalModalOpen] = useState(false);
-
-    const [gradedSubmission, setGradedSubmission] =
-        useState<TestSubmission | null>(null);
 
     const modelsUnavailable = modelNames.length === 0;
 
-    // 6) Adapt submissions for the sidebar list
+    // Adapt submissions for the sidebar list
     const listItems = useMemo(
         () =>
             subs.map((s: TestSubmission) => ({
@@ -84,80 +84,55 @@ export default function TestsPage() {
         [subs],
     );
 
-    // 7) Grade current selection
+    // Grade current selection (delegates to useTestGrader)
     async function handleSend(): Promise<void> {
         const sub: TestSubmission | undefined =
             selectedId != null
                 ? subs.find((s: TestSubmission) => s.id === selectedId)
                 : undefined;
 
-        if (!sub) {
-            setFeedback(null);
-            setOutputMsg(
-                "Select a submission from the list on the right, then press Send.",
-            );
-            return;
-        }
-
-        if (!selectedModel) {
-            setFeedback(null);
-            setOutputMsg("No model selected.");
-            return;
-        }
-
-        setSending(true);
-        setFeedback(null);
-        setOutputMsg("Processing…");
-        setGradedSubmission(sub);
-
-        try {
-            const resp = await chat({
-                testSubmission: sub,
-                systemPrompt,
-                modelName: selectedModel,
-            });
-
-            setFeedback(resp.results);
-            setOutputMsg("");
-        } catch (e: unknown) {
-            setFeedback(null);
-            setOutputMsg(errorMessage(e));
-        } finally {
-            setSending(false);
-        }
+        await grade({
+            submission: sub ?? null,
+            systemPrompt,
+            modelName: selectedModel,
+        });
     }
 
-    // 8) Save-guard
+    // Save-guard
     function canSave():
         | { ok: true }
         | { ok: false; reason: string } {
         if (!systemPrompt.trim()) {
-            return { ok: false, reason: "System prompt is empty." };
+            return {ok: false, reason: "System prompt is empty."};
         }
         if (selectedId == null) {
-            return { ok: false, reason: "No submission selected." };
+            return {ok: false, reason: "No submission selected."};
         }
         if (!Array.isArray(feedback) || feedback.length === 0) {
-            return { ok: false, reason: "No output to save." };
+            return {ok: false, reason: "No output to save."};
         }
         if (gradedSubmission == null) {
-            return { ok: false, reason: "No graded submission context." };
+            return {ok: false, reason: "No graded submission context."};
         }
-        return { ok: true };
+        return {ok: true};
     }
 
-    // 9) Save current run locally
+    // Save current run locally
     function handleSaveLocal(): void {
         if (modelsUnavailable) {
-            setFeedback(null);
-            setOutputMsg("No models available.");
+            // reuse output panel for this message
+            // note: we don't touch feedback here
+            // eslint-disable-next-line no-console
+            setSaveMsg("Cannot save: no models available.")
+            window.setTimeout(() => setSaveMsg(""), 5000);
+            console.log("[TestsPage] Cannot save: no models available.");
             return;
         }
 
         const v = canSave();
         if (!v.ok) {
             setSaveMsg(v.reason);
-            window.setTimeout(() => setSaveMsg(""), 5000)
+            window.setTimeout(() => setSaveMsg(""), 5000);
             return;
         }
 
@@ -188,11 +163,11 @@ export default function TestsPage() {
                             <h1 className="text-xl font-semibold">System Prompt</h1>
                         </div>
 
-                        {/* Actions: model select + save local */}
+                        {/* Actions: model select + save local + view local */}
                         <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
                             {/* Model select */}
                             <label className="flex items-center gap-2 text-sm font-medium text-primary">
-                                <BrainCircuit className="h-4 w-4" aria-hidden="true" />
+                                <BrainCircuit className="h-4 w-4" aria-hidden="true"/>
                                 <span>Model:</span>
                                 <div className="relative">
                                     <select
@@ -271,7 +246,6 @@ export default function TestsPage() {
                     </div>
                 </header>
 
-
                 <PromptEditor
                     value={systemPrompt}
                     onChange={setSystemPrompt}
@@ -289,7 +263,8 @@ export default function TestsPage() {
             {/* Sidebar */}
             <aside
                 aria-label="Test Submissions list"
-                className="col-span-12 xl:col-span-2 xl:pr-0">
+                className="col-span-12 xl:col-span-2 xl:pr-0"
+            >
                 <div className="xl:sticky xl:top-16">
                     <SubmissionList
                         items={listItems}

@@ -26,7 +26,7 @@ import {LoginRequest} from "../../lib/types/auth";
 import {me} from "../../lib/api/shared/user";
 import type {MeResponse} from "../../lib/types/user";
 import {Info, KeyRound, LucideRectangleEllipsis, LucideMail} from "lucide-react";
-
+import {useBootstrapUserRole} from "./hooks/auth";
 
 type LocationState = { from?: string };
 type FieldErrors = { email?: string; password?: string; form?: string };
@@ -43,21 +43,16 @@ export default function LoginPage() {
     const [errors, setErrors] = useState<FieldErrors>({});
     const [loading, setLoading] = useState<boolean>(false);
 
-    // 1) If already signed in, route by role
+    // 1) If already signed in, route by role (shared hook with AutoHome)
+    const {status: bootstrapStatus, role: bootstrapRole} = useBootstrapUserRole();
+
     useEffect(() => {
-        let alive = true;
-        me()
-            .then((u: MeResponse) => {
-                if (!alive) return;
-                nav(u.role === "admin" ? "/admin" : "/student", {replace: true});
-            })
-            .catch(() => {
-                // ignore 401 on first load
-            });
-        return () => {
-            alive = false;
-        };
-    }, [nav]);
+        if (bootstrapStatus === "success" && bootstrapRole) {
+            const dest = bootstrapRole === "admin" ? "/admin" : "/student";
+            nav(dest, {replace: true});
+        }
+        // On "error" we do nothing: user stays on login page.
+    }, [bootstrapStatus, bootstrapRole, nav]);
 
     // 2) Clear a single field error on change
     function clearFieldError(field: keyof FieldErrors) {
@@ -128,7 +123,7 @@ export default function LoginPage() {
                     className="w-full max-w-[440px] rounded-2xl border border-subtle bg-surface-subtle shadow-sm"
                 >
                     <div className="border-b border-subtle px-5 py-3 text-base font-semibold flex items-center gap-2">
-                        <KeyRound className="h-4 w-4" />
+                        <KeyRound className="h-4 w-4"/>
                         <span>Sign in</span>
                     </div>
 
@@ -255,9 +250,9 @@ export default function LoginPage() {
                         <div className="flex items-start text-[11px] text-muted">
                             <Info className="mr-1 h-5 w-5 mt-[1px]" aria-hidden="true"/>
                             <span>
-                                This site uses session cookies; signing in
-                                implies consent to store a session on this device.
-                            </span>
+                This site uses session cookies; signing in
+                implies consent to store a session on this device.
+              </span>
                         </div>
                     </div>
                 </form>
