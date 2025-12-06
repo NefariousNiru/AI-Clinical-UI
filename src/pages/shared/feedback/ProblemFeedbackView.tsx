@@ -192,9 +192,9 @@ function ProblemTile({ idx, feedback, studentProblem }: ProblemTileProps) {
 
                 <div className="ml-3 flex items-center gap-2">
                     {feedback.isPriority && (
-                        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">
-              Priority
-            </span>
+                        <span className="inline-flex items-center rounded-md bg-secondary px-3 m-2 py-0.5 text-xs font-medium text-on-secondary">
+                          Priority
+                        </span>
                     )}
 
                     <button
