@@ -4,6 +4,8 @@ import {useEffect, useState} from "react";
 import {useNavigate, useLocation} from "react-router-dom";
 import {me} from "../../../lib/api/shared/user";
 import type {MeResponse, Role} from "../../../lib/types/user";
+import {activateAccount} from "../../../lib/api/public/auth";
+import type {UserActivationRequest} from "../../../lib/types/auth";
 
 export type BootstrapStatus = "idle" | "loading" | "success" | "error";
 
@@ -122,4 +124,48 @@ export function useAuthGuard(allowedRoles?: Role[]): UseAuthGuardResult {
     }, [loc.pathname, nav, JSON.stringify(allowedRoles)]);
 
     return {loading, me: currentUser};
+}
+
+/* ------------------------------------------------------------------ */
+/* Account activation hook                                            */
+/* ------------------------------------------------------------------ */
+
+type UseAccountActivationResult = {
+    loading: boolean;
+    error: string | null;
+    success: boolean;
+    activate: (payload: UserActivationRequest) => Promise<void>;
+};
+
+/**
+ * Account activation hook.
+ *
+ * - Wraps `POST /api/v1/public/auth/activate/account`.
+ * - Uses the shared `http` client through `activateAccount`.
+ */
+export function useAccountActivation(): UseAccountActivationResult {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+
+    const activate = async (payload: UserActivationRequest) => {
+        setLoading(true);
+        setError(null);
+        setSuccess(false);
+
+        try {
+            await activateAccount(payload);
+            setSuccess(true);
+        } catch (err) {
+            const msg =
+                err instanceof Error && err.message.trim()
+                    ? err.message
+                    : "Failed to activate account. Contact support";
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return {loading, error, success, activate};
 }

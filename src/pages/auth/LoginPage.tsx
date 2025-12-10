@@ -25,7 +25,7 @@ import {login} from "../../lib/api/public/auth";
 import {LoginRequest} from "../../lib/types/auth";
 import {me} from "../../lib/api/shared/user";
 import type {MeResponse} from "../../lib/types/user";
-import {Info, KeyRound, LucideRectangleEllipsis, LucideMail} from "lucide-react";
+import {Info, KeyRound, LucideRectangleEllipsis, LucideMail, Bot, Eye, EyeOff} from "lucide-react";
 import {useBootstrapUserRole} from "./hooks/auth";
 
 type LocationState = { from?: string };
@@ -42,6 +42,7 @@ export default function LoginPage() {
     const [triedSubmit, setTriedSubmit] = useState<boolean>(false);
     const [errors, setErrors] = useState<FieldErrors>({});
     const [loading, setLoading] = useState<boolean>(false);
+    const [showPassword, setShowPassword] = useState<boolean>(false);
 
     // 1) If already signed in, route by role (shared hook with AutoHome)
     const {status: bootstrapStatus, role: bootstrapRole} = useBootstrapUserRole();
@@ -122,7 +123,12 @@ export default function LoginPage() {
                     noValidate
                     className="w-full max-w-[440px] rounded-2xl border border-subtle bg-surface-subtle shadow-sm"
                 >
-                    <div className="border-b border-subtle px-5 py-3 text-base font-semibold flex items-center gap-2">
+                    <div className="px-5 py-3 text-base font-semibold flex items-center gap-2">
+                        <Bot className="h-4 w-4"/>
+                        <span>Welcome to AI Clinical</span>
+                    </div>
+
+                    <div className="border-t border-subtle px-5 py-3 text-base font-light flex items-center gap-2">
                         <KeyRound className="h-4 w-4"/>
                         <span>Sign in</span>
                     </div>
@@ -180,38 +186,48 @@ export default function LoginPage() {
                                 htmlFor="password"
                                 className="flex items-center gap-1 text-sm text-primary"
                             >
-                                <LucideRectangleEllipsis
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                />
+                                <LucideRectangleEllipsis className="h-4 w-4" aria-hidden="true"/>
                                 <span>Password</span>
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(ev) => {
-                                    setPassword(ev.target.value);
-                                    if (errors.password) clearFieldError("password");
-                                }}
-                                className={[
-                                    "w-full rounded-md border bg-input px-3 py-2 text-base",
-                                    "focus:outline-none focus:ring-1",
-                                    errors.password ? "border-danger" : "border-subtle",
-                                ].join(" ")}
-                                placeholder="Password"
-                                aria-invalid={!!errors.password}
-                                aria-describedby={
-                                    errors.password ? "password-error" : undefined
-                                }
-                                required
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(ev) => {
+                                        setPassword(ev.target.value);
+                                        if (errors.password) clearFieldError("password");
+                                    }}
+                                    className={[
+                                        "w-full rounded-md border bg-input px-3 py-2 pr-10 text-base",
+                                        "focus:outline-none focus:ring-1",
+                                        errors.password ? "border-danger" : "border-subtle",
+                                    ].join(" ")}
+                                    placeholder="Password"
+                                    aria-invalid={!!errors.password}
+                                    aria-describedby={errors.password ? "password-error" : undefined}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted hover:text-primary"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4" aria-hidden="true"/>
+                                    ) : (
+                                        <Eye className="h-4 w-4" aria-hidden="true"/>
+                                    )}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <p id="password-error" className="text-xs text-danger">
                                     {errors.password}
                                 </p>
                             )}
                         </div>
+
 
                         {/* Consent checkbox (controlled; show hint only after a failed submit) */}
                         <div className="flex items-start gap-2">

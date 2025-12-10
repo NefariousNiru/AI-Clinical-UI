@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { Menu, Moon, SunMedium, Settings2 } from "lucide-react";
 import { useTheme } from "../providers/theme/useTheme";
+import CompanyLogo from "./CompanyLogo.tsx";
 
 type HeaderProps = {
     title: string;
@@ -37,6 +38,7 @@ export default function Header({
                 {/* Left: title (mobile: flex-1 so hamburger is pushed right) */}
                 <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none">
                     {left ? <div className="shrink-0">{left}</div> : null}
+                    <CompanyLogo size={20} />
                     <div className="font-semibold truncate">{title}</div>
                 </div>
 
