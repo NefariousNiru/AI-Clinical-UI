@@ -1,6 +1,6 @@
 // file: src/lib/types/auth.ts
 
-import { z } from "zod";
+import {z} from "zod";
 
 /**
  * UGA-only email + strong password for login.
@@ -9,8 +9,8 @@ import { z } from "zod";
 export const LoginRequest = z.object({
     email: z
         .string()
-        .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, { message: "Invalid email format" })
-        .endsWith("@uga.edu", { message: "Email must end with @uga.edu" }),
+        .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {message: "Invalid email format"})
+        .endsWith("@uga.edu", {message: "Email must end with @uga.edu"}),
     password: z
         .string()
         .min(8, "Password must be at least 8 characters long")
@@ -45,3 +45,16 @@ export const UserActivationRequest = z.object({
 });
 
 export type UserActivationRequest = z.infer<typeof UserActivationRequest>;
+
+
+/**
+ * Enrollment activation: token only.
+ * Mirrors backend `ActivationToken` for enrollment endpoint.
+ */
+export const EnrollmentActivationRequest = z.object({
+    token: z.string().min(1, "Missing activation token"),
+});
+
+export type EnrollmentActivationRequest = z.infer<
+    typeof EnrollmentActivationRequest
+>;

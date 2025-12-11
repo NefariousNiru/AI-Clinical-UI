@@ -4,8 +4,8 @@ import {useEffect, useState} from "react";
 import {useNavigate, useLocation} from "react-router-dom";
 import {me} from "../../../lib/api/shared/user";
 import type {MeResponse, Role} from "../../../lib/types/user";
-import {activateAccount} from "../../../lib/api/public/auth";
-import type {UserActivationRequest} from "../../../lib/types/auth";
+import {activateAccount, activateEnrollment} from "../../../lib/api/public/auth";
+import type {EnrollmentActivationRequest, UserActivationRequest} from "../../../lib/types/auth";
 
 export type BootstrapStatus = "idle" | "loading" | "success" | "error";
 
@@ -168,4 +168,49 @@ export function useAccountActivation(): UseAccountActivationResult {
     };
 
     return {loading, error, success, activate};
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Enrollment activation hook                                         */
+/* ------------------------------------------------------------------ */
+
+type UseEnrollmentActivationResult = {
+    loading: boolean;
+    error: string | null;
+    success: boolean;
+    activate: (payload: EnrollmentActivationRequest) => Promise<void>;
+};
+
+/**
+ * Enrollment activation hook.
+ *
+ * - Wraps `POST /api/v1/public/auth/activate/enrollment`.
+ * - Does not navigate; caller decides what to do on success.
+ */
+export function useEnrollmentActivation(): UseEnrollmentActivationResult {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+
+    const activate = async (payload: EnrollmentActivationRequest) => {
+        setLoading(true);
+        setError(null);
+        setSuccess(false);
+
+        try {
+            await activateEnrollment(payload);
+            setSuccess(true);
+        } catch (err) {
+            const msg =
+                err instanceof Error && err.message.trim()
+                    ? err.message
+                    : "Failed to enroll in semester. Contact support";
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { loading, error, success, activate };
 }

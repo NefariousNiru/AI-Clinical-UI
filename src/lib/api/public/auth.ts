@@ -1,8 +1,10 @@
 // file: src/lib/api/public/auth.ts
 
 import {http} from "../http";
-import {AUTH_ACCOUNT_ACTIVATE, AUTH_LOGIN, AUTH_LOGOUT} from "../../constants/urls";
+import {AUTH_ACCOUNT_ACTIVATE, AUTH_ENROLLMENT_ACTIVATE, AUTH_LOGIN, AUTH_LOGOUT} from "../../constants/urls";
 import {
+    EnrollmentActivationRequest as EnrollmentActivationRequestSchema,
+    type EnrollmentActivationRequest,
     LoginRequest as LoginRequestSchema,
     type LoginRequest,
     UserActivationRequest as UserActivationRequestSchema,
@@ -40,5 +42,19 @@ export async function activateAccount(
 ): Promise<{ ok: boolean }> {
     const payload = UserActivationRequestSchema.parse(body);
     return http.post<{ ok: boolean }>(AUTH_ACCOUNT_ACTIVATE, payload);
+}
+
+
+/**
+ * POST /api/v1/public/auth/activate/enrollment
+ *
+ * Confirms semester enrollment and consent with `{ token }`.
+ * Backend returns a RedirectResponse, but from SPA we only care about success vs error.
+ */
+export async function activateEnrollment(
+    body: EnrollmentActivationRequest,
+): Promise<{ ok: boolean }> {
+    const payload = EnrollmentActivationRequestSchema.parse(body);
+    return await http.post<{ ok: boolean }>(AUTH_ENROLLMENT_ACTIVATE, payload);
 }
 

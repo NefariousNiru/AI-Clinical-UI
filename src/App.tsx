@@ -16,6 +16,7 @@ import WeeksPage from "./pages/admin/weeks/WeeksPage";
 import StatisticsPage from "./pages/admin/statistics/StatisticsPage";
 import SkipLink from "./components/SkipLink";
 import AccountActivationPage from "./pages/auth/AccountActivationPage.tsx";
+import EnrollmentActivationPage from "./pages/auth/EnrollmentActivationPage.tsx";
 
 
 const router = createBrowserRouter([
@@ -26,7 +27,13 @@ const router = createBrowserRouter([
     {
         path: "/auth",
         children: [
-            {path: "activate/account", element: <AccountActivationPage/>},
+            {
+                path: "activate",
+                children: [
+                    {path: "account", element: <AccountActivationPage/>},
+                    {path: "enrollment", element: <EnrollmentActivationPage/>},
+                ],
+            },
             {path: "login", element: <LoginPage/>}, // optional
         ],
     },
