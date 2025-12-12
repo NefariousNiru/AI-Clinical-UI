@@ -51,6 +51,7 @@ export default function SubmissionViewer({
                 { value: "formatted", label: "Formatted" },
                 { value: "json", label: "JSON" },
             ]}
+            fullWidth
         />
     );
 

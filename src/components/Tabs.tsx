@@ -6,24 +6,52 @@ type TabsProps = {
     value: string;
     onChange: (v: string) => void;
     items: TabItem[];
+    /**
+     * When true, tabs stretch to fill width on small screens,
+     * but revert to compact inline pill on md+.
+     */
+    fullWidth?: boolean;
 };
 
-/**
- * Simple controlled tabs.
- *
- * - Parent owns state.
- * - Uses semantic theme utilities.
- * - Accessible: role="tablist"/"tab", aria-selected, tabIndex.
- */
-export default function Tabs({ value, onChange, items }: TabsProps) {
+export default function Tabs({
+                                 value,
+                                 onChange,
+                                 items,
+                                 fullWidth = false,
+                             }: TabsProps) {
+    const rootClass = [
+        "rounded-full border border-subtle overflow-hidden bg-surface-subtle",
+        fullWidth
+            ? "flex w-full md:inline-flex md:w-auto"
+            : "inline-flex",
+    ]
+        .filter(Boolean)
+        .join(" ");
+
     return (
-        <div
-            className="inline-flex rounded-full border border-subtle bg-surface-subtle overflow-hidden"
-            role="tablist"
-            aria-label="View mode"
-        >
+        <div className={rootClass} role="tablist" aria-label="View mode">
             {items.map((t, index) => {
                 const active = value === t.value;
+
+                const sizeLayoutClasses = fullWidth
+                    ? "flex-1 py-1.5 text-xs font-medium text-center md:flex-none md:px-3"
+                    : "px-3 py-1.5 text-xs font-medium";
+
+                const borderClass =
+                    index > 0 ? "border-l border-subtle" : "";
+
+                const stateClass = active
+                    ? "bg-accent text-on-accent"
+                    : "bg-surface-subtle text-muted hover:text-primary hover:bg-surface";
+
+                const buttonClass = [
+                    sizeLayoutClasses,
+                    borderClass,
+                    stateClass,
+                ]
+                    .filter(Boolean)
+                    .join(" ");
+
                 return (
                     <button
                         key={t.value}
@@ -33,13 +61,7 @@ export default function Tabs({ value, onChange, items }: TabsProps) {
                         aria-controls={`tab-panel-${t.value}`}
                         tabIndex={active ? 0 : -1}
                         onClick={() => onChange(t.value)}
-                        className={[
-                            "px-3 py-1.5 text-xs font-medium",
-                            index > 0 ? "border-l border-subtle" : "",
-                            active
-                                ? "bg-accent text-on-accent"
-                                : "bg-surface-subtle text-muted hover:text-primary hover:bg-surface",
-                        ].join(" ")}
+                        className={buttonClass}
                     >
                         {t.label}
                     </button>

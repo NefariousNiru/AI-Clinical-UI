@@ -1,6 +1,6 @@
 // file: src/components/Modal.tsx
 
-import { useEffect, type ReactNode } from "react";
+import {useEffect, type ReactNode} from "react";
 
 type ModalProps = {
     open: boolean;
@@ -67,23 +67,49 @@ export default function Modal({
                 aria-labelledby={titleId}
             >
                 {hasHeader && (
-                    <header className="flex items-center justify-between border-b border-subtle px-5 py-3">
-                        <div
-                            id={titleId}
-                            className="text-sm font-semibold text-primary"
-                        >
-                            {title}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {headerRight}
-                            {onClose && (
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="h-8 rounded-md border border-subtle bg-surface-subtle px-3 text-sm text-primary hover:bg-surface"
+                    <header className="border-b border-subtle px-5 py-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Left side: title (+ Close on mobile) */}
+                            <div className="flex items-center justify-between gap-2 min-w-0 sm:block">
+                                <div
+                                    id={titleId}
+                                    className="text-sm font-semibold text-primary truncate"
                                 >
-                                    Close
-                                </button>
+                                    {title}
+                                </div>
+
+                                {/* Close button on mobile (next to title) */}
+                                {onClose && (
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="h-8 shrink-0 rounded-md border border-subtle bg-surface-subtle px-3 text-sm text-primary hover:bg-surface sm:hidden"
+                                    >
+                                        Close
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Right side: headerRight (tabs) + Close on desktop */}
+                            {(headerRight || onClose) && (
+                                <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
+                                    {headerRight && (
+                                        <div className="w-full sm:w-auto">
+                                            {headerRight}
+                                        </div>
+                                    )}
+
+                                    {/* Close button on desktop (after tabs) */}
+                                    {onClose && (
+                                        <button
+                                            type="button"
+                                            onClick={onClose}
+                                            className="hidden h-8 lshrink-0 rounded-md border border-subtle bg-surface-subtle px-3 text-sm text-primary hover:bg-surface sm:inline-flex sm:items-center sm:justify-center"
+                                        >
+                                            Close
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </header>

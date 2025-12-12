@@ -164,12 +164,15 @@ export default function TestsPage() {
                         </div>
 
                         {/* Actions: model select + save local + view local */}
-                        <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
-                            {/* Model select */}
-                            <label className="flex items-center gap-2 text-sm font-medium text-primary">
+                        {/* Actions: model select + save local + view local */}
+                        <div
+                            className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+                            {/* Line 1: Model select */}
+                            <label
+                                className="flex w-full items-center gap-2 text-sm font-medium text-primary md:w-auto">
                                 <BrainCircuit className="h-4 w-4" aria-hidden="true"/>
                                 <span>Model:</span>
-                                <div className="relative">
+                                <div className="relative flex-1 md:flex-none">
                                     <select
                                         value={selectedModel}
                                         onChange={(ev: React.ChangeEvent<HTMLSelectElement>) =>
@@ -177,7 +180,7 @@ export default function TestsPage() {
                                         }
                                         disabled={loadingUi || modelsUnavailable}
                                         className={[
-                                            "h-9 rounded-lg border border-secondary bg-input pl-3 pr-8 text-sm",
+                                            "h-9 w-full rounded-lg border border-secondary bg-input pl-3 pr-8 text-sm",
                                             "focus-visible:outline focus-visible:outline-offset-2",
                                         ].join(" ")}
                                         aria-label="Select model"
@@ -197,30 +200,32 @@ export default function TestsPage() {
                                 </div>
                             </label>
 
-                            {/* Save local */}
-                            <button
-                                type="button"
-                                onClick={handleSaveLocal}
-                                className={[
-                                    "h-10 rounded-md px-4 text-sm font-medium bg-accent text-on-accent",
-                                    "hover:opacity-90 disabled:opacity-60",
-                                ].join(" ")}
-                            >
-                                Save local
-                            </button>
+                            {/* Line 2: Save / View */}
+                            <div className="flex w-full gap-3 md:w-auto md:justify-end">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveLocal}
+                                    className={[
+                                        "h-10 flex-1 rounded-md px-4 text-sm font-medium bg-accent text-on-accent",
+                                        "hover:opacity-90 disabled:opacity-60 md:flex-none",
+                                    ].join(" ")}
+                                >
+                                    Save local
+                                </button>
 
-                            {/* View Local */}
-                            <button
-                                type="button"
-                                onClick={() => setLocalModalOpen(true)}
-                                className={[
-                                    "h-10 rounded-md px-4 text-sm font-medium border border-subtle bg-surface",
-                                    "hover:bg-surface-subtle",
-                                ].join(" ")}
-                            >
-                                View local
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLocalModalOpen(true)}
+                                    className={[
+                                        "h-10 flex-1 rounded-md px-4 text-sm font-medium border border-subtle bg-surface",
+                                        "hover:bg-surface-subtle md:flex-none",
+                                    ].join(" ")}
+                                >
+                                    View local
+                                </button>
+                            </div>
                         </div>
+
                     </div>
 
                     {/* Status / error messages: always below actions */}
