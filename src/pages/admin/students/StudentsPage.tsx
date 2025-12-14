@@ -4,35 +4,38 @@ import {useState} from "react";
 import SubHeader from "../../../components/SubHeader";
 import SemesterDropdown from "../SemesterDropdown";
 import Tabs from "../../../components/Tabs";
+import type {Semester} from "../../../lib/types/semester.ts";
+import StudentRosterTab from "./StudentRosterTab.tsx";
 
 type StudentTabKey = "roster" | "submissions";
 
-type StudentTabsProps = {
-    activeTab: StudentTabKey;
-    onChange: (next: StudentTabKey) => void;
-};
-
 export default function StudentsPage() {
     const [activeTab, setActiveTab] = useState<StudentTabKey>("roster");
+    const [semester, setSemester] = useState<Semester | null>(null); // <-- add
+
 
     return (
         <div className="flex flex-col gap-3">
             <SubHeader
-                sticky
                 title="Students"
                 description="Manage student roster, submissions and deadlines for the semester."
                 tabs={
-                    <StudentTabs
-                        activeTab={activeTab}
-                        onChange={setActiveTab}
+                    <Tabs
+                        value={activeTab}
+                        onChange={(v) => setActiveTab(v as StudentTabKey)}
+                        items={[
+                            {value: "roster", label: "Roster"},
+                            {value: "submissions", label: "Submissions & deadlines"},
+                        ]}
+                        fullWidth
                     />
                 }
-                right={<SemesterDropdown compact/>}
+                right={<SemesterDropdown compact onChange={setSemester}/>}
             />
 
-            <section className="rounded-lg border border-subtle bg-surface p-4">
+            <section className="py-4 px-2">
                 {activeTab === "roster" ? (
-                    <StudentRosterTab/>
+                    <StudentRosterTab semester={semester}/>
                 ) : (
                     <StudentSubmissionsTab/>
                 )}
@@ -42,35 +45,6 @@ export default function StudentsPage() {
 }
 
 /* ----------------- Page level tabs (reuse shared Tabs) ----------------- */
-
-function StudentTabs({activeTab, onChange}: StudentTabsProps) {
-    return (
-        <Tabs
-            value={activeTab}
-            onChange={(v) => onChange(v as StudentTabKey)}
-            items={[
-                {value: "roster", label: "Roster"},
-                {value: "submissions", label: "Submissions & deadlines"},
-            ]}
-            fullWidth
-        />
-    );
-}
-
-/* ----------------- Tab content placeholders ----------------- */
-
-function StudentRosterTab() {
-    return (
-        <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-primary">
-                Roster (placeholder)
-            </h2>
-            <p className="text-sm text-muted">
-                This area will show the student roster for the selected semester.
-            </p>
-        </div>
-    );
-}
 
 function StudentSubmissionsTab() {
     return (
