@@ -1,43 +1,139 @@
 // file: src/lib/api/admin/rubric.ts
 
-import { http } from "../http";
+import {z} from "zod";
+import {http} from "../http";
 import {
-    RubricSearchResponse as RubricSearchResponseSchema,
-    type RubricSearchResponse,
+    ADMIN_RUBRIC_BASE,
+    ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE,
+    ADMIN_RUBRIC_IDS,
+} from "../../constants/urls";
+import {
+    RubricResponseSchema,
+    RubricSearchResponseSchema,
+    type RubricDraft,
 } from "../../types/rubric";
-import { ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE } from "../../constants/urls";
 
 /**
- * GET /api/v1/admin/rubric/search
+ * Build a URL with query parameters.
  *
- * Autocomplete search for rubrics by disease text.
- *
- * Params:
- *   query: partial disease text (min 3 chars)
- *   limit: max results (hard-coded to 10 by caller, but configurable)
- *
- * Returns:
- *   Zod-validated RubricSearchResponse: { results: RubricSearchItem[] }
+ * NOTE:
+ * - Our `http` wrapper does NOT support `{ params }`
+ * - Query params must be encoded manually
  */
-export async function searchRubrics(
-    query: string,
-    limit = 10,
-): Promise<RubricSearchResponse> {
-    const trimmed = query.trim();
-
-    // Short-circuit for tiny queries so we don't spam the backend.
-    if (trimmed.length < 3) {
-        return { results: [] };
+function withQuery(
+    path: string,
+    params: Record<string, string | number | boolean | null | undefined>,
+): string {
+    const qs = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+        if (value === null || value === undefined) continue;
+        qs.set(key, String(value));
     }
+    const query = qs.toString();
+    return query ? `${path}?${query}` : path;
+}
 
-    // Build query string manually because http.get only accepts a single argument
-    const url =
-        `${ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE}` +
-        `?query=${encodeURIComponent(trimmed)}` +
-        `&limit=${encodeURIComponent(String(limit))}`;
-
+/**
+ * Autocomplete search for rubrics by partial disease name.
+ *
+ * Backend:
+ *   GET /api/v1/admin/rubric/search?query=...&limit=...
+ *
+ * @param query - Partial disease text
+ * @param limit - Max number of results (default: 10)
+ *
+ * @returns Parsed autocomplete response
+ */
+export async function searchRubrics(query: string, limit = 10) {
+    const url = withQuery(ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE, {query, limit});
     const resp = await http.get<unknown>(url);
-
-    // Validate and normalize via zod
     return RubricSearchResponseSchema.parse(resp);
+}
+
+/**
+ * Fetch a rubric by rubric_id (canonical disease slug).
+ *
+ * Backend:
+ *   GET /api/v1/admin/rubric?rubric_id=...
+ *
+ * @param rubric_id - Canonical rubric id (same as disease slug)
+ *
+ * @returns Parsed rubric response
+ */
+export async function getRubricById(rubric_id: string) {
+    const url = withQuery(ADMIN_RUBRIC_BASE, {rubric_id});
+    const resp = await http.get<unknown>(url);
+    console.log(resp);
+    return RubricResponseSchema.parse(resp);
+}
+
+/**
+ * Create a new rubric.
+ *
+ * Backend:
+ *   POST /api/v1/admin/rubric
+ *
+ * Contract:
+ * - `payload.rubric_id` MUST match the disease slug
+ * - Payload is validated on frontend via Zod before sending
+ *
+ * @param payload - Full rubric JSON payload
+ *
+ * @returns Parsed rubric response
+ */
+export async function addRubric(payload: RubricDraft) {
+    const resp = await http.post<unknown>(ADMIN_RUBRIC_BASE, payload);
+    return RubricResponseSchema.parse(resp);
+}
+
+/**
+ * Update (replace) an existing rubric.
+ *
+ * Backend:
+ *   PUT /api/v1/admin/rubric
+ *
+ * Semantics:
+ * - Full replacement (not patch)
+ * - Used only after explicit user confirmation in UI
+ *
+ * @param payload - Full rubric JSON payload
+ *
+ * @returns Parsed rubric response
+ */
+export async function updateRubric(payload: RubricDraft) {
+    const resp = await http.put<unknown>(ADMIN_RUBRIC_BASE, payload);
+    return RubricResponseSchema.parse(resp);
+}
+
+/**
+ * Delete a rubric by rubric_id.
+ *
+ * Backend:
+ *   DELETE /api/v1/admin/rubric?rubric_id=...
+ *
+ * @param rubric_id - Canonical rubric id (disease slug)
+ */
+export async function deleteRubricById(rubric_id: string): Promise<void> {
+    const url = withQuery(ADMIN_RUBRIC_BASE, {rubric_id});
+    await http.del<unknown>(url);
+}
+
+/**
+ * Fetch a paginated list of all rubric ids.
+ *
+ * Backend:
+ *   GET /api/v1/admin/rubric/ids?limit=...&offset=...
+ *
+ * @param limit  - Max number of ids to return (default: 20)
+ * @param offset - Zero-based offset for pagination
+ *
+ * @returns Array of rubric ids
+ */
+export async function getAllRubricIds(
+    limit = 20,
+    offset = 0,
+): Promise<string[]> {
+    const url = withQuery(ADMIN_RUBRIC_IDS, {limit, offset});
+    const resp = await http.get<unknown>(url);
+    return z.array(z.string()).parse(resp);
 }

@@ -113,3 +113,48 @@ export function parseCsvToStudents(text: string): { students: NewRosterStudent[]
 
     return {students};
 }
+
+function isObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function toCamelKey(k: string): string {
+    // snake_case -> camelCase
+    if (k.includes("_")) {
+        return k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+    }
+    return k;
+}
+
+// Known alias map (handles the handful that are not pure snake<->camel differences)
+const KEY_ALIASES: Record<string, string> = {
+    rubric_id: "rubricId",
+    rubric_version: "rubricVersion",
+    schema_version: "schemaVersion",
+    scoring_invariants: "scoringInvariants",
+    contraindications_policy: "contraindicationsPolicy",
+    evidence_keys: "evidenceKeys",
+    non_scored_clinical_notes: "nonScoredClinicalNotes",
+
+    max_points: "maxPoints",
+    group_id: "groupId",
+    select_k: "selectK",
+    award_points: "awardPoints",
+    unit_equivalents: "unitEquivalents",
+    require_section_block_sums_match: "requireSectionBlockSumsMatch",
+};
+
+function _normalizeKey(k: string): string {
+    return KEY_ALIASES[k] ?? toCamelKey(k);
+}
+
+export function normalizeRubricJsonToCamel(input: unknown): unknown {
+    if (Array.isArray(input)) return input.map(normalizeRubricJsonToCamel);
+    if (!isObject(input)) return input;
+
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input)) {
+        out[_normalizeKey(k)] = normalizeRubricJsonToCamel(v);
+    }
+    return out;
+}

@@ -1,4 +1,4 @@
-// file: src/pages/rubric/RubricSearchAutocomplete.tsx
+// file: src/pages/admin/rubric/RubricSearchAutocomplete.tsx
 
 import {useEffect, useMemo, useState} from "react";
 import {Loader2, Search} from "lucide-react";
@@ -17,11 +17,7 @@ type CreateDiseaseModalProps = {
     onClose: () => void;
 };
 
-function CreateDiseaseModal({
-                                open,
-                                initialName,
-                                onClose,
-                            }: CreateDiseaseModalProps) {
+function CreateDiseaseModal({open, initialName, onClose}: CreateDiseaseModalProps) {
     const [name, setName] = useState(initialName);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -44,18 +40,9 @@ function CreateDiseaseModal({
         setError(null);
         try {
             const resp = await addDisease(trimmed);
-
-            // Backend returns { created: [...], skipped: [...] }.
-            // Only close when at least one disease was created as ui allows to create only one disease
-            if (Array.isArray(resp.created) && resp.created.length > 0) {
-                onClose();
-            } else {
-                // Could be already existing or skipped for some other reason.
-                setError(
-                    "Disease could not be created (it may already exist or was skipped).",
-                );
-            }
-        } catch (e) {
+            if (Array.isArray(resp.created) && resp.created.length > 0) onClose();
+            else setError("Disease could not be created (it may already exist).");
+        } catch {
             setError("Failed to save disease. Please try again.");
         } finally {
             setSaving(false);
@@ -70,9 +57,7 @@ function CreateDiseaseModal({
             className="w-[min(420px,95vw)]"
         >
             <div className="space-y-3 text-sm">
-                <p className="text-muted">
-                    Add a new disease.
-                </p>
+                <p className="text-muted">Add a new disease.</p>
 
                 <label className="block space-y-1">
                     <span className="text-xs font-medium text-muted">Disease name</span>
@@ -114,14 +99,17 @@ function CreateDiseaseModal({
     );
 }
 
-type RubricSearchAutocompleteProps = {
-    /** Optional heading/label for the field */
+type Props = {
     label?: string;
+    onCreateRubric: (rubricId: string) => void;
+    onViewRubric: (rubricId: string) => void;
 };
 
 export default function RubricSearchAutocomplete({
                                                      label = "Search disease / rubric",
-                                                 }: RubricSearchAutocompleteProps) {
+                                                     onCreateRubric,
+                                                     onViewRubric,
+                                                 }: Props) {
     const [query, setQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState("");
     const [results, setResults] = useState<RubricSearchItem[]>([]);
@@ -130,16 +118,11 @@ export default function RubricSearchAutocomplete({
 
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
-    // debounce query
     useEffect(() => {
-        const handle = window.setTimeout(() => {
-            setDebouncedQuery(query.trim());
-        }, DEBOUNCE_MS);
-
+        const handle = window.setTimeout(() => setDebouncedQuery(query.trim()), DEBOUNCE_MS);
         return () => window.clearTimeout(handle);
     }, [query]);
 
-    // fetch autocomplete results when debouncedQuery changes
     useEffect(() => {
         if (debouncedQuery.length < MIN_QUERY_LEN) {
             setResults([]);
@@ -151,7 +134,6 @@ export default function RubricSearchAutocomplete({
         setLoading(true);
         setError(null);
 
-        // hard-code limit 10 as requested
         searchRubrics(debouncedQuery, 10)
             .then((resp) => {
                 if (cancelled) return;
@@ -177,33 +159,14 @@ export default function RubricSearchAutocomplete({
         [debouncedQuery, results.length],
     );
 
-    function handleClickCreateDiseaseInline() {
-        setCreateModalOpen(true);
-    }
-
-    function handleClickCreateRubric(item: RubricSearchItem) {
-        // TODO: wire to "add rubric" flow
-        // eslint-disable-next-line no-console
-        console.log("[Autocomplete] create rubric for disease:", item.diseaseName);
-    }
-
-    function handleClickViewRubric(item: RubricSearchItem) {
-        // TODO: wire to "view rubric" flow
-        // eslint-disable-next-line no-console
-        console.log("[Autocomplete] view rubric for disease:", item.diseaseName);
-    }
-
     return (
         <div className="space-y-2 text-sm">
-            {/* Search input */}
             <div className="space-y-1">
-                <label className="block text-xs font-medium text-muted">
-                    {label}
-                </label>
+                <label className="block text-xs font-medium text-muted">{label}</label>
                 <div className="relative">
-                    <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
-                        <Search className="h-4 w-4 text-muted" aria-hidden="true"/>
-                    </span>
+          <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
+            <Search className="h-4 w-4 text-muted" aria-hidden="true"/>
+          </span>
                     <input
                         type="text"
                         value={query}
@@ -213,12 +176,9 @@ export default function RubricSearchAutocomplete({
                         autoComplete="off"
                     />
                 </div>
-                <p className="text-[11px] text-muted">
-                    Type at least {MIN_QUERY_LEN} characters to search.
-                </p>
+                <p className="text-[11px] text-muted">Type at least {MIN_QUERY_LEN} characters to search.</p>
             </div>
 
-            {/* Results panel */}
             <div className="rounded-xl border border-subtle bg-surface-subtle">
                 {loading && (
                     <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted">
@@ -227,87 +187,66 @@ export default function RubricSearchAutocomplete({
                     </div>
                 )}
 
-                {!loading && error && (
-                    <div className="px-3 py-2 text-xs text-danger">{error}</div>
-                )}
+                {!loading && error && <div className="px-3 py-2 text-xs text-danger">{error}</div>}
 
                 {!loading && !error && debouncedQuery.length < MIN_QUERY_LEN && (
-                    <div className="px-3 py-2 text-xs text-muted">
-                        Start typing to see matching diseases.
-                    </div>
+                    <div className="px-3 py-2 text-xs text-muted">Start typing to see matching diseases.</div>
                 )}
 
-                {!loading &&
-                    !error &&
-                    debouncedQuery.length >= MIN_QUERY_LEN &&
-                    results.length > 0 && (
-                        <ul className="max-h-64 overflow-auto divide-y divide-subtle text-xs">
-                            {results.map((item) => (
-                                <li
-                                    key={item.diseaseName}
-                                    className="flex items-center justify-between gap-2 px-3 py-2"
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <div className="truncate text-primary">
-                                            {titleizeDiseaseName(item.diseaseName)}
-                                        </div>
-                                        <div className="mt-0.5 text-[11px] text-muted">
-                                            {item.rubricExists
-                                                ? "Rubric exists for this disease."
-                                                : "No rubric yet for this disease."}
-                                        </div>
+                {!loading && !error && debouncedQuery.length >= MIN_QUERY_LEN && results.length > 0 && (
+                    <ul className="max-h-64 overflow-auto divide-y divide-subtle text-xs">
+                        {results.map((item) => (
+                            <li key={item.diseaseName} className="flex items-center justify-between gap-2 px-3 py-2">
+                                <div className="min-w-0 flex-1">
+                                    <div className="truncate text-primary">{titleizeDiseaseName(item.diseaseName)}</div>
+                                    <div className="mt-0.5 text-[11px] text-muted">
+                                        {item.rubricExists ? "Rubric exists for this disease." : "No rubric yet for this disease."}
                                     </div>
-
-                                    <div className="flex shrink-0 items-center gap-2">
-                                        {item.rubricExists ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleClickViewRubric(item)}
-                                                className="h-7 rounded-4xl border border-subtle bg-secondary text-on-secondary px-2 text-[11px] font-medium text-primary hover:bg-surface-subtle"
-                                            >
-                                                View rubric
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleClickCreateRubric(item)}
-                                                className="h-7 rounded-4xl bg-secondary px-2 text-[11px] font-medium text-on-secondary hover:opacity-90"
-                                            >
-                                                Create Rubric
-                                            </button>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-
-                {/* No matches -> inline create disease prompt */}
-                {!loading &&
-                    !error &&
-                    showCreateInline && (
-                        <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
-                            <div className="flex-1 min-w-0">
-                                <div className="truncate text-primary">
-                                    No diseases match &ldquo;{debouncedQuery}&rdquo;.
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-muted">
-                                    You can create a new disease using this key. Click create to
-                                    learn more.
+
+                                <div className="flex shrink-0 items-center gap-2">
+                                    {item.rubricExists ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => onViewRubric(item.diseaseName)}
+                                            className="h-7 rounded-4xl border border-subtle bg-secondary px-2 text-[11px] font-medium text-on-secondary hover:bg-surface-subtle"
+                                        >
+                                            View/Edit Rubric
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => onCreateRubric(item.diseaseName)}
+                                            className="h-7 rounded-4xl bg-secondary px-2 text-[11px] font-medium text-on-secondary hover:opacity-90"
+                                        >
+                                            Create rubric
+                                        </button>
+                                    )}
                                 </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                {!loading && !error && showCreateInline && (
+                    <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                        <div className="flex-1 min-w-0">
+                            <div className="truncate text-primary">
+                                No diseases match &ldquo;{debouncedQuery}&rdquo;.
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleClickCreateDiseaseInline}
-                                className="h-7 rounded-4xl bg-secondary px-2 text-[11px] font-medium text-on-secondary hover:opacity-90"
-                            >
-                                Create disease
-                            </button>
+                            <div className="mt-0.5 text-[11px] text-muted">You can create a new disease.</div>
                         </div>
-                    )}
+                        <button
+                            type="button"
+                            onClick={() => setCreateModalOpen(true)}
+                            className="h-7 rounded-4xl bg-secondary px-2 text-[11px] font-medium text-on-secondary hover:opacity-90"
+                        >
+                            Create disease
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* Create disease modal */}
             <CreateDiseaseModal
                 open={createModalOpen}
                 initialName={debouncedQuery}

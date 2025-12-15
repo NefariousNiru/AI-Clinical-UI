@@ -33,11 +33,12 @@ export const ADMIN_TEST_SUBMISSION = ADMIN_TEST_BASE + "/submission";
 export const ADMIN_TEST_CHAT = ADMIN_TEST_BASE + "/chat";
 
 // Admin Rubric Base
-const ADMIN_RUBRIC_BASE = API_BASE_V1 + "/admin/rubric";
+export const ADMIN_RUBRIC_BASE = API_BASE_V1 + "/admin/rubric";
 export const ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE = ADMIN_RUBRIC_BASE + "/search"
+export const ADMIN_RUBRIC_IDS = ADMIN_RUBRIC_BASE + "/ids";
 
 // Admin Student Base
-const ADMIN_STUDENT_BASE = API_BASE_V1 + "/admin/student"; 
+const ADMIN_STUDENT_BASE = API_BASE_V1 + "/admin/student";
 export const ADMIN_STUDENT_ROSTER = ADMIN_STUDENT_BASE + "/roster";
 export const ADMIN_DISABLE_SEMESTER = ADMIN_STUDENT_BASE + "/disable/semester";
 export const ADMIN_DISABLE_USER = ADMIN_STUDENT_BASE + "/disable/user";

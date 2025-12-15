@@ -1,31 +1,49 @@
 // file: src/lib/types/rubric.ts
 
-import { z } from "zod";
+import {z} from "zod";
 
 /**
- * Single autocomplete result for a rubric/disease.
+ * Search result item for rubric autocomplete.
+ */
+export const RubricSearchItemSchema = z
+    .object({
+        diseaseName: z.string(),
+        rubricExists: z.boolean(),
+    })
+    .strict();
+
+export type RubricSearchItem = z.infer<typeof RubricSearchItemSchema>;
+
+/**
+ * Search response for rubric autocomplete.
+ */
+export const RubricSearchResponseSchema = z
+    .object({
+        results: z.array(RubricSearchItemSchema),
+    })
+    .strict();
+
+export type RubricSearchResponse = z.infer<typeof RubricSearchResponseSchema>;
+
+/**
+ * Backend RubricResponse envelope.
  *
- * diseaseName: canonical disease slug.
- * rubricExists: true if a rubric already exists for this disease.
+ * IMPORTANT:
+ * - `file` is NOT validated here (it's `unknown`).
+ * - The rubric editor hook owns normalization + strict validation via RubricJsonSchema.
  */
-export const RubricSearchItem = z.object({
-    diseaseName: z.string(),
-    rubricExists: z.boolean(),
-});
-export type RubricSearchItem = z.infer<typeof RubricSearchItem>;
+export const RubricResponseSchema = z
+    .object({
+        id: z.number().int(),
+        diseaseName: z.string(),
+        instructorName: z.string(),
+        created: z.number().int(),
+        modified: z.number().int(),
+        status: z.string(),
+        notes: z.string().nullable().optional(),
+        file: z.unknown(),
+    })
+    .strict();
 
-/**
- * List of rubric search items.
- */
-export const RubricSearchItemList = z.array(RubricSearchItem);
-export type RubricSearchItemList = z.infer<typeof RubricSearchItemList>;
+export type RubricResponse = z.infer<typeof RubricResponseSchema>;
 
-/**
- * Full response shape from GET /api/v1/admin/rubric/search.
- *
- * results: array of RubricSearchItem.
- */
-export const RubricSearchResponse = z.object({
-    results: RubricSearchItemList,
-});
-export type RubricSearchResponse = z.infer<typeof RubricSearchResponse>;
