@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { titleizeDiseaseName } from "../../../lib/functions.ts";
+import { titleizeDiseaseName } from "../../../lib/utils/functions.ts";
 import type {
     ProblemFeedback,
     ProblemFeedbackList,

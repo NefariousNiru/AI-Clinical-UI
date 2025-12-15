@@ -10,7 +10,7 @@ import {
     normalizeEmail,
     normalizeYear,
     parseCsvToStudents,
-} from "../../../lib/functions.ts";
+} from "../../../lib/utils/functions.ts";
 
 type Props = {
     semester: Semester | null;

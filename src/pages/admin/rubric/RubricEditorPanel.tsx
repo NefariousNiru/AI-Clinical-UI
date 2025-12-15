@@ -6,7 +6,7 @@ import Modal from "../../../components/Modal";
 import Tabs from "../../../components/Tabs";
 import type {RubricDraft} from "../hooks/rubric.ts";
 import RubricFormattedEditable from "./RubricFormattedEditable";
-import {titleizeDiseaseName} from "../../../lib/functions.ts";
+import {titleizeDiseaseName} from "../../../lib/utils/functions.ts";
 
 type Props = {
     mode: "create" | "edit";

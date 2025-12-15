@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import hljs from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
 import "highlight.js/styles/atom-one-dark-reasonable.css";
-import {downloadJSON} from "../../../lib/functions.ts";
+import {downloadJSON} from "../../../lib/utils/functions.ts";
 
 hljs.registerLanguage("json", json);
 

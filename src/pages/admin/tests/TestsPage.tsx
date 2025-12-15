@@ -17,7 +17,7 @@ import type {TestSubmission} from "../../../lib/types/test";
 
 import * as React from "react";
 import {BrainCircuit} from "lucide-react";
-import {saveSession} from "../../../lib/localSession";
+import {saveSession} from "../../../lib/utils/localSession.ts";
 import LocalSessionsModal from "./LocalSessionsModal";
 
 /**

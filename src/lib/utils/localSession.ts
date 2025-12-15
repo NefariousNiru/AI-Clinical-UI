@@ -1,8 +1,8 @@
-// src/lib/localSession.ts
+// file: src/lib/utils/localSession.ts
 
-import type { TestSubmission } from "./types/test.ts"
-import type {ProblemFeedbackList} from "./types/feedback.ts";
-import {LOCAL_STORAGE_TEST_SESSION_KEY} from "./constants/localStorageKeys.ts";
+import type { TestSubmission } from "../types/test.ts"
+import type {ProblemFeedbackList} from "../types/feedback.ts";
+import {LOCAL_STORAGE_TEST_SESSION_KEY} from "../constants/localStorageKeys.ts";
 import {downloadJSON} from "./functions.ts";
 
 const KEY = LOCAL_STORAGE_TEST_SESSION_KEY

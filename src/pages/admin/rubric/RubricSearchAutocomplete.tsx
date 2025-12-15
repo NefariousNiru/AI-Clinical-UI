@@ -6,7 +6,7 @@ import Modal from "../../../components/Modal";
 import {searchRubrics} from "../../../lib/api/admin/rubric";
 import {addDisease} from "../../../lib/api/admin/disease";
 import type {RubricSearchItem} from "../../../lib/types/rubric";
-import {titleizeDiseaseName} from "../../../lib/functions";
+import {titleizeDiseaseName} from "../../../lib/utils/functions.ts";
 
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LEN = 3;

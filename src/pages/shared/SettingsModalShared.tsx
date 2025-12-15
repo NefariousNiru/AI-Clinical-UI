@@ -5,7 +5,7 @@ import Modal from "../../components/Modal";
 import {logout} from "../../lib/api/public/auth";
 import type {UserProfile} from "../../lib/types/user";
 import {Flag, LogOut} from "lucide-react";
-import {capitalizeFirst} from "../../lib/functions";
+import {capitalizeFirst} from "../../lib/utils/functions.ts";
 import {useSettingsProfile} from "./hooks/settings";
 
 type SharedSettingsModalProps = {

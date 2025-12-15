@@ -1,22 +1,27 @@
 import {useCallback, useMemo, useRef, useState} from "react";
 import {addRubric, getRubricById, updateRubric} from "../../../lib/api/admin/rubric";
-import {normalizeRubricJsonToCamel} from "../../../lib/functions";
-import {RubricJsonSchema } from "../../../lib/types/rubricSchema.ts";
+import {normalizeRubricJsonToCamel} from "../../../lib/utils/functions";
+import {RubricJsonSchema} from "../../../lib/types/rubricSchema";
 
 /**
- * This hook owns:
- * - loading/saving state
- * - raw JSON editor state
- * - draft (typed) rubric state
- * - strict validation + error formatting
+ * Rubric Editor Hook
  *
- * Key rule:
- * - API layer parses only the envelope; file is unknown.
- * - Hook normalizes + sanitizes + strict-parses the file.
+ * Responsibilities:
+ * - Owns editor state (mode, selected rubricId, view, raw JSON, draft object)
+ * - Loads/saves via API
+ * - Normalizes incoming/outgoing rubric JSON to camelCase
+ * - Sanitizes legacy DB fields that are not part of the authoring schema
+ * - Validates using strict Zod schema and exposes human-readable errors
+ *
+ * Design:
+ * - API layer parses the response envelope; the rubric "file" is treated as unknown.
+ * - This hook canonicalizes the file into a strict RubricDraft for both "form" and "json" modes.
+ * - raw and draft are kept in sync; we avoid ping-pong loops using refs.
  */
 
 export type RubricEditorMode = "idle" | "create" | "edit";
-export type RubricDraft = import("../../../lib/types/rubricSchema.ts").RubricJson;
+export type RubricDraft = import("../../../lib/types/rubricSchema").RubricJson;
+
 export type UseRubricEditorResult = {
     mode: RubricEditorMode;
     rubricId: string | null;
@@ -59,10 +64,16 @@ function formatIssues(issues: Array<{ path: PropertyKey[]; message: string }>): 
 }
 
 /**
- * Remove legacy/extra keys that exist in stored rubrics but are not part of
- * the authoring schema.
+ * Sanitizes incoming rubric JSON (from DB or user upload) to fit the authoring schema.
  *
- * Also canonicalize nulls -> absent for fields we treat as optional.
+ * Rules:
+ * - Drop legacy keys not in schema (example: "aliases")
+ * - Drop null-valued optional-ish fields that older rubrics stored as null
+ * - Keep "notes" only when it's a string (older data may store null/object)
+ *
+ * Important:
+ * - This does NOT "fix" semantically invalid rubrics. It only removes known garbage.
+ * - Strict Zod validation still decides validity.
  */
 function sanitizeRubricIncoming(input: unknown): unknown {
     if (Array.isArray(input)) return input.map(sanitizeRubricIncoming);
@@ -72,15 +83,15 @@ function sanitizeRubricIncoming(input: unknown): unknown {
     const out: Record<string, unknown> = {};
 
     for (const [k, v] of Object.entries(obj)) {
-        // Drop junk everywhere
+        // Drop legacy/unmodeled keys
         if (k === "aliases") continue;
 
-        // These sometimes come back as null from DB
+        // Optional fields that older rubrics sometimes persisted as null
         if (k === "unitEquivalents" && v === null) continue;
         if (k === "dependsOnAny" && v === null) continue;
         if (k === "minItemsRequired" && v === null) continue;
 
-        // "notes" exists at different levels. We only keep if it's a string.
+        // notes exists at multiple levels. Authoring schema treats it as string when present.
         if (k === "notes") {
             if (typeof v !== "string") continue;
             out[k] = v;
@@ -93,6 +104,13 @@ function sanitizeRubricIncoming(input: unknown): unknown {
     return out;
 }
 
+/**
+ * Minimal starter rubric for create flow.
+ * The four sections remain constant, but blocks/criteria can evolve.
+ *
+ * Note: maxPoints are allowed to start at 0. If you later add derived-point logic,
+ * this skeleton still remains compatible.
+ */
 function makeSkeletonRubric(rubricId: string): RubricDraft {
     return {
         rubricId,
@@ -190,21 +208,23 @@ export function useRubricEditor(): UseRubricEditorResult {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // prevent ping-pong loops when syncing raw <-> draft
+    // Prevent raw<->draft ping-pong loops
     const syncingFromRawRef = useRef(false);
     const syncingFromDraftRef = useRef(false);
 
-    const expectedId = rubricId;
-
+    /**
+     * Normalize + sanitize + strict-parse a rubric JSON payload.
+     * Returns canonical RubricDraft on success, otherwise null and sets errors state.
+     */
     const validateAndCanonicalize = useCallback(
         (nextUnknown: unknown, expectedRubricId: string | null): RubricDraft | null => {
-            // 1) normalize user/backfill formats to camel
+            // 1) normalize user/backfill formats to camelCase
             const camel = normalizeRubricJsonToCamel(nextUnknown);
 
             // 2) strip legacy keys + normalize nulls
             const sanitized = sanitizeRubricIncoming(camel);
 
-            // 3) strict-parse
+            // 3) strict parse
             const parsed = RubricJsonSchema.safeParse(sanitized);
             if (!parsed.success) {
                 setValid(false);
@@ -212,14 +232,16 @@ export function useRubricEditor(): UseRubricEditorResult {
                 return null;
             }
 
-            // 4) verify rubricId matches selection
+            // 4) verify rubricId matches selected disease slug
             if (expectedRubricId && parsed.data.rubricId !== expectedRubricId) {
                 setValid(false);
-                setErrors([`rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`]);
+                setErrors([
+                    `rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`,
+                ]);
                 return null;
             }
 
-            // 5) canonicalize UI state to parsed value
+            // 5) mark valid and return canonical payload
             setValid(true);
             setErrors([]);
             return parsed.data;
@@ -227,36 +249,43 @@ export function useRubricEditor(): UseRubricEditorResult {
         [],
     );
 
+    /**
+     * Set draft object (form mode).
+     * We update raw JSON to a canonical pretty-printed version and then re-validate.
+     */
     const setDraft = useCallback(
         (next: RubricDraft) => {
             _setDraft(next);
-
             if (syncingFromRawRef.current) return;
 
             syncingFromDraftRef.current = true;
             _setRaw(JSON.stringify(next, null, 2));
             syncingFromDraftRef.current = false;
 
-            const validated = validateAndCanonicalize(next, expectedId);
+            const validated = validateAndCanonicalize(next, rubricId);
             if (!validated) return;
 
-            // ensure canonical draft/raw
+            // enforce canonical object + raw text
             _setDraft(validated);
             _setRaw(JSON.stringify(validated, null, 2));
         },
-        [expectedId, validateAndCanonicalize],
+        [rubricId, validateAndCanonicalize],
     );
 
+    /**
+     * Set raw JSON (json mode).
+     * We parse the JSON and re-validate into a canonical RubricDraft.
+     */
     const setRaw = useCallback(
         (next: string) => {
             _setRaw(next);
-
             if (syncingFromDraftRef.current) return;
 
             syncingFromRawRef.current = true;
             try {
                 const parsedJson = JSON.parse(next);
-                const validated = validateAndCanonicalize(parsedJson, expectedId);
+                const validated = validateAndCanonicalize(parsedJson, rubricId);
+
                 _setDraft(validated);
                 if (validated) _setRaw(JSON.stringify(validated, null, 2));
             } catch {
@@ -267,9 +296,12 @@ export function useRubricEditor(): UseRubricEditorResult {
                 syncingFromRawRef.current = false;
             }
         },
-        [expectedId, validateAndCanonicalize],
+        [rubricId, validateAndCanonicalize],
     );
 
+    /**
+     * Create mode: new skeleton + validate immediately.
+     */
     const openCreate = useCallback(
         (id: string) => {
             setError(null);
@@ -286,6 +318,9 @@ export function useRubricEditor(): UseRubricEditorResult {
         [validateAndCanonicalize],
     );
 
+    /**
+     * Edit mode: load from backend and validate the file payload strictly.
+     */
     const openEdit = useCallback(
         async (id: string) => {
             console.log("[rubric] openEdit", {id});
@@ -306,9 +341,7 @@ export function useRubricEditor(): UseRubricEditorResult {
                 _setDraft(validated);
                 _setRaw(validated ? JSON.stringify(validated, null, 2) : JSON.stringify(fileUnknown, null, 2));
 
-                if (!validated) {
-                    console.warn("[rubric] openEdit file failed validation (see errors state)");
-                }
+                if (!validated) console.warn("[rubric] openEdit: file failed validation");
             } catch (e) {
                 console.error("[rubric] openEdit failed:", e);
                 setError("Failed to load rubric.");
@@ -323,6 +356,9 @@ export function useRubricEditor(): UseRubricEditorResult {
         [validateAndCanonicalize],
     );
 
+    /**
+     * Close editor and reset state.
+     */
     const close = useCallback(() => {
         setMode("idle");
         setRubricId(null);
@@ -335,6 +371,11 @@ export function useRubricEditor(): UseRubricEditorResult {
         setSaving(false);
     }, []);
 
+    /**
+     * Save rubric using current mode.
+     * - edit: requires confirmReplace
+     * - create: adds then switches to edit mode
+     */
     const save = useCallback(
         async (opts?: { confirmReplace?: boolean }) => {
             if (!draft || !rubricId) return false;
@@ -391,6 +432,23 @@ export function useRubricEditor(): UseRubricEditorResult {
 
             save,
         }),
-        [mode, rubricId, view, raw, setRaw, draft, setDraft, valid, errors, loading, saving, error, openCreate, openEdit, close, save],
+        [
+            mode,
+            rubricId,
+            view,
+            raw,
+            setRaw,
+            draft,
+            setDraft,
+            valid,
+            errors,
+            loading,
+            saving,
+            error,
+            openCreate,
+            openEdit,
+            close,
+            save,
+        ],
     );
 }

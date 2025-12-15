@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { TestSubmission } from "../../../lib/types/test.ts";
-import { titleizeDiseaseName } from "../../../lib/functions";
+import { titleizeDiseaseName } from "../../../lib/utils/functions.ts";
 import Modal from "../../../components/Modal";
 import Tabs from "../../../components/Tabs";
 import JsonPanel from "./JsonPanel";

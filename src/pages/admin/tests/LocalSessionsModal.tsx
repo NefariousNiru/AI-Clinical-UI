@@ -7,7 +7,7 @@ import {
     deleteSession,
     downloadSession,
     type SavedSession,
-} from "../../../lib/localSession";
+} from "../../../lib/utils/localSession.ts";
 import ProblemFeedbackView from "../../shared/feedback/ProblemFeedbackView.tsx" // adjust path if needed
 
 type LocalSessionsModalProps = {

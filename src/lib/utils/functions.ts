@@ -1,12 +1,11 @@
-// file: src/lib/functions.ts
+// file: src/lib/utils/functions.ts
 
-import type {NewRosterStudent} from "./types/roster.ts";
-import type {Semester} from "./types/semester.ts";
+import type {NewRosterStudent} from "../types/roster.ts";
+import type {Semester} from "../types/semester.ts";
 
 /**
  * Title-case helper that drops the last segment after the final underscore.
- *
- * "abc_def_gh" -> "Abc Def"
+ * @param input - The input disease name eg: "abc_def_gh" -> "Abc Def"
  */
 export function titleizeDiseaseName(input: string): string {
     // Drop everything after the last underscore
@@ -23,7 +22,7 @@ export function titleizeDiseaseName(input: string): string {
 
 /**
  * Capitalise first letter
- * @param str
+ * @param str - The string to capitalise abc -> Abc
  */
 export function capitalizeFirst(str: string): string {
     if (!str) return "";
@@ -49,22 +48,50 @@ export function downloadJSON(jsonString: string, filename: string) {
     URL.revokeObjectURL(url);
 }
 
-/* ----------------- utils ----------------- */
-
+/**
+ * Normalize a Semester year value into a number.
+ *
+ * @param year - The year value from a Semester (number or numeric string).
+ * @returns A numeric year. If parsing fails, returns the current calendar year.
+ */
 export function normalizeYear(year: Semester["year"]): number {
     if (typeof year === "number") return year;
     const parsed = Number(year);
     return Number.isNaN(parsed) ? new Date().getFullYear() : parsed;
 }
 
+/**
+ * Normalize an email string for consistent comparison/storage.
+ *
+ * @param s - Raw email input.
+ * @returns The trimmed, lowercased email.
+ */
 export function normalizeEmail(s: string): string {
     return s.trim().toLowerCase();
 }
 
+/**
+ * Check whether a string is a UGA email address.
+ *
+ * @param s - Email to validate.
+ * @returns True if the email matches the pattern `<local>@uga.edu`, otherwise false.
+ */
 export function isUgaEmail(s: string): boolean {
     return /^[^\s@]+@uga\.edu$/.test(s);
 }
 
+
+/**
+ * Deduplicate and sanitize a list of newly uploaded roster students.
+ *
+ * Rules:
+ * - Normalizes emails (trim + lowercase) and names (trim).
+ * - Keeps only non-empty names and valid @uga.edu emails.
+ * - Dedupes by normalized email (first occurrence wins).
+ *
+ * @param xs - Raw parsed students (may include duplicates/invalid rows).
+ * @returns Cleaned, deduped list of students.
+ */
 export function dedupeNewStudents(xs: NewRosterStudent[]): NewRosterStudent[] {
     const seen = new Set<string>();
     const out: NewRosterStudent[] = [];
@@ -80,6 +107,21 @@ export function dedupeNewStudents(xs: NewRosterStudent[]): NewRosterStudent[] {
     return out;
 }
 
+/**
+ * Parse a simple CSV (name,email) into roster students.
+ *
+ * Supported format:
+ * - With header: `name,email` (case-insensitive) in the first row
+ * - Without header: data starts on the first row
+ *
+ * Notes:
+ * - Rows with missing fields, empty names, or non-@uga.edu emails are skipped.
+ * - This is a lightweight parser: it does not support quoted commas, escaped
+ *   fields, or multi-column schemas.
+ *
+ * @param text - Raw CSV text.
+ * @returns `{ students, error? }` where `error` is set when no valid rows exist.
+ */
 export function parseCsvToStudents(text: string): { students: NewRosterStudent[]; error?: string } {
     const raw = text.trim();
     if (!raw) return {students: [], error: "CSV is empty."};
@@ -114,10 +156,23 @@ export function parseCsvToStudents(text: string): { students: NewRosterStudent[]
     return {students};
 }
 
+/**
+ * Type guard for plain JSON-like objects (non-null, non-array). HELPER
+ *
+ * @param v - Value to test.
+ * @returns True if `v` is a plain object record.
+ */
 function isObject(v: unknown): v is Record<string, unknown> {
     return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+/**
+ * Convert a key from snake_case to camelCase.
+ * If the key is already camelCase (no underscores), it is returned unchanged.
+ *
+ * @param k - Input object key.
+ * @returns Normalized camelCase key.
+ */
 function toCamelKey(k: string): string {
     // snake_case -> camelCase
     if (k.includes("_")) {
@@ -126,7 +181,11 @@ function toCamelKey(k: string): string {
     return k;
 }
 
-// Known alias map (handles the handful that are not pure snake<->camel differences)
+/**
+ * Explicit key aliases for fields that either:
+ * - are common snake_case variants in rubric JSON, or
+ * - do not map cleanly via generic snake->camel conversion.
+ */
 const KEY_ALIASES: Record<string, string> = {
     rubric_id: "rubricId",
     rubric_version: "rubricVersion",
@@ -135,7 +194,6 @@ const KEY_ALIASES: Record<string, string> = {
     contraindications_policy: "contraindicationsPolicy",
     evidence_keys: "evidenceKeys",
     non_scored_clinical_notes: "nonScoredClinicalNotes",
-
     max_points: "maxPoints",
     group_id: "groupId",
     select_k: "selectK",
@@ -144,17 +202,36 @@ const KEY_ALIASES: Record<string, string> = {
     require_section_block_sums_match: "requireSectionBlockSumsMatch",
 };
 
-function _normalizeKey(k: string): string {
+/**
+ * Normalize a JSON key to camelCase using explicit aliases first,
+ * then falling back to snake_case -> camelCase conversion.
+ *
+ * @param k - Raw input key.
+ * @returns Camel-cased key.
+ */
+function normalizeKey(k: string): string {
     return KEY_ALIASES[k] ?? toCamelKey(k);
 }
 
+
+/**
+ * Recursively normalize a rubric JSON payload to camelCase keys.
+ *
+ * Behavior:
+ * - Arrays: maps each element recursively.
+ * - Objects: converts each key to camelCase (alias-aware) and recurses into values.
+ * - Primitives: returned as-is.
+ *
+ * @param input - Any JSON-like value.
+ * @returns A structurally identical value with object keys normalized to camelCase.
+ */
 export function normalizeRubricJsonToCamel(input: unknown): unknown {
     if (Array.isArray(input)) return input.map(normalizeRubricJsonToCamel);
     if (!isObject(input)) return input;
 
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(input)) {
-        out[_normalizeKey(k)] = normalizeRubricJsonToCamel(v);
+        out[normalizeKey(k)] = normalizeRubricJsonToCamel(v);
     }
     return out;
 }
