@@ -1,12 +1,12 @@
 // file: src/pages/admin/rubric/RubricEditorPanel.tsx
 
-import {useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {Loader2, Upload} from "lucide-react";
 import Modal from "../../../components/Modal";
 import Tabs from "../../../components/Tabs";
-import type {RubricDraft} from "../hooks/rubric.ts";
+import type {RubricJson, RubricStatus} from "../../../lib/types/rubricSchema";
 import RubricFormattedEditable from "./RubricFormattedEditable";
-import {titleizeDiseaseName} from "../../../lib/utils/functions.ts";
+import {titleizeDiseaseName} from "../../../lib/utils/functions";
 
 type Props = {
     mode: "create" | "edit";
@@ -18,11 +18,23 @@ type Props = {
     raw: string;
     setRaw: (v: string) => void;
 
-    draft: RubricDraft | null;
-    setDraft: (v: RubricDraft) => void;
+    fileDraft: RubricJson | null;
+    setFileDraft: (v: RubricJson) => void;
+
+    instructorName: string;
+    setInstructorName: (v: string) => void;
+
+    status: RubricStatus;
+    setStatus: (v: RubricStatus) => void;
+
+    notes: string;
+    setNotes: (v: string) => void;
 
     valid: boolean;
     errors: string[];
+
+    validationVisible: boolean;
+    setValidationVisible: (v: boolean) => void;
 
     loading: boolean;
     saving: boolean;
@@ -40,10 +52,18 @@ export default function RubricEditorPanel(props: Props) {
         setView,
         raw,
         setRaw,
-        draft,
-        setDraft,
+        fileDraft,
+        setFileDraft,
+        instructorName,
+        setInstructorName,
+        status,
+        setStatus,
+        notes,
+        setNotes,
         valid,
         errors,
+        validationVisible,
+        setValidationVisible,
         loading,
         saving,
         error,
@@ -51,40 +71,68 @@ export default function RubricEditorPanel(props: Props) {
         onSave,
     } = props;
 
-    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
 
-    async function onFileChange(f: File | null) {
+    const [localDraft, setLocalDraft] = useState<RubricJson | null>(fileDraft);
+
+    useEffect(() => {
+        if (fileDraft) setLocalDraft(fileDraft);
+    }, [fileDraft]);
+
+    useEffect(() => {
+        setConfirmOpen(false);
+        if (view === "form") setValidationVisible(false);
+    }, [rubricId, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const title = mode === "edit" ? "Edit rubric" : "Create rubric";
+    const rubricName = titleizeDiseaseName(rubricId);
+    const canInteract = !(saving || loading);
+
+    const effectiveDraft = useMemo(() => (view === "form" ? localDraft : fileDraft), [
+        view,
+        localDraft,
+        fileDraft,
+    ]);
+
+    const showSummary = validationVisible && !valid && errors.length > 0;
+
+    async function onFileChange(f: File | null): Promise<void> {
         if (!f) return;
         const text = await f.text();
         setRaw(text);
+        setView("json");
+        setValidationVisible(true);
     }
 
-    function prettify() {
+    function prettify(): void {
         try {
-            const obj = JSON.parse(raw);
+            const obj = JSON.parse(raw) as unknown;
             setRaw(JSON.stringify(obj, null, 2));
         } catch {
-            // ignore; validation shows parse error
+            // ignore
         }
     }
 
     return (
-        <section className="mt-3 rounded-[1.75rem] bg-input shadow-sm border border-subtle p-4">
+        <section className="mt-3 rounded-[1.75rem] border border-subtle app-bg p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <h2 className="text-sm font-semibold text-primary">
-                        {mode === "edit" ? "Edit rubric" : "Create rubric"}:{" "}
-                        <span className="text-secondary">{titleizeDiseaseName(rubricId)}</span>
+                        {title}: <span className="text-secondary">{rubricName}</span>
                     </h2>
-                    <p className="text-xs text-muted mt-1">
-                        Upload JSON or edit Form/JSON. Save will overwrite previous rubric.
+                    <p className="mt-1 text-xs text-muted">
+                        Upload a JSON file or edit using the Form/JSON tabs. Saving replaces the previous rubric.
                     </p>
                 </div>
 
                 <div className="shrink-0 flex items-center gap-2">
                     <Tabs
                         value={view}
-                        onChange={(v) => setView(v as "form" | "json")}
+                        onChange={(v) => {
+                            const next = v as "form" | "json";
+                            setView(next);
+                            setValidationVisible(next === "json");
+                        }}
                         items={[
                             {value: "form", label: "Form"},
                             {value: "json", label: "JSON"},
@@ -94,12 +142,64 @@ export default function RubricEditorPanel(props: Props) {
             </div>
 
             <div className="mt-3 space-y-2">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <label className="space-y-1">
+                        <div className="text-[11px] font-medium text-muted">Instructor/Rubric Creator Name</div>
+                        <input
+                            value={instructorName}
+                            onChange={(e) => setInstructorName(e.target.value)}
+                            disabled={!canInteract}
+                            className={[
+                                "h-8 w-full rounded-3xl border bg-surface px-2 text-xs text-primary placeholder:text-muted",
+                                "border-subtle",
+                                !canInteract ? "opacity-50" : "",
+                                "focus:outline-none focus:border-strong",
+                            ].join(" ")}
+                            placeholder="e.g., Dr. Smith"
+                        />
+                    </label>
+
+                    <label className="space-y-1">
+                        <div className="text-[11px] font-medium text-muted">Status</div>
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value as RubricStatus)}
+                            disabled={!canInteract}
+                            className={[
+                                "h-8 w-full rounded-3xl border bg-surface px-2 text-xs text-primary",
+                                "border-subtle",
+                                !canInteract ? "opacity-50" : "",
+                                "focus:outline-none focus:border-strong",
+                            ].join(" ")}
+                        >
+                            <option value="testing">testing</option>
+                            <option value="completed">completed</option>
+                        </select>
+                    </label>
+
+                    <label className="space-y-1 md:col-span-3">
+                        <div className="text-[11px] font-medium text-muted">Notes (optional)</div>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            disabled={!canInteract}
+                            className={[
+                                "min-h-[64px] w-full rounded-2xl border border-subtle bg-surface px-3 py-2",
+                                "text-xs leading-relaxed text-primary placeholder:text-muted",
+                                !canInteract ? "opacity-50" : "",
+                                "focus:outline-none focus:border-strong",
+                            ].join(" ")}
+                            placeholder="Optional notes about this rubric"
+                        />
+                    </label>
+                </div>
+
                 <input
                     id="rubric-json"
                     type="file"
                     accept=".json,application/json,text/json"
                     className="sr-only"
-                    disabled={saving || loading}
+                    disabled={!canInteract}
                     onChange={(e) => {
                         const f = e.target.files?.[0] ?? null;
                         void onFileChange(f);
@@ -110,9 +210,10 @@ export default function RubricEditorPanel(props: Props) {
                 <label
                     htmlFor="rubric-json"
                     className={[
-                        "inline-flex items-center justify-center gap-2 rounded-3xl w-full",
-                        "h-9 border border-subtle bg-secondary px-3 text-xs font-medium text-on-secondary hover:bg-surface",
-                        saving || loading ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer",
+                        "inline-flex w-full items-center justify-center gap-2 rounded-3xl",
+                        "h-9 border border-subtle bg-secondary px-3 text-xs font-medium text-on-secondary",
+                        "hover:opacity-90",
+                        !canInteract ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer",
                     ].join(" ")}
                 >
                     <Upload className="h-4 w-4" aria-hidden="true"/>
@@ -128,11 +229,11 @@ export default function RubricEditorPanel(props: Props) {
 
                 {error ? <div className="text-xs text-danger">{error}</div> : null}
 
-                {!valid && errors.length ? (
+                {showSummary ? (
                     <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3">
-                        <div className="text-xs font-semibold text-danger">Schema validation failed</div>
-                        <ul className="mt-2 list-disc pl-5 text-[11px] text-danger space-y-1 max-h-48 overflow-auto">
-                            {errors.slice(0, 100).map((e, idx) => (
+                        <div className="text-xs font-semibold text-danger">Please fix these issues</div>
+                        <ul className="mt-2 list-disc space-y-1 max-h-48 overflow-auto pl-5 text-[11px] text-danger">
+                            {errors.slice(0, 200).map((e, idx) => (
                                 <li key={`${e}-${idx}`}>{e}</li>
                             ))}
                         </ul>
@@ -145,41 +246,56 @@ export default function RubricEditorPanel(props: Props) {
                             <button
                                 type="button"
                                 onClick={prettify}
-                                disabled={saving || loading || !raw.trim()}
-                                className="h-8 rounded-4xl border border-subtle bg-surface-subtle px-3 text-[11px] font-medium text-primary hover:bg-surface disabled:opacity-60"
+                                disabled={!canInteract || !raw.trim()}
+                                className="h-8 rounded-4xl border border-subtle bg-surface px-3 text-[11px] font-medium text-primary hover:bg-surface-subtle disabled:opacity-60"
                             >
-                                Prettify
+                                Pretty JSON
                             </button>
                         </div>
 
                         <textarea
                             value={raw}
                             onChange={(e) => setRaw(e.target.value)}
-                            className="min-h-[340px] w-full rounded-2xl border border-subtle bg-surface px-3 py-2 text-xs text-primary font-mono leading-relaxed"
+                            className="min-h-[340px] w-full rounded-2xl border border-subtle bg-surface px-3 py-2 font-mono text-xs leading-relaxed text-primary"
                             spellCheck={false}
                         />
                     </div>
-                ) : draft ? (
-                    <RubricFormattedEditable draft={draft} onChange={setDraft}/>
+                ) : effectiveDraft ? (
+                    <RubricFormattedEditable
+                        draft={effectiveDraft}
+                        onChange={(next) => {
+                            setLocalDraft(next);
+                            setFileDraft(next);
+                        }}
+                    />
                 ) : (
-                    <div className="text-xs text-muted py-6">No rubric loaded.</div>
+                    <div className="py-6 text-xs text-muted">No rubric loaded.</div>
                 )}
 
                 <div className="pt-3 flex items-center justify-between gap-2">
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={saving || loading}
-                        className="h-9 rounded-3xl border border-subtle bg-surface-subtle px-4 text-xs font-semibold text-primary hover:bg-surface disabled:opacity-60"
+                        disabled={!canInteract}
+                        className={[
+                            "h-9 rounded-3xl border border-subtle bg-surface-subtle px-4 text-xs font-semibold text-primary",
+                            "hover:bg-surface focus:outline-none focus-visible:border-strong",
+                            !canInteract ? "opacity-60" : "",
+                        ].join(" ")}
                     >
                         Close
                     </button>
 
                     <button
                         type="button"
-                        disabled={saving || loading || !valid || !draft}
+                        disabled={!canInteract || !localDraft}
                         className="h-9 rounded-3xl bg-secondary px-4 text-xs font-semibold text-on-secondary hover:opacity-90 disabled:opacity-60"
                         onClick={() => {
+                            if (!valid) {
+                                setValidationVisible(true);
+                                return;
+                            }
+
                             if (mode === "edit") setConfirmOpen(true);
                             else void onSave();
                         }}
@@ -197,8 +313,8 @@ export default function RubricEditorPanel(props: Props) {
             >
                 <div className="space-y-3 text-sm">
                     <p className="text-muted">
-                        This will overwrite the existing rubric for{" "}
-                        <span className="font-semibold text-primary">{titleizeDiseaseName(rubricId)}</span>.
+                        This will replace the existing rubric for{" "}
+                        <span className="font-semibold text-primary">{rubricName}</span>.
                     </p>
 
                     <div className="flex justify-end gap-2 pt-2">

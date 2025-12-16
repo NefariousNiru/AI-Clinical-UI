@@ -19,7 +19,9 @@ export default function RubricPage() {
                     />
                 </div>
             </div>
+
             <div className="p-1"/>
+
             {editor.mode !== "idle" && editor.rubricId ? (
                 <RubricEditorPanel
                     mode={editor.mode === "edit" ? "edit" : "create"}
@@ -28,10 +30,18 @@ export default function RubricPage() {
                     setView={editor.setView}
                     raw={editor.raw}
                     setRaw={editor.setRaw}
-                    draft={editor.draft}
-                    setDraft={editor.setDraft}
+                    fileDraft={editor.fileDraft}
+                    setFileDraft={editor.setFileDraft}
+                    instructorName={editor.instructorName}
+                    setInstructorName={editor.setInstructorName}
+                    status={editor.status}
+                    setStatus={editor.setStatus}
+                    notes={editor.notes}
+                    setNotes={editor.setNotes}
                     valid={editor.valid}
                     errors={editor.errors}
+                    validationVisible={editor.validationVisible}
+                    setValidationVisible={editor.setValidationVisible}
                     loading={editor.loading}
                     saving={editor.saving}
                     error={editor.error}

@@ -10,13 +10,14 @@ import {
 import {
     RubricResponseSchema,
     RubricSearchResponseSchema,
-    type RubricDraft,
+    type RubricRequest,
+    type RubricResponse,
 } from "../../types/rubric";
 
 /**
  * Build a URL with query parameters.
  *
- * NOTE:
+ * Note:
  * - Our `http` wrapper does NOT support `{ params }`
  * - Query params must be encoded manually
  */
@@ -38,11 +39,6 @@ function withQuery(
  *
  * Backend:
  *   GET /api/v1/admin/rubric/search?query=...&limit=...
- *
- * @param query - Partial disease text
- * @param limit - Max number of results (default: 10)
- *
- * @returns Parsed autocomplete response
  */
 export async function searchRubrics(query: string, limit = 10) {
     const url = withQuery(ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE, {query, limit});
@@ -55,15 +51,10 @@ export async function searchRubrics(query: string, limit = 10) {
  *
  * Backend:
  *   GET /api/v1/admin/rubric?rubric_id=...
- *
- * @param rubric_id - Canonical rubric id (same as disease slug)
- *
- * @returns Parsed rubric response
  */
-export async function getRubricById(rubric_id: string) {
+export async function getRubricById(rubric_id: string): Promise<RubricResponse> {
     const url = withQuery(ADMIN_RUBRIC_BASE, {rubric_id});
     const resp = await http.get<unknown>(url);
-    console.log(resp);
     return RubricResponseSchema.parse(resp);
 }
 
@@ -72,16 +63,8 @@ export async function getRubricById(rubric_id: string) {
  *
  * Backend:
  *   POST /api/v1/admin/rubric
- *
- * Contract:
- * - `payload.rubric_id` MUST match the disease slug
- * - Payload is validated on frontend via Zod before sending
- *
- * @param payload - Full rubric JSON payload
- *
- * @returns Parsed rubric response
  */
-export async function addRubric(payload: RubricDraft) {
+export async function addRubric(payload: RubricRequest): Promise<RubricResponse> {
     const resp = await http.post<unknown>(ADMIN_RUBRIC_BASE, payload);
     return RubricResponseSchema.parse(resp);
 }
@@ -91,16 +74,8 @@ export async function addRubric(payload: RubricDraft) {
  *
  * Backend:
  *   PUT /api/v1/admin/rubric
- *
- * Semantics:
- * - Full replacement (not patch)
- * - Used only after explicit user confirmation in UI
- *
- * @param payload - Full rubric JSON payload
- *
- * @returns Parsed rubric response
  */
-export async function updateRubric(payload: RubricDraft) {
+export async function updateRubric(payload: RubricRequest): Promise<RubricResponse> {
     const resp = await http.put<unknown>(ADMIN_RUBRIC_BASE, payload);
     return RubricResponseSchema.parse(resp);
 }
@@ -110,8 +85,6 @@ export async function updateRubric(payload: RubricDraft) {
  *
  * Backend:
  *   DELETE /api/v1/admin/rubric?rubric_id=...
- *
- * @param rubric_id - Canonical rubric id (disease slug)
  */
 export async function deleteRubricById(rubric_id: string): Promise<void> {
     const url = withQuery(ADMIN_RUBRIC_BASE, {rubric_id});
@@ -123,16 +96,8 @@ export async function deleteRubricById(rubric_id: string): Promise<void> {
  *
  * Backend:
  *   GET /api/v1/admin/rubric/ids?limit=...&offset=...
- *
- * @param limit  - Max number of ids to return (default: 20)
- * @param offset - Zero-based offset for pagination
- *
- * @returns Array of rubric ids
  */
-export async function getAllRubricIds(
-    limit = 20,
-    offset = 0,
-): Promise<string[]> {
+export async function getAllRubricIds(limit = 20, offset = 0): Promise<string[]> {
     const url = withQuery(ADMIN_RUBRIC_IDS, {limit, offset});
     const resp = await http.get<unknown>(url);
     return z.array(z.string()).parse(resp);

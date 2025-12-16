@@ -1,26 +1,16 @@
+// file: src/pages/admin/hooks/rubric.ts
+
 import {useCallback, useMemo, useRef, useState} from "react";
 import {addRubric, getRubricById, updateRubric} from "../../../lib/api/admin/rubric";
-import {normalizeRubricJsonToCamel} from "../../../lib/utils/functions";
-import {RubricJsonSchema} from "../../../lib/types/rubricSchema";
-
-/**
- * Rubric Editor Hook
- *
- * Responsibilities:
- * - Owns editor state (mode, selected rubricId, view, raw JSON, draft object)
- * - Loads/saves via API
- * - Normalizes incoming/outgoing rubric JSON to camelCase
- * - Sanitizes legacy DB fields that are not part of the authoring schema
- * - Validates using strict Zod schema and exposes human-readable errors
- *
- * Design:
- * - API layer parses the response envelope; the rubric "file" is treated as unknown.
- * - This hook canonicalizes the file into a strict RubricDraft for both "form" and "json" modes.
- * - raw and draft are kept in sync; we avoid ping-pong loops using refs.
- */
+import {
+    RubricJsonSchema,
+    RubricStatusSchema,
+    type RubricJson,
+    type RubricStatus
+} from "../../../lib/types/rubricSchema";
+import {canonicalizeAndValidate} from "../../../lib/utils/rubricEdit";
 
 export type RubricEditorMode = "idle" | "create" | "edit";
-export type RubricDraft = import("../../../lib/types/rubricSchema").RubricJson;
 
 export type UseRubricEditorResult = {
     mode: RubricEditorMode;
@@ -32,11 +22,23 @@ export type UseRubricEditorResult = {
     raw: string;
     setRaw: (next: string) => void;
 
-    draft: RubricDraft | null;
-    setDraft: (next: RubricDraft) => void;
+    fileDraft: RubricJson | null;
+    setFileDraft: (next: RubricJson) => void;
+
+    instructorName: string;
+    setInstructorName: (v: string) => void;
+
+    status: RubricStatus;
+    setStatus: (v: RubricStatus) => void;
+
+    notes: string;
+    setNotes: (v: string) => void;
 
     valid: boolean;
     errors: string[];
+
+    validationVisible: boolean;
+    setValidationVisible: (v: boolean) => void;
 
     loading: boolean;
     saving: boolean;
@@ -49,69 +51,7 @@ export type UseRubricEditorResult = {
     save: (opts?: { confirmReplace?: boolean }) => Promise<boolean>;
 };
 
-function pathToString(path: PropertyKey[]): string {
-    if (!path.length) return "(root)";
-    return path
-        .map((p) => {
-            if (typeof p === "symbol") return p.description ? `Symbol(${p.description})` : "Symbol(?)";
-            return String(p);
-        })
-        .join(".");
-}
-
-function formatIssues(issues: Array<{ path: PropertyKey[]; message: string }>): string[] {
-    return issues.map((i) => `${pathToString(i.path)}: ${i.message}`);
-}
-
-/**
- * Sanitizes incoming rubric JSON (from DB or user upload) to fit the authoring schema.
- *
- * Rules:
- * - Drop legacy keys not in schema (example: "aliases")
- * - Drop null-valued optional-ish fields that older rubrics stored as null
- * - Keep "notes" only when it's a string (older data may store null/object)
- *
- * Important:
- * - This does NOT "fix" semantically invalid rubrics. It only removes known garbage.
- * - Strict Zod validation still decides validity.
- */
-function sanitizeRubricIncoming(input: unknown): unknown {
-    if (Array.isArray(input)) return input.map(sanitizeRubricIncoming);
-    if (typeof input !== "object" || input === null) return input;
-
-    const obj = input as Record<string, unknown>;
-    const out: Record<string, unknown> = {};
-
-    for (const [k, v] of Object.entries(obj)) {
-        // Drop legacy/unmodeled keys
-        if (k === "aliases") continue;
-
-        // Optional fields that older rubrics sometimes persisted as null
-        if (k === "unitEquivalents" && v === null) continue;
-        if (k === "dependsOnAny" && v === null) continue;
-        if (k === "minItemsRequired" && v === null) continue;
-
-        // notes exists at multiple levels. Authoring schema treats it as string when present.
-        if (k === "notes") {
-            if (typeof v !== "string") continue;
-            out[k] = v;
-            continue;
-        }
-
-        out[k] = sanitizeRubricIncoming(v);
-    }
-
-    return out;
-}
-
-/**
- * Minimal starter rubric for create flow.
- * The four sections remain constant, but blocks/criteria can evolve.
- *
- * Note: maxPoints are allowed to start at 0. If you later add derived-point logic,
- * this skeleton still remains compatible.
- */
-function makeSkeletonRubric(rubricId: string): RubricDraft {
+function makeSkeletonFile(rubricId: string): RubricJson {
     return {
         rubricId,
         rubricVersion: "1.0",
@@ -119,7 +59,7 @@ function makeSkeletonRubric(rubricId: string): RubricDraft {
         scoringInvariants: {
             requireSectionBlockSumsMatch: true,
             evidenceScope: "section",
-            notes: "",
+            notes: "Scope limited to section.",
         },
         contraindicationsPolicy: "non_scored_feedback_only",
         evidenceKeys: [],
@@ -139,6 +79,9 @@ function makeSkeletonRubric(rubricId: string): RubricDraft {
                                 key: "priority_level",
                                 verbiage: "Priority identified",
                                 weight: 0,
+                                unitEquivalents: null,
+                                notes: null,
+                                aliases: null,
                             },
                         ],
                         notes: "",
@@ -192,90 +135,125 @@ function makeSkeletonRubric(rubricId: string): RubricDraft {
     };
 }
 
+function formatIssues(issues: Array<{ path: string; message: string }>): string[] {
+    return issues.map((i) => `${i.path}: ${i.message}`);
+}
+
+function formatZodIssues(
+    issues: Array<{ path: Array<string | number>; message: string }>,
+): string[] {
+    return issues.map((i) => {
+        const path = i.path.length ? i.path.join(".") : "(root)";
+        return `${path}: ${i.message}`;
+    });
+}
+
+type ValidationResult =
+    | { ok: true; canonical: RubricJson; errors: string[] }
+    | { ok: false; canonical: null; errors: string[] };
+
+function validateFileUnknown(nextUnknown: unknown, expectedRubricId: string | null): ValidationResult {
+    const parsed = RubricJsonSchema.safeParse(nextUnknown);
+    if (!parsed.success) {
+        return {
+            ok: false,
+            canonical: null,
+            errors: formatZodIssues(
+                parsed.error.issues.map((x) => ({path: x.path as Array<string | number>, message: x.message})),
+            ),
+        };
+    }
+
+    if (expectedRubricId && parsed.data.rubricId !== expectedRubricId) {
+        return {
+            ok: false,
+            canonical: null,
+            errors: [
+                `rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`,
+            ],
+        };
+    }
+
+    const {draft: canonical, issues} = canonicalizeAndValidate(parsed.data);
+    if (issues.length) return {ok: false, canonical: null, errors: formatIssues(issues)};
+
+    return {ok: true, canonical, errors: []};
+}
+
 export function useRubricEditor(): UseRubricEditorResult {
     const [mode, setMode] = useState<RubricEditorMode>("idle");
     const [rubricId, setRubricId] = useState<string | null>(null);
 
-    const [view, setView] = useState<"form" | "json">("form");
+    const [view, _setView] = useState<"form" | "json">("form");
+    const [raw, _setRaw] = useState<string>("");
 
-    const [raw, _setRaw] = useState("");
-    const [draft, _setDraft] = useState<RubricDraft | null>(null);
+    const [fileDraft, _setFileDraft] = useState<RubricJson | null>(null);
 
+    const [instructorName, setInstructorName] = useState<string>("");
+    const [status, setStatus] = useState<RubricStatus>("testing");
+    const [notes, setNotes] = useState<string>("");
+
+    const [valid, setValid] = useState<boolean>(false);
     const [errors, setErrors] = useState<string[]>([]);
-    const [valid, setValid] = useState(false);
+    const [validationVisible, setValidationVisible] = useState<boolean>(false);
 
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [saving, setSaving] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Prevent raw<->draft ping-pong loops
-    const syncingFromRawRef = useRef(false);
-    const syncingFromDraftRef = useRef(false);
+    const syncingFromRawRef = useRef<boolean>(false);
+    const syncingFromDraftRef = useRef<boolean>(false);
 
-    /**
-     * Normalize + sanitize + strict-parse a rubric JSON payload.
-     * Returns canonical RubricDraft on success, otherwise null and sets errors state.
-     */
-    const validateAndCanonicalize = useCallback(
-        (nextUnknown: unknown, expectedRubricId: string | null): RubricDraft | null => {
-            // 1) normalize user/backfill formats to camelCase
-            const camel = normalizeRubricJsonToCamel(nextUnknown);
+    const lastErrorsRef = useRef<string[]>([]);
+    const lastValidRef = useRef<boolean>(false);
 
-            // 2) strip legacy keys + normalize nulls
-            const sanitized = sanitizeRubricIncoming(camel);
+    const applyValidationSnapshot = useCallback(
+        (v: boolean, errs: string[]) => {
+            lastValidRef.current = v;
+            lastErrorsRef.current = errs;
 
-            // 3) strict parse
-            const parsed = RubricJsonSchema.safeParse(sanitized);
-            if (!parsed.success) {
-                setValid(false);
-                setErrors(formatIssues(parsed.error.issues as Array<{ path: PropertyKey[]; message: string }>));
-                return null;
-            }
-
-            // 4) verify rubricId matches selected disease slug
-            if (expectedRubricId && parsed.data.rubricId !== expectedRubricId) {
-                setValid(false);
-                setErrors([
-                    `rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`,
-                ]);
-                return null;
-            }
-
-            // 5) mark valid and return canonical payload
-            setValid(true);
-            setErrors([]);
-            return parsed.data;
+            setValid(v);
+            setErrors(validationVisible ? errs : []);
         },
-        [],
+        [validationVisible],
     );
 
-    /**
-     * Set draft object (form mode).
-     * We update raw JSON to a canonical pretty-printed version and then re-validate.
-     */
-    const setDraft = useCallback(
-        (next: RubricDraft) => {
-            _setDraft(next);
-            if (syncingFromRawRef.current) return;
+    const setView = useCallback((v: "form" | "json") => {
+        _setView(v);
+        setValidationVisible(v === "json");
+    }, []);
 
-            syncingFromDraftRef.current = true;
-            _setRaw(JSON.stringify(next, null, 2));
-            syncingFromDraftRef.current = false;
+    const setFileDraft = useCallback(
+        (next: RubricJson) => {
+            // Always keep the user's latest object in state.
+            _setFileDraft(next);
 
-            const validated = validateAndCanonicalize(next, rubricId);
-            if (!validated) return;
+            if (syncingFromRawRef.current) {
+                applyValidationSnapshot(lastValidRef.current, lastErrorsRef.current);
+                return;
+            }
 
-            // enforce canonical object + raw text
-            _setDraft(validated);
-            _setRaw(JSON.stringify(validated, null, 2));
+            const res = validateFileUnknown(next, rubricId);
+            if (res.ok) {
+                _setFileDraft(res.canonical);
+
+                syncingFromDraftRef.current = true;
+                _setRaw(JSON.stringify(res.canonical, null, 2));
+                syncingFromDraftRef.current = false;
+
+                applyValidationSnapshot(true, []);
+            } else {
+                // Keep draft editable, but do not spam errors in Form view.
+                syncingFromDraftRef.current = true;
+                _setRaw(JSON.stringify(next, null, 2));
+                syncingFromDraftRef.current = false;
+
+                applyValidationSnapshot(false, res.errors);
+            }
         },
-        [rubricId, validateAndCanonicalize],
+        [applyValidationSnapshot, rubricId],
     );
 
-    /**
-     * Set raw JSON (json mode).
-     * We parse the JSON and re-validate into a canonical RubricDraft.
-     */
     const setRaw = useCallback(
         (next: string) => {
             _setRaw(next);
@@ -283,118 +261,165 @@ export function useRubricEditor(): UseRubricEditorResult {
 
             syncingFromRawRef.current = true;
             try {
-                const parsedJson = JSON.parse(next);
-                const validated = validateAndCanonicalize(parsedJson, rubricId);
+                const parsedJson: unknown = JSON.parse(next);
+                const res = validateFileUnknown(parsedJson, rubricId);
 
-                _setDraft(validated);
-                if (validated) _setRaw(JSON.stringify(validated, null, 2));
+                if (res.ok) {
+                    _setFileDraft(res.canonical);
+                    _setRaw(JSON.stringify(res.canonical, null, 2));
+                    applyValidationSnapshot(true, []);
+                } else {
+                    // Keep last good fileDraft for Form view; JSON view shows errors.
+                    applyValidationSnapshot(false, res.errors);
+                }
             } catch {
-                setValid(false);
-                setErrors(["(root): Invalid JSON (failed to parse)."]);
-                _setDraft(null);
+                applyValidationSnapshot(false, ["(root): Invalid JSON (failed to parse)."]);
             } finally {
                 syncingFromRawRef.current = false;
             }
         },
-        [rubricId, validateAndCanonicalize],
+        [applyValidationSnapshot, rubricId],
     );
 
-    /**
-     * Create mode: new skeleton + validate immediately.
-     */
     const openCreate = useCallback(
         (id: string) => {
             setError(null);
             setMode("create");
             setRubricId(id);
             setView("form");
+            setValidationVisible(false);
 
-            const skel = makeSkeletonRubric(id);
-            const validated = validateAndCanonicalize(skel, id);
+            setInstructorName("");
+            setStatus("testing");
+            setNotes("");
 
-            _setDraft(validated);
-            _setRaw(JSON.stringify(validated ?? skel, null, 2));
+            const skel = makeSkeletonFile(id);
+            const res = validateFileUnknown(skel, id);
+
+            if (res.ok) {
+                _setFileDraft(res.canonical);
+                _setRaw(JSON.stringify(res.canonical, null, 2));
+                applyValidationSnapshot(true, []);
+            } else {
+                _setFileDraft(skel);
+                _setRaw(JSON.stringify(skel, null, 2));
+                applyValidationSnapshot(false, res.errors);
+            }
         },
-        [validateAndCanonicalize],
+        [applyValidationSnapshot, setView],
     );
 
-    /**
-     * Edit mode: load from backend and validate the file payload strictly.
-     */
     const openEdit = useCallback(
         async (id: string) => {
-            console.log("[rubric] openEdit", {id});
-
             setError(null);
             setLoading(true);
             setMode("edit");
             setRubricId(id);
             setView("form");
+            setValidationVisible(false);
 
             try {
                 const resp = await getRubricById(id);
-                console.log("[rubric] getRubricById resp", resp);
 
-                const fileUnknown = resp.file;
-                const validated = validateAndCanonicalize(fileUnknown, id);
+                setInstructorName(resp.instructorName ?? "");
+                setStatus(RubricStatusSchema.parse(resp.status));
+                setNotes(resp.notes ?? "");
 
-                _setDraft(validated);
-                _setRaw(validated ? JSON.stringify(validated, null, 2) : JSON.stringify(fileUnknown, null, 2));
-
-                if (!validated) console.warn("[rubric] openEdit: file failed validation");
-            } catch (e) {
+                const res = validateFileUnknown(resp.file, id);
+                if (res.ok) {
+                    _setFileDraft(res.canonical);
+                    _setRaw(JSON.stringify(res.canonical, null, 2));
+                    applyValidationSnapshot(true, []);
+                } else {
+                    // Keep the file in raw (for inspection), but Form uses fileDraft.
+                    _setFileDraft(resp.file);
+                    _setRaw(JSON.stringify(resp.file, null, 2));
+                    applyValidationSnapshot(false, res.errors);
+                }
+            } catch (e: unknown) {
+                // eslint-disable-next-line no-console
                 console.error("[rubric] openEdit failed:", e);
                 setError("Failed to load rubric.");
-                _setDraft(null);
+                _setFileDraft(null);
                 _setRaw("");
-                setValid(false);
-                setErrors([]);
+                applyValidationSnapshot(false, []);
             } finally {
                 setLoading(false);
             }
         },
-        [validateAndCanonicalize],
+        [applyValidationSnapshot, setView],
     );
 
-    /**
-     * Close editor and reset state.
-     */
     const close = useCallback(() => {
         setMode("idle");
         setRubricId(null);
-        _setDraft(null);
+
+        _setFileDraft(null);
         _setRaw("");
+
+        setInstructorName("");
+        setStatus("testing");
+        setNotes("");
+
         setValid(false);
         setErrors([]);
+        lastErrorsRef.current = [];
+        lastValidRef.current = false;
+
+        setValidationVisible(false);
         setError(null);
         setLoading(false);
         setSaving(false);
+        _setView("form");
     }, []);
 
-    /**
-     * Save rubric using current mode.
-     * - edit: requires confirmReplace
-     * - create: adds then switches to edit mode
-     */
     const save = useCallback(
         async (opts?: { confirmReplace?: boolean }) => {
-            if (!draft || !rubricId) return false;
-            if (!valid) return false;
-            if (draft.rubricId !== rubricId) return false;
+            if (!rubricId || !fileDraft) return false;
+
+            // Force surfacing issues on save attempt.
+            setValidationVisible(true);
+
+            const metaInstructor = instructorName.trim();
+            if (!metaInstructor) {
+                applyValidationSnapshot(false, ["instructorName: is required."]);
+                return false;
+            }
+
+            const res = validateFileUnknown(fileDraft, rubricId);
+            if (!res.ok) {
+                applyValidationSnapshot(false, res.errors);
+                return false;
+            }
 
             setSaving(true);
             setError(null);
 
             try {
+                const payload = {
+                    diseaseName: rubricId,
+                    instructorName: metaInstructor,
+                    status,
+                    notes: notes.trim() ? notes.trim() : null,
+                    file: res.canonical,
+                } as const;
+
                 if (mode === "edit") {
                     if (!opts?.confirmReplace) return false;
-                    await updateRubric(draft);
+                    const resp = await updateRubric(payload);
+                    _setFileDraft(resp.file);
+                    _setRaw(JSON.stringify(resp.file, null, 2));
                 } else if (mode === "create") {
-                    await addRubric(draft);
+                    const resp = await addRubric(payload);
                     setMode("edit");
+                    _setFileDraft(resp.file);
+                    _setRaw(JSON.stringify(resp.file, null, 2));
                 }
+
+                applyValidationSnapshot(true, []);
                 return true;
-            } catch (e) {
+            } catch (e: unknown) {
+                // eslint-disable-next-line no-console
                 console.error("[rubric] save failed:", e);
                 setError("Failed to save rubric.");
                 return false;
@@ -402,7 +427,15 @@ export function useRubricEditor(): UseRubricEditorResult {
                 setSaving(false);
             }
         },
-        [draft, rubricId, valid, mode],
+        [
+            rubricId,
+            fileDraft,
+            instructorName,
+            status,
+            notes,
+            mode,
+            applyValidationSnapshot,
+        ],
     );
 
     return useMemo(
@@ -416,11 +449,23 @@ export function useRubricEditor(): UseRubricEditorResult {
             raw,
             setRaw,
 
-            draft,
-            setDraft,
+            fileDraft,
+            setFileDraft,
+
+            instructorName,
+            setInstructorName,
+
+            status,
+            setStatus,
+
+            notes,
+            setNotes,
 
             valid,
             errors,
+
+            validationVisible,
+            setValidationVisible,
 
             loading,
             saving,
@@ -436,12 +481,17 @@ export function useRubricEditor(): UseRubricEditorResult {
             mode,
             rubricId,
             view,
+            setView,
             raw,
             setRaw,
-            draft,
-            setDraft,
+            fileDraft,
+            setFileDraft,
+            instructorName,
+            status,
+            notes,
             valid,
             errors,
+            validationVisible,
             loading,
             saving,
             error,

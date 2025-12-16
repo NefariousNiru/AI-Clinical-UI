@@ -1,15 +1,23 @@
-// file: src/lib/validation/rubricSchema.ts
+// file: src/lib/types/rubricSchema.ts
 
 import {z} from "zod";
 
 const NonEmpty = z.string().trim().min(1);
+
+const RubricContraindicationsPolicySchema = z.literal("non_scored_feedback_only");
+
+export const RubricStatusSchema = z.enum(["testing", "completed"]);
+export type RubricStatus = z.infer<typeof RubricStatusSchema>;
 
 const UnitEquivalentsSchema = z
     .record(z.string(), z.record(z.string(), z.number()))
     .superRefine((val: Record<string, Record<string, number>>, ctx) => {
         for (const [unit, inner] of Object.entries(val)) {
             if (typeof inner !== "object" || inner === null) {
-                ctx.addIssue({code: "custom", message: `unitEquivalents["${unit}"] must be an object`});
+                ctx.addIssue({
+                    code: "custom",
+                    message: `unitEquivalents["${unit}"] must be an object`,
+                });
                 return;
             }
             for (const k of Object.keys(inner)) {
@@ -28,6 +36,8 @@ const SelectKItemSchema = z
     .object({
         key: NonEmpty,
         verbiage: NonEmpty,
+        notes: z.string().optional().nullable(),
+        aliases: z.unknown().optional().nullable(),
     })
     .strict();
 
@@ -37,10 +47,9 @@ const BinaryCriterionSchema = z
         key: NonEmpty,
         verbiage: NonEmpty,
         weight: z.number(),
-        // Accept null from backend, we’ll sanitize to undefined/[] anyway.
         unitEquivalents: z.array(UnitEquivalentsSchema).optional().nullable(),
-        // Some older payloads store notes at criterion-level; accept null
         notes: z.string().optional().nullable(),
+        aliases: z.unknown().optional().nullable(),
     })
     .strict();
 
@@ -52,17 +61,17 @@ const SelectKCriterionSchema = z
         selectK: z.number().int().positive(),
         awardPoints: z.number(),
         items: z.array(SelectKItemSchema).min(1),
-
-        // These appeared in your formatted viewer, and backend may emit them
-        dependsOnAny: z.array(NonEmpty).optional(),
-        minItemsRequired: z.number().int().nonnegative().optional(),
-
+        dependsOnAny: z.array(NonEmpty).optional().nullable(),
+        minItemsRequired: z.number().int().nonnegative().optional().nullable(),
         unitEquivalents: z.array(UnitEquivalentsSchema).optional().nullable(),
         notes: z.string().optional().nullable(),
     })
     .strict();
 
-const CriterionSchema = z.discriminatedUnion("type", [BinaryCriterionSchema, SelectKCriterionSchema]);
+const CriterionSchema = z.discriminatedUnion("type", [
+    BinaryCriterionSchema,
+    SelectKCriterionSchema,
+]);
 
 const BlockSchema = z
     .object({
@@ -70,7 +79,7 @@ const BlockSchema = z
         title: NonEmpty,
         maxPoints: z.number(),
         criteria: z.array(CriterionSchema),
-        notes: z.string().optional().nullable(), // backend has null
+        notes: z.string().optional().nullable(),
     })
     .strict();
 
@@ -96,9 +105,15 @@ const IdentificationSectionSchema = BaseSectionSchema.extend({
     }
 });
 
-const ExplanationSectionSchema = BaseSectionSchema.extend({id: z.literal("explanation")});
-const PlanRecommendationSectionSchema = BaseSectionSchema.extend({id: z.literal("plan_recommendation")});
-const MonitoringSectionSchema = BaseSectionSchema.extend({id: z.literal("monitoring")});
+const ExplanationSectionSchema = BaseSectionSchema.extend({
+    id: z.literal("explanation"),
+});
+const PlanRecommendationSectionSchema = BaseSectionSchema.extend({
+    id: z.literal("plan_recommendation"),
+});
+const MonitoringSectionSchema = BaseSectionSchema.extend({
+    id: z.literal("monitoring"),
+});
 
 const ScoringInvariantsSchema = z
     .object({
@@ -115,13 +130,24 @@ export const RubricJsonSchema = z
         schemaVersion: NonEmpty,
 
         scoringInvariants: ScoringInvariantsSchema,
-        contraindicationsPolicy: z.literal("non_scored_feedback_only"),
+        contraindicationsPolicy: RubricContraindicationsPolicySchema,
         evidenceKeys: z.array(NonEmpty),
 
         sections: z
-            .tuple([IdentificationSectionSchema, ExplanationSectionSchema, PlanRecommendationSectionSchema, MonitoringSectionSchema])
+            .tuple([
+                IdentificationSectionSchema,
+                ExplanationSectionSchema,
+                PlanRecommendationSectionSchema,
+                MonitoringSectionSchema,
+            ])
             .superRefine((secs, ctx) => {
-                const expected = ["identification", "explanation", "plan_recommendation", "monitoring"] as const;
+                const expected = [
+                    "identification",
+                    "explanation",
+                    "plan_recommendation",
+                    "monitoring",
+                ] as const;
+
                 for (let i = 0; i < expected.length; i++) {
                     if (secs[i].id !== expected[i]) {
                         ctx.addIssue({
@@ -133,6 +159,17 @@ export const RubricJsonSchema = z
                 }
             }),
 
+        nonScoredClinicalNotes: z.array(z.string()).optional(),
+
+        // Stored in file JSON as well
+        // (your backend includes it in the payload)
+        // Keep strict contract: require it.
+        // If you ever make it optional server-side, update here too.
+        // For now: required.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // Note: Zod handles literal above.
+    })
+    .extend({
         nonScoredClinicalNotes: z.array(z.string()).optional(),
     })
     .strict();
