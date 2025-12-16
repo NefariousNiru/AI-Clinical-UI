@@ -21,7 +21,7 @@ export const UserProfile = z.object({
     email: z.string(),
     name: z.string(),
     role: Role,
-    semesterName: z.string(),
-    semesterYear: z.string(),
+    semesterName: z.string().nullable(),
+    semesterYear: z.string().nullable(),
 })
 export type UserProfile = z.infer<typeof UserProfile>;

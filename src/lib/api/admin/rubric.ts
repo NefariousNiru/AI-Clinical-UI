@@ -11,7 +11,7 @@ import {
     RubricResponseSchema,
     RubricSearchResponseSchema,
     type RubricRequest,
-    type RubricResponse,
+    type RubricResponse, RubricRequestSchema,
 } from "../../types/rubric";
 
 /**
@@ -65,7 +65,8 @@ export async function getRubricById(rubric_id: string): Promise<RubricResponse> 
  *   POST /api/v1/admin/rubric
  */
 export async function addRubric(payload: RubricRequest): Promise<RubricResponse> {
-    const resp = await http.post<unknown>(ADMIN_RUBRIC_BASE, payload);
+    const body = RubricRequestSchema.parse(payload);
+    const resp = await http.post<unknown>(ADMIN_RUBRIC_BASE, body);
     return RubricResponseSchema.parse(resp);
 }
 
@@ -76,7 +77,8 @@ export async function addRubric(payload: RubricRequest): Promise<RubricResponse>
  *   PUT /api/v1/admin/rubric
  */
 export async function updateRubric(payload: RubricRequest): Promise<RubricResponse> {
-    const resp = await http.put<unknown>(ADMIN_RUBRIC_BASE, payload);
+    const body = RubricRequestSchema.parse(payload);
+    const resp = await http.put<unknown>(ADMIN_RUBRIC_BASE, body);
     return RubricResponseSchema.parse(resp);
 }
 

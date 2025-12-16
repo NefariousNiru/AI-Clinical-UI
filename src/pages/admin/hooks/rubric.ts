@@ -2,6 +2,7 @@
 
 import {useCallback, useMemo, useRef, useState} from "react";
 import {addRubric, getRubricById, updateRubric} from "../../../lib/api/admin/rubric";
+import type {RubricRequest} from "../../../lib/types/rubric";
 import {
     RubricJsonSchema,
     RubricStatusSchema,
@@ -51,7 +52,22 @@ export type UseRubricEditorResult = {
     save: (opts?: { confirmReplace?: boolean }) => Promise<boolean>;
 };
 
-function makeSkeletonFile(rubricId: string): RubricJson {
+function pathToString(path: PropertyKey[]): string {
+    if (!path.length) return "(root)";
+    return path
+        .map((p) => (typeof p === "symbol" ? (p.description ? `Symbol(${p.description})` : "Symbol(?)") : String(p)))
+        .join(".");
+}
+
+function formatZodIssues(issues: Array<{ path: PropertyKey[]; message: string }>): string[] {
+    return issues.map((i) => `${pathToString(i.path)}: ${i.message}`);
+}
+
+function formatRuleIssues(issues: Array<{ path: string; message: string }>): string[] {
+    return issues.map((i) => `${i.path}: ${i.message}`);
+}
+
+function makeSkeletonRubric(rubricId: string): RubricJson {
     return {
         rubricId,
         rubricVersion: "1.0",
@@ -59,7 +75,7 @@ function makeSkeletonFile(rubricId: string): RubricJson {
         scoringInvariants: {
             requireSectionBlockSumsMatch: true,
             evidenceScope: "section",
-            notes: "Scope limited to section.",
+            notes: "",
         },
         contraindicationsPolicy: "non_scored_feedback_only",
         evidenceKeys: [],
@@ -135,19 +151,6 @@ function makeSkeletonFile(rubricId: string): RubricJson {
     };
 }
 
-function formatIssues(issues: Array<{ path: string; message: string }>): string[] {
-    return issues.map((i) => `${i.path}: ${i.message}`);
-}
-
-function formatZodIssues(
-    issues: Array<{ path: Array<string | number>; message: string }>,
-): string[] {
-    return issues.map((i) => {
-        const path = i.path.length ? i.path.join(".") : "(root)";
-        return `${path}: ${i.message}`;
-    });
-}
-
 type ValidationResult =
     | { ok: true; canonical: RubricJson; errors: string[] }
     | { ok: false; canonical: null; errors: string[] };
@@ -158,9 +161,7 @@ function validateFileUnknown(nextUnknown: unknown, expectedRubricId: string | nu
         return {
             ok: false,
             canonical: null,
-            errors: formatZodIssues(
-                parsed.error.issues.map((x) => ({path: x.path as Array<string | number>, message: x.message})),
-            ),
+            errors: formatZodIssues(parsed.error.issues as Array<{ path: PropertyKey[]; message: string }>),
         };
     }
 
@@ -168,16 +169,25 @@ function validateFileUnknown(nextUnknown: unknown, expectedRubricId: string | nu
         return {
             ok: false,
             canonical: null,
-            errors: [
-                `rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`,
-            ],
+            errors: [`rubricId: must equal selected disease slug "${expectedRubricId}", got "${parsed.data.rubricId}"`],
         };
     }
 
     const {draft: canonical, issues} = canonicalizeAndValidate(parsed.data);
-    if (issues.length) return {ok: false, canonical: null, errors: formatIssues(issues)};
+    if (issues.length) return {ok: false, canonical: null, errors: formatRuleIssues(issues)};
 
     return {ok: true, canonical, errors: []};
+}
+
+function validateMeta(instructorName: string, status: string | null): string[] {
+    const errs: string[] = [];
+
+    if (!instructorName.trim()) errs.push("instructorName: is required.");
+
+    const st = RubricStatusSchema.safeParse(status);
+    if (!st.success) errs.push('status: must be "testing" or "completed".');
+
+    return errs;
 }
 
 export function useRubricEditor(): UseRubricEditorResult {
@@ -185,170 +195,184 @@ export function useRubricEditor(): UseRubricEditorResult {
     const [rubricId, setRubricId] = useState<string | null>(null);
 
     const [view, _setView] = useState<"form" | "json">("form");
-    const [raw, _setRaw] = useState<string>("");
 
+    const [raw, _setRaw] = useState("");
     const [fileDraft, _setFileDraft] = useState<RubricJson | null>(null);
 
-    const [instructorName, setInstructorName] = useState<string>("");
-    const [status, setStatus] = useState<RubricStatus>("testing");
-    const [notes, setNotes] = useState<string>("");
+    const [instructorName, _setInstructorName] = useState("");
+    const [status, _setStatus] = useState<RubricStatus>("testing");
+    const [notes, _setNotes] = useState("");
 
-    const [valid, setValid] = useState<boolean>(false);
+    const [valid, setValid] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
-    const [validationVisible, setValidationVisible] = useState<boolean>(false);
+    const [validationVisible, setValidationVisible] = useState(false);
 
-    const [loading, setLoading] = useState<boolean>(false);
-    const [saving, setSaving] = useState<boolean>(false);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const syncingFromRawRef = useRef<boolean>(false);
-    const syncingFromDraftRef = useRef<boolean>(false);
+    const syncingFromRawRef = useRef(false);
+    const syncingFromDraftRef = useRef(false);
 
     const lastErrorsRef = useRef<string[]>([]);
     const lastValidRef = useRef<boolean>(false);
 
-    const applyValidationSnapshot = useCallback(
-        (v: boolean, errs: string[]) => {
-            lastValidRef.current = v;
-            lastErrorsRef.current = errs;
+    function applyValidationSnapshot(v: boolean, errs: string[]) {
+        lastValidRef.current = v;
+        lastErrorsRef.current = errs;
 
-            setValid(v);
-            setErrors(validationVisible ? errs : []);
-        },
-        [validationVisible],
-    );
+        setValid(v);
+        if (validationVisible) setErrors(errs);
+        else setErrors([]);
+    }
 
     const setView = useCallback((v: "form" | "json") => {
         _setView(v);
         setValidationVisible(v === "json");
     }, []);
 
-    const setFileDraft = useCallback(
-        (next: RubricJson) => {
-            // Always keep the user's latest object in state.
-            _setFileDraft(next);
+    const setInstructorName = useCallback((v: string) => {
+        _setInstructorName(v);
+        const metaErrs = validateMeta(v, status);
+        const merged = [...metaErrs, ...lastErrorsRef.current.filter((e) => !e.startsWith("instructorName:") && !e.startsWith("status:"))];
+        applyValidationSnapshot(metaErrs.length === 0 && lastValidRef.current, merged);
+    }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-            if (syncingFromRawRef.current) {
-                applyValidationSnapshot(lastValidRef.current, lastErrorsRef.current);
-                return;
-            }
+    const setStatus = useCallback((v: RubricStatus) => {
+        _setStatus(v);
+        const metaErrs = validateMeta(instructorName, v);
+        const merged = [...metaErrs, ...lastErrorsRef.current.filter((e) => !e.startsWith("instructorName:") && !e.startsWith("status:"))];
+        applyValidationSnapshot(metaErrs.length === 0 && lastValidRef.current, merged);
+    }, [instructorName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-            const res = validateFileUnknown(next, rubricId);
-            if (res.ok) {
-                _setFileDraft(res.canonical);
+    const setNotes = useCallback((v: string) => {
+        _setNotes(v);
+    }, []);
 
-                syncingFromDraftRef.current = true;
-                _setRaw(JSON.stringify(res.canonical, null, 2));
-                syncingFromDraftRef.current = false;
+    const setFileDraft = useCallback((next: RubricJson) => {
+        _setFileDraft(next);
 
-                applyValidationSnapshot(true, []);
+        if (syncingFromRawRef.current) {
+            applyValidationSnapshot(lastValidRef.current, lastErrorsRef.current);
+            return;
+        }
+
+        const fileRes = validateFileUnknown(next, rubricId);
+        const metaErrs = validateMeta(instructorName, status);
+
+        if (fileRes.ok) {
+            _setFileDraft(fileRes.canonical);
+
+            syncingFromDraftRef.current = true;
+            _setRaw(JSON.stringify(fileRes.canonical, null, 2));
+            syncingFromDraftRef.current = false;
+
+            const ok = metaErrs.length === 0;
+            applyValidationSnapshot(ok, ok ? [] : metaErrs);
+        } else {
+            syncingFromDraftRef.current = true;
+            _setRaw(JSON.stringify(next, null, 2));
+            syncingFromDraftRef.current = false;
+
+            const merged = [...metaErrs, ...fileRes.errors];
+            applyValidationSnapshot(false, merged);
+        }
+    }, [rubricId, instructorName, status, validationVisible]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const setRaw = useCallback((next: string) => {
+        _setRaw(next);
+        if (syncingFromDraftRef.current) return;
+
+        syncingFromRawRef.current = true;
+        try {
+            const parsedJson: unknown = JSON.parse(next);
+
+            const fileRes = validateFileUnknown(parsedJson, rubricId);
+            const metaErrs = validateMeta(instructorName, status);
+
+            if (fileRes.ok) {
+                _setFileDraft(fileRes.canonical);
+                _setRaw(JSON.stringify(fileRes.canonical, null, 2));
+
+                const ok = metaErrs.length === 0;
+                applyValidationSnapshot(ok, ok ? [] : metaErrs);
             } else {
-                // Keep draft editable, but do not spam errors in Form view.
-                syncingFromDraftRef.current = true;
-                _setRaw(JSON.stringify(next, null, 2));
-                syncingFromDraftRef.current = false;
-
-                applyValidationSnapshot(false, res.errors);
-            }
-        },
-        [applyValidationSnapshot, rubricId],
-    );
-
-    const setRaw = useCallback(
-        (next: string) => {
-            _setRaw(next);
-            if (syncingFromDraftRef.current) return;
-
-            syncingFromRawRef.current = true;
-            try {
-                const parsedJson: unknown = JSON.parse(next);
-                const res = validateFileUnknown(parsedJson, rubricId);
-
-                if (res.ok) {
-                    _setFileDraft(res.canonical);
-                    _setRaw(JSON.stringify(res.canonical, null, 2));
-                    applyValidationSnapshot(true, []);
-                } else {
-                    // Keep last good fileDraft for Form view; JSON view shows errors.
-                    applyValidationSnapshot(false, res.errors);
-                }
-            } catch {
-                applyValidationSnapshot(false, ["(root): Invalid JSON (failed to parse)."]);
-            } finally {
-                syncingFromRawRef.current = false;
-            }
-        },
-        [applyValidationSnapshot, rubricId],
-    );
-
-    const openCreate = useCallback(
-        (id: string) => {
-            setError(null);
-            setMode("create");
-            setRubricId(id);
-            setView("form");
-            setValidationVisible(false);
-
-            setInstructorName("");
-            setStatus("testing");
-            setNotes("");
-
-            const skel = makeSkeletonFile(id);
-            const res = validateFileUnknown(skel, id);
-
-            if (res.ok) {
-                _setFileDraft(res.canonical);
-                _setRaw(JSON.stringify(res.canonical, null, 2));
-                applyValidationSnapshot(true, []);
-            } else {
-                _setFileDraft(skel);
-                _setRaw(JSON.stringify(skel, null, 2));
-                applyValidationSnapshot(false, res.errors);
-            }
-        },
-        [applyValidationSnapshot, setView],
-    );
-
-    const openEdit = useCallback(
-        async (id: string) => {
-            setError(null);
-            setLoading(true);
-            setMode("edit");
-            setRubricId(id);
-            setView("form");
-            setValidationVisible(false);
-
-            try {
-                const resp = await getRubricById(id);
-
-                setInstructorName(resp.instructorName ?? "");
-                setStatus(RubricStatusSchema.parse(resp.status));
-                setNotes(resp.notes ?? "");
-
-                const res = validateFileUnknown(resp.file, id);
-                if (res.ok) {
-                    _setFileDraft(res.canonical);
-                    _setRaw(JSON.stringify(res.canonical, null, 2));
-                    applyValidationSnapshot(true, []);
-                } else {
-                    // Keep the file in raw (for inspection), but Form uses fileDraft.
-                    _setFileDraft(resp.file);
-                    _setRaw(JSON.stringify(resp.file, null, 2));
-                    applyValidationSnapshot(false, res.errors);
-                }
-            } catch (e: unknown) {
-                // eslint-disable-next-line no-console
-                console.error("[rubric] openEdit failed:", e);
-                setError("Failed to load rubric.");
                 _setFileDraft(null);
-                _setRaw("");
-                applyValidationSnapshot(false, []);
-            } finally {
-                setLoading(false);
+                const merged = [...metaErrs, ...fileRes.errors];
+                applyValidationSnapshot(false, merged);
             }
-        },
-        [applyValidationSnapshot, setView],
-    );
+        } catch {
+            _setFileDraft(null);
+            const metaErrs = validateMeta(instructorName, status);
+            applyValidationSnapshot(false, [...metaErrs, "(root): Invalid JSON (failed to parse)."]);
+        } finally {
+            syncingFromRawRef.current = false;
+        }
+    }, [rubricId, instructorName, status, validationVisible]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const openCreate = useCallback((id: string) => {
+        setError(null);
+        setMode("create");
+        setRubricId(id);
+        setView("form");
+        setValidationVisible(false);
+
+        _setInstructorName("");
+        _setStatus("testing");
+        _setNotes("");
+
+        const skel = makeSkeletonRubric(id);
+        const fileRes = validateFileUnknown(skel, id);
+        const metaErrs = validateMeta("", "testing");
+
+        if (fileRes.ok) {
+            _setFileDraft(fileRes.canonical);
+            _setRaw(JSON.stringify(fileRes.canonical, null, 2));
+        } else {
+            _setFileDraft(skel);
+            _setRaw(JSON.stringify(skel, null, 2));
+        }
+
+        applyValidationSnapshot(false, [...metaErrs, ...(fileRes.ok ? [] : fileRes.errors)]);
+    }, [setView]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const openEdit = useCallback(async (id: string) => {
+        setError(null);
+        setLoading(true);
+        setMode("edit");
+        setRubricId(id);
+        setView("form");
+        setValidationVisible(false);
+
+        try {
+            const resp = await getRubricById(id);
+
+            _setInstructorName(resp.instructorName ?? "");
+            _setStatus(resp.status);
+            _setNotes(resp.notes ?? "");
+
+            const fileRes = validateFileUnknown(resp.file, id);
+            const metaErrs = validateMeta(resp.instructorName ?? "", resp.status);
+
+            if (fileRes.ok) {
+                _setFileDraft(fileRes.canonical);
+                _setRaw(JSON.stringify(fileRes.canonical, null, 2));
+                applyValidationSnapshot(metaErrs.length === 0, metaErrs);
+            } else {
+                _setFileDraft(null);
+                _setRaw(JSON.stringify(resp.file, null, 2));
+                applyValidationSnapshot(false, [...metaErrs, ...fileRes.errors]);
+            }
+        } catch (e) {
+            console.error("[rubric] openEdit failed:", e);
+            setError("Failed to load rubric.");
+            _setFileDraft(null);
+            _setRaw("");
+            applyValidationSnapshot(false, []);
+        } finally {
+            setLoading(false);
+        }
+    }, [setView]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const close = useCallback(() => {
         setMode("idle");
@@ -357,9 +381,9 @@ export function useRubricEditor(): UseRubricEditorResult {
         _setFileDraft(null);
         _setRaw("");
 
-        setInstructorName("");
-        setStatus("testing");
-        setNotes("");
+        _setInstructorName("");
+        _setStatus("testing");
+        _setNotes("");
 
         setValid(false);
         setErrors([]);
@@ -373,132 +397,127 @@ export function useRubricEditor(): UseRubricEditorResult {
         _setView("form");
     }, []);
 
-    const save = useCallback(
-        async (opts?: { confirmReplace?: boolean }) => {
-            if (!rubricId || !fileDraft) return false;
+    const save = useCallback(async (opts?: { confirmReplace?: boolean }) => {
+        if (!rubricId) return false;
 
-            // Force surfacing issues on save attempt.
-            setValidationVisible(true);
+        setValidationVisible(true);
 
-            const metaInstructor = instructorName.trim();
-            if (!metaInstructor) {
-                applyValidationSnapshot(false, ["instructorName: is required."]);
-                return false;
+        const metaErrs = validateMeta(instructorName, status);
+        if (metaErrs.length) {
+            applyValidationSnapshot(false, metaErrs);
+            return false;
+        }
+
+        if (!fileDraft) {
+            applyValidationSnapshot(false, ["file: rubric JSON is missing or invalid."]);
+            return false;
+        }
+
+        const fileRes = validateFileUnknown(fileDraft, rubricId);
+        if (!fileRes.ok) {
+            applyValidationSnapshot(false, [...metaErrs, ...fileRes.errors]);
+            return false;
+        }
+
+        const payload: RubricRequest = {
+            diseaseName: rubricId,
+            instructorName: instructorName.trim(),
+            status,
+            notes: notes.trim() ? notes.trim() : null,
+            file: fileRes.canonical,
+        };
+
+        setSaving(true);
+        setError(null);
+
+        try {
+            if (mode === "edit") {
+                if (!opts?.confirmReplace) return false;
+                await updateRubric(payload);
+            } else if (mode === "create") {
+                await addRubric(payload);
+                setMode("edit");
             }
 
-            const res = validateFileUnknown(fileDraft, rubricId);
-            if (!res.ok) {
-                applyValidationSnapshot(false, res.errors);
-                return false;
-            }
+            _setFileDraft(fileRes.canonical);
+            _setRaw(JSON.stringify(fileRes.canonical, null, 2));
+            applyValidationSnapshot(true, []);
+            return true;
+        } catch (e) {
+            console.error("[rubric] save failed:", e);
+            setError("Failed to save rubric.");
+            return false;
+        } finally {
+            setSaving(false);
+        }
+    }, [rubricId, instructorName, status, notes, fileDraft, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-            setSaving(true);
-            setError(null);
+    useMemo(() => {
+        if (validationVisible) setErrors(lastErrorsRef.current);
+        else setErrors([]);
+    }, [validationVisible]);
 
-            try {
-                const payload = {
-                    diseaseName: rubricId,
-                    instructorName: metaInstructor,
-                    status,
-                    notes: notes.trim() ? notes.trim() : null,
-                    file: res.canonical,
-                } as const;
+    return useMemo(() => ({
+        mode,
+        rubricId,
 
-                if (mode === "edit") {
-                    if (!opts?.confirmReplace) return false;
-                    const resp = await updateRubric(payload);
-                    _setFileDraft(resp.file);
-                    _setRaw(JSON.stringify(resp.file, null, 2));
-                } else if (mode === "create") {
-                    const resp = await addRubric(payload);
-                    setMode("edit");
-                    _setFileDraft(resp.file);
-                    _setRaw(JSON.stringify(resp.file, null, 2));
-                }
+        view,
+        setView,
 
-                applyValidationSnapshot(true, []);
-                return true;
-            } catch (e: unknown) {
-                // eslint-disable-next-line no-console
-                console.error("[rubric] save failed:", e);
-                setError("Failed to save rubric.");
-                return false;
-            } finally {
-                setSaving(false);
-            }
-        },
-        [
-            rubricId,
-            fileDraft,
-            instructorName,
-            status,
-            notes,
-            mode,
-            applyValidationSnapshot,
-        ],
-    );
+        raw,
+        setRaw,
 
-    return useMemo(
-        () => ({
-            mode,
-            rubricId,
+        fileDraft,
+        setFileDraft,
 
-            view,
-            setView,
+        instructorName,
+        setInstructorName,
 
-            raw,
-            setRaw,
+        status,
+        setStatus,
 
-            fileDraft,
-            setFileDraft,
+        notes,
+        setNotes,
 
-            instructorName,
-            setInstructorName,
+        valid,
+        errors,
 
-            status,
-            setStatus,
+        validationVisible,
+        setValidationVisible,
 
-            notes,
-            setNotes,
+        loading,
+        saving,
+        error,
 
-            valid,
-            errors,
+        openCreate,
+        openEdit,
+        close,
 
-            validationVisible,
-            setValidationVisible,
-
-            loading,
-            saving,
-            error,
-
-            openCreate,
-            openEdit,
-            close,
-
-            save,
-        }),
-        [
-            mode,
-            rubricId,
-            view,
-            setView,
-            raw,
-            setRaw,
-            fileDraft,
-            setFileDraft,
-            instructorName,
-            status,
-            notes,
-            valid,
-            errors,
-            validationVisible,
-            loading,
-            saving,
-            error,
-            openCreate,
-            openEdit,
-            close,
-            save,
-        ],
-    );
+        save,
+    }), [
+        mode,
+        rubricId,
+        view,
+        setView,
+        raw,
+        setRaw,
+        fileDraft,
+        setFileDraft,
+        instructorName,
+        setInstructorName,
+        status,
+        setStatus,
+        notes,
+        setNotes,
+        valid,
+        errors,
+        validationVisible,
+        loading,
+        saving,
+        error,
+        openCreate,
+        openEdit,
+        close,
+        save,
+    ]);
 }

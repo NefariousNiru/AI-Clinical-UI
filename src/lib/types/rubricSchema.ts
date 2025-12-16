@@ -4,14 +4,15 @@ import {z} from "zod";
 
 const NonEmpty = z.string().trim().min(1);
 
-const RubricContraindicationsPolicySchema = z.literal("non_scored_feedback_only");
-
 export const RubricStatusSchema = z.enum(["testing", "completed"]);
 export type RubricStatus = z.infer<typeof RubricStatusSchema>;
 
-const UnitEquivalentsSchema = z
+export const RubricContraindicationsPolicySchema = z.literal("non_scored_feedback_only");
+export type RubricContraindicationsPolicy = z.infer<typeof RubricContraindicationsPolicySchema>;
+
+export const UnitEquivalentsSchema = z
     .record(z.string(), z.record(z.string(), z.number()))
-    .superRefine((val: Record<string, Record<string, number>>, ctx) => {
+    .superRefine((val, ctx) => {
         for (const [unit, inner] of Object.entries(val)) {
             if (typeof inner !== "object" || inner === null) {
                 ctx.addIssue({
@@ -32,16 +33,22 @@ const UnitEquivalentsSchema = z
         }
     });
 
-const SelectKItemSchema = z
+export type UnitEquivalents = z.infer<typeof UnitEquivalentsSchema>;
+
+const JsonishSchema = z.unknown().optional().nullable();
+
+export const SelectKItemSchema = z
     .object({
         key: NonEmpty,
         verbiage: NonEmpty,
         notes: z.string().optional().nullable(),
-        aliases: z.unknown().optional().nullable(),
+        aliases: JsonishSchema,
     })
     .strict();
 
-const BinaryCriterionSchema = z
+export type SelectKItem = z.infer<typeof SelectKItemSchema>;
+
+export const BinaryCriterionSchema = z
     .object({
         type: z.literal("binary"),
         key: NonEmpty,
@@ -49,11 +56,13 @@ const BinaryCriterionSchema = z
         weight: z.number(),
         unitEquivalents: z.array(UnitEquivalentsSchema).optional().nullable(),
         notes: z.string().optional().nullable(),
-        aliases: z.unknown().optional().nullable(),
+        aliases: JsonishSchema,
     })
     .strict();
 
-const SelectKCriterionSchema = z
+export type BinaryCriterion = z.infer<typeof BinaryCriterionSchema>;
+
+export const SelectKCriterionSchema = z
     .object({
         type: z.literal("select_k"),
         groupId: NonEmpty,
@@ -61,19 +70,25 @@ const SelectKCriterionSchema = z
         selectK: z.number().int().positive(),
         awardPoints: z.number(),
         items: z.array(SelectKItemSchema).min(1),
+
         dependsOnAny: z.array(NonEmpty).optional().nullable(),
         minItemsRequired: z.number().int().nonnegative().optional().nullable(),
+
         unitEquivalents: z.array(UnitEquivalentsSchema).optional().nullable(),
         notes: z.string().optional().nullable(),
     })
     .strict();
 
-const CriterionSchema = z.discriminatedUnion("type", [
+export type SelectKCriterion = z.infer<typeof SelectKCriterionSchema>;
+
+export const CriterionSchema = z.discriminatedUnion("type", [
     BinaryCriterionSchema,
     SelectKCriterionSchema,
 ]);
 
-const BlockSchema = z
+export type Criterion = z.infer<typeof CriterionSchema>;
+
+export const BlockSchema = z
     .object({
         id: NonEmpty,
         title: NonEmpty,
@@ -82,6 +97,8 @@ const BlockSchema = z
         notes: z.string().optional().nullable(),
     })
     .strict();
+
+export type Block = z.infer<typeof BlockSchema>;
 
 const BaseSectionSchema = z
     .object({
@@ -92,7 +109,7 @@ const BaseSectionSchema = z
     })
     .strict();
 
-const IdentificationSectionSchema = BaseSectionSchema.extend({
+export const IdentificationSectionSchema = BaseSectionSchema.extend({
     id: z.literal("identification"),
 }).superRefine((sec, ctx) => {
     const hasPriority = sec.blocks.some((b) => b.id === "priority");
@@ -105,23 +122,33 @@ const IdentificationSectionSchema = BaseSectionSchema.extend({
     }
 });
 
-const ExplanationSectionSchema = BaseSectionSchema.extend({
+export const ExplanationSectionSchema = BaseSectionSchema.extend({
     id: z.literal("explanation"),
 });
-const PlanRecommendationSectionSchema = BaseSectionSchema.extend({
+
+export const PlanRecommendationSectionSchema = BaseSectionSchema.extend({
     id: z.literal("plan_recommendation"),
 });
-const MonitoringSectionSchema = BaseSectionSchema.extend({
+
+export const MonitoringSectionSchema = BaseSectionSchema.extend({
     id: z.literal("monitoring"),
 });
 
-const ScoringInvariantsSchema = z
+export type RubricSection =
+    | z.infer<typeof IdentificationSectionSchema>
+    | z.infer<typeof ExplanationSectionSchema>
+    | z.infer<typeof PlanRecommendationSectionSchema>
+    | z.infer<typeof MonitoringSectionSchema>;
+
+export const ScoringInvariantsSchema = z
     .object({
         requireSectionBlockSumsMatch: z.boolean(),
         evidenceScope: z.literal("section"),
         notes: z.string().optional().nullable(),
     })
     .strict();
+
+export type ScoringInvariants = z.infer<typeof ScoringInvariantsSchema>;
 
 export const RubricJsonSchema = z
     .object({
@@ -159,19 +186,9 @@ export const RubricJsonSchema = z
                 }
             }),
 
-        nonScoredClinicalNotes: z.array(z.string()).optional(),
-
-        // Stored in file JSON as well
-        // (your backend includes it in the payload)
-        // Keep strict contract: require it.
-        // If you ever make it optional server-side, update here too.
-        // For now: required.
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        // Note: Zod handles literal above.
-    })
-    .extend({
-        nonScoredClinicalNotes: z.array(z.string()).optional(),
+        nonScoredClinicalNotes: z.array(z.string()).default([]),
     })
     .strict();
 
 export type RubricJson = z.infer<typeof RubricJsonSchema>;
+

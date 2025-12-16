@@ -1,14 +1,12 @@
 // file: src/lib/types/rubric.ts
 
 import {z} from "zod";
-import {RubricJsonSchema, RubricStatusSchema, type RubricJson, type RubricStatus} from "./rubricSchema";
-
-const NonEmptyStr = z.string().trim().min(1);
+import {RubricJsonSchema, RubricStatusSchema} from "./rubricSchema";
 
 export const RubricRequestSchema = z
     .object({
-        diseaseName: NonEmptyStr,
-        instructorName: NonEmptyStr,
+        diseaseName: z.string().trim().min(1),
+        instructorName: z.string().trim().min(1),
         status: RubricStatusSchema,
         notes: z.string().optional().nullable(),
         file: RubricJsonSchema,
@@ -20,10 +18,10 @@ export type RubricRequest = z.infer<typeof RubricRequestSchema>;
 export const RubricResponseSchema = z
     .object({
         id: z.number().int(),
-        diseaseName: NonEmptyStr,
-        instructorName: NonEmptyStr,
-        created: z.number().int().nonnegative(),
-        modified: z.number().int().nonnegative(),
+        diseaseName: z.string().trim().min(1),
+        instructorName: z.string().trim().min(1),
+        created: z.number().int(),
+        modified: z.number().int(),
         status: RubricStatusSchema,
         notes: z.string().optional().nullable(),
         file: RubricJsonSchema,
@@ -34,7 +32,7 @@ export type RubricResponse = z.infer<typeof RubricResponseSchema>;
 
 export const RubricSearchItemSchema = z
     .object({
-        diseaseName: NonEmptyStr,
+        diseaseName: z.string().trim().min(1),
         rubricExists: z.boolean(),
     })
     .strict();
@@ -49,4 +47,3 @@ export const RubricSearchResponseSchema = z
 
 export type RubricSearchResponse = z.infer<typeof RubricSearchResponseSchema>;
 
-export type {RubricJson, RubricStatus};

@@ -84,15 +84,14 @@ export default function RubricEditorPanel(props: Props) {
         if (view === "form") setValidationVisible(false);
     }, [rubricId, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const title = mode === "edit" ? "Edit rubric" : "Create rubric";
+    const title = mode === "edit" ? "View/Edit rubric" : "Create rubric";
     const rubricName = titleizeDiseaseName(rubricId);
     const canInteract = !(saving || loading);
 
-    const effectiveDraft = useMemo(() => (view === "form" ? localDraft : fileDraft), [
-        view,
-        localDraft,
-        fileDraft,
-    ]);
+    const effectiveDraft = useMemo(
+        () => (view === "form" ? localDraft : fileDraft),
+        [view, localDraft, fileDraft],
+    );
 
     const showSummary = validationVisible && !valid && errors.length > 0;
 
@@ -144,7 +143,7 @@ export default function RubricEditorPanel(props: Props) {
             <div className="mt-3 space-y-2">
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                     <label className="space-y-1">
-                        <div className="text-[11px] font-medium text-muted">Instructor/Rubric Creator Name</div>
+                        <div className="text-[11px] font-medium text-muted">Instructor Name</div>
                         <input
                             value={instructorName}
                             onChange={(e) => setInstructorName(e.target.value)}
@@ -178,7 +177,7 @@ export default function RubricEditorPanel(props: Props) {
                     </label>
 
                     <label className="space-y-1 md:col-span-3">
-                        <div className="text-[11px] font-medium text-muted">Notes (optional)</div>
+                        <div className="text-[11px] font-medium text-muted">Notes (optional comments for the rubric; not used by LLM)</div>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
@@ -223,7 +222,7 @@ export default function RubricEditorPanel(props: Props) {
                 {loading ? (
                     <div className="flex items-center gap-2 text-xs text-muted">
                         <Loader2 className="h-3 w-3 animate-spin"/>
-                        <span>Loading…</span>
+                        <span>Loading...</span>
                     </div>
                 ) : null}
 
@@ -295,12 +294,11 @@ export default function RubricEditorPanel(props: Props) {
                                 setValidationVisible(true);
                                 return;
                             }
-
                             if (mode === "edit") setConfirmOpen(true);
                             else void onSave();
                         }}
                     >
-                        {saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create rubric"}
+                        {saving ? "Saving..." : mode === "edit" ? "Save changes" : "Create rubric"}
                     </button>
                 </div>
             </div>
@@ -341,3 +339,4 @@ export default function RubricEditorPanel(props: Props) {
         </section>
     );
 }
+
