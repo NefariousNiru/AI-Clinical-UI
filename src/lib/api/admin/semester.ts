@@ -40,8 +40,8 @@ export async function fetchSemesterByNameYear(
  */
 export async function createSemester(
     body: SemesterCreateRequest,
-): Promise<Semester> {
+): Promise<void> {
     const payload = SemesterCreateRequestSchema.parse(body);
-    const resp = await http.post<unknown>(ADMIN_SEMESTER_BASE, payload);
-    return SemesterSchema.parse(resp);
+    await http.post<unknown>(ADMIN_SEMESTER_BASE, payload);
+    return
 }

@@ -1,8 +1,8 @@
-// file: src/pages/admin/SemesterDropdown.tsx
+// file: src/pages/admin/semester/SemesterDropdown.tsx
 
 import { useEffect, type ChangeEvent } from "react";
-import { useSemesterSelection } from "./hooks/semester";
-import type { Semester } from "../../lib/types/semester";
+import { useSemesterSelection } from "../hooks/semester.ts";
+import type { Semester } from "../../../lib/types/semester.ts";
 
 type SemesterDropdownProps = {
     onChange?: (semester: Semester | null) => void;

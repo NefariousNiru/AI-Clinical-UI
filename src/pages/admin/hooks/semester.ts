@@ -3,6 +3,9 @@
 import {useEffect, useMemo, useState} from "react";
 import type {Semester, SemesterName} from "../../../lib/types/semester";
 import {fetchAllSemesters} from "../../../lib/api/admin/semester";
+import type {SemesterCreateRequest} from "../../../lib/types/semester";
+import {createSemester as createSemesterApi} from "../../../lib/api/admin/semester";
+
 
 export type SemesterComboOption = {
     key: string; // e.g. "Spring-2026"
@@ -153,3 +156,41 @@ export function useSemesterSelection(): UseSemesterSelectionResult {
         resetToCurrent,
     };
 }
+
+export type UseCreateSemesterResult = {
+    saving: boolean;
+    error: string | null;
+    clearError: () => void;
+    create: (req: SemesterCreateRequest) => Promise<Semester>;
+};
+
+export function useCreateSemester(): UseCreateSemesterResult {
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function clearError() {
+        setError(null);
+    }
+
+    async function create(req: SemesterCreateRequest): Promise<Semester> {
+        setError(null);
+        setSaving(true);
+
+        try {
+            return await createSemesterApi(req);
+        } catch (e: unknown) {
+            console.dir(e)
+            const msg =
+                e instanceof Error && e.message.trim()
+                    ? e.message
+                    : "Failed to create semester.";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    return {saving, error, clearError, create};
+}
+

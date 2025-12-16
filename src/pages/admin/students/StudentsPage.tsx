@@ -2,10 +2,11 @@
 
 import {useState} from "react";
 import SubHeader from "../../../components/SubHeader";
-import SemesterDropdown from "../SemesterDropdown";
+import SemesterDropdown from "../semester/SemesterDropdown.tsx";
 import Tabs from "../../../components/Tabs";
 import type {Semester} from "../../../lib/types/semester.ts";
 import StudentRosterTab from "./StudentRosterTab.tsx";
+import CreateSemesterButton from "../semester/CreateSemesterButton.tsx";
 
 type StudentTabKey = "roster" | "submissions";
 
@@ -30,7 +31,12 @@ export default function StudentsPage() {
                         fullWidth
                     />
                 }
-                right={<SemesterDropdown compact onChange={setSemester}/>}
+                right={
+                    <div className="flex flex-wrap items-start gap-2">
+                        <SemesterDropdown compact onChange={setSemester}/>
+                        <CreateSemesterButton onCreated={(s) => setSemester(s)}/>
+                    </div>
+                }
             />
 
             <section className="py-4 px-2">
