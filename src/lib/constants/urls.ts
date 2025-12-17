@@ -46,7 +46,7 @@ export const ADMIN_NOTIFY_ACCOUNT = ADMIN_STUDENT_BASE + "/notify/account";
 export const ADMIN_NOTIFY_ENROLLMENT = ADMIN_STUDENT_BASE + "/notify/enrollment";
 
 // Admin Disease
-export const ADMIN_ADD_DISEASE = "/api/v1/admin/disease"
+export const ADMIN_DISEASE = API_BASE_V1 + "/admin/disease"
 
 // Admin Settings Base
 const ADMIN_SETTINGS_BASE = API_BASE_V1 + "/admin/settings";
@@ -55,3 +55,7 @@ export const ADMIN_MRP_TOOL = ADMIN_SETTINGS_BASE + "/mrp_tool_status"
 // Admin Semester
 export const ADMIN_SEMESTER_BASE = API_BASE_V1 + "/admin/semester"
 export const ADMIN_ALL_SEMESTER = ADMIN_SEMESTER_BASE + "/all"
+
+// Admin Weeks
+export const ADMIN_WEEKLY_WORKUP_BASE = API_BASE_V1 + "/weekly_workup"
+export const ADMIN_WEEKLY_WORKUP_SEMESTER = ADMIN_WEEKLY_WORKUP_BASE + "/semester"

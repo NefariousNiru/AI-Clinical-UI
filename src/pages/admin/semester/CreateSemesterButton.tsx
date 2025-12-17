@@ -24,7 +24,7 @@ function toEpochSecondsAtEndOfDay(dateStr: string): number {
     return Math.floor(dt.getTime() / 1000);
 }
 
-export default function CreateSemesterButton({onCreated, className = ""}: Props) {
+export default function CreateSemesterButton({className = ""}: Props) {
     const [open, setOpen] = useState(false);
 
     const {create, saving, error, clearError} = useCreateSemester();
@@ -68,8 +68,7 @@ export default function CreateSemesterButton({onCreated, className = ""}: Props)
         };
 
         try {
-            const created = await create(payload);
-            onCreated?.(created);
+            await create(payload);
             setOpen(false);
             resetForm();
         } catch {

@@ -34,7 +34,7 @@ export default function StudentsPage() {
                 right={
                     <div className="flex flex-wrap items-start gap-2">
                         <SemesterDropdown compact onChange={setSemester}/>
-                        <CreateSemesterButton onCreated={(s) => setSemester(s)}/>
+                        <CreateSemesterButton/>
                     </div>
                 }
             />

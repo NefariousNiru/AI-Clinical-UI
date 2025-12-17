@@ -156,82 +156,57 @@ export function parseCsvToStudents(text: string): { students: NewRosterStudent[]
     return {students};
 }
 
+
 /**
- * Type guard for plain JSON-like objects (non-null, non-array). HELPER
+ * Convert a Unix timestamp (seconds since epoch) into an ISO calendar date string in UTC.
  *
- * @param v - Value to test.
- * @returns True if `v` is a plain object record.
+ * - Output format: `YYYY-MM-DD`
+ * - Uses UTC (not local time).
+ *
+ * @param unixSeconds - Unix timestamp in seconds.
+ * @returns ISO date string (UTC) in `YYYY-MM-DD` format.
  */
-function isObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === "object" && v !== null && !Array.isArray(v);
+export function unixToIsoDate(unixSeconds: number): string {
+    // YYYY-MM-DD in UTC
+    return new Date(unixSeconds * 1000).toISOString().slice(0, 10);
 }
 
 /**
- * Convert a key from snake_case to camelCase.
- * If the key is already camelCase (no underscores), it is returned unchanged.
+ * Convert an ISO calendar date string (`YYYY-MM-DD`) into a Unix timestamp (UTC start of day).
  *
- * @param k - Input object key.
- * @returns Normalized camelCase key.
+ * - Interprets the date as UTC midnight at the start of that day: `00:00:00Z`.
+ *
+ * @param dateStr - ISO date string in `YYYY-MM-DD` format.
+ * @returns Unix timestamp in seconds for `YYYY-MM-DDT00:00:00Z`.
  */
-function toCamelKey(k: string): string {
-    // snake_case -> camelCase
-    if (k.includes("_")) {
-        return k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
-    }
-    return k;
+export function isoDateToUnixStart(dateStr: string): number {
+    // dateStr is YYYY-MM-DD
+    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
+    return Math.floor(Date.UTC(y, m - 1, d, 0, 0, 0) / 1000);
 }
 
 /**
- * Explicit key aliases for fields that either:
- * - are common snake_case variants in rubric JSON, or
- * - do not map cleanly via generic snake->camel conversion.
- */
-const KEY_ALIASES: Record<string, string> = {
-    rubric_id: "rubricId",
-    rubric_version: "rubricVersion",
-    schema_version: "schemaVersion",
-    scoring_invariants: "scoringInvariants",
-    contraindications_policy: "contraindicationsPolicy",
-    evidence_keys: "evidenceKeys",
-    non_scored_clinical_notes: "nonScoredClinicalNotes",
-    max_points: "maxPoints",
-    group_id: "groupId",
-    select_k: "selectK",
-    award_points: "awardPoints",
-    unit_equivalents: "unitEquivalents",
-    require_section_block_sums_match: "requireSectionBlockSumsMatch",
-};
-
-/**
- * Normalize a JSON key to camelCase using explicit aliases first,
- * then falling back to snake_case -> camelCase conversion.
+ * Convert an ISO calendar date string (`YYYY-MM-DD`) into a Unix timestamp near the end of that day (UTC).
  *
- * @param k - Raw input key.
- * @returns Camel-cased key.
+ * - This implementation returns `23:50:00Z` (not `23:59:59Z`).
+ * - If you meant "inclusive end-of-day", consider using `23:59:59Z` instead.
+ *
+ * @param dateStr - ISO date string in `YYYY-MM-DD` format.
+ * @returns Unix timestamp in seconds for `YYYY-MM-DDT23:50:00Z`.
  */
-function normalizeKey(k: string): string {
-    return KEY_ALIASES[k] ?? toCamelKey(k);
+export function isoDateToUnixEnd(dateStr: string): number {
+    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
+    return Math.floor(Date.UTC(y, m - 1, d, 23, 50, 0) / 1000);
 }
 
-
 /**
- * Recursively normalize a rubric JSON payload to camelCase keys.
+ * Format a Unix timestamp (seconds) as a short date string.
  *
- * Behavior:
- * - Arrays: maps each element recursively.
- * - Objects: converts each key to camelCase (alias-aware) and recurses into values.
- * - Primitives: returned as-is.
+ * - Currently identical to `unixToIsoDate` (UTC `YYYY-MM-DD`).
  *
- * @param input - Any JSON-like value.
- * @returns A structurally identical value with object keys normalized to camelCase.
+ * @param unixSeconds - Unix timestamp in seconds.
+ * @returns ISO date string (UTC) in `YYYY-MM-DD` format.
  */
-export function normalizeRubricJsonToCamel(input: unknown): unknown {
-    if (Array.isArray(input)) return input.map(normalizeRubricJsonToCamel);
-    if (!isObject(input)) return input;
-
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(input)) {
-        out[normalizeKey(k)] = normalizeRubricJsonToCamel(v);
-    }
-    return out;
+export function fmtDateShort(unixSeconds: number): string {
+    return unixToIsoDate(unixSeconds);
 }

@@ -1,7 +1,7 @@
 // file: src/lib/api/admin/disease.ts
 
 import { http } from "../http";
-import { ADMIN_ADD_DISEASE } from "../../constants/urls";
+import { ADMIN_DISEASE } from "../../constants/urls";
 import {
     DiseaseRequest as DiseaseRequestSchema,
     DiseaseResponse as DiseaseResponseSchema,
@@ -24,7 +24,7 @@ export async function addDisease(name: string): Promise<DiseaseResponse> {
         diseases: [name],
     });
 
-    const resp = await http.post<unknown>(ADMIN_ADD_DISEASE, payload);
+    const resp = await http.post<unknown>(ADMIN_DISEASE, payload);
 
     return DiseaseResponseSchema.parse(resp);
 }

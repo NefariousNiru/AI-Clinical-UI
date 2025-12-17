@@ -161,7 +161,7 @@ export type UseCreateSemesterResult = {
     saving: boolean;
     error: string | null;
     clearError: () => void;
-    create: (req: SemesterCreateRequest) => Promise<Semester>;
+    create: (req: SemesterCreateRequest) => Promise<void>;
 };
 
 export function useCreateSemester(): UseCreateSemesterResult {
@@ -172,12 +172,12 @@ export function useCreateSemester(): UseCreateSemesterResult {
         setError(null);
     }
 
-    async function create(req: SemesterCreateRequest): Promise<Semester> {
+    async function create(req: SemesterCreateRequest): Promise<void> {
         setError(null);
         setSaving(true);
 
         try {
-            return await createSemesterApi(req);
+            await createSemesterApi(req);
         } catch (e: unknown) {
             console.dir(e)
             const msg =
