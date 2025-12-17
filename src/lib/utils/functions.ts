@@ -2,6 +2,7 @@
 
 import type {NewRosterStudent} from "../types/roster.ts";
 import type {Semester} from "../types/semester.ts";
+import { Temporal } from "@js-temporal/polyfill";
 
 /**
  * Title-case helper that drops the last segment after the final underscore.
@@ -156,67 +157,73 @@ export function parseCsvToStudents(text: string): { students: NewRosterStudent[]
     return {students};
 }
 
-
 /**
- * Convert a Unix timestamp (seconds since epoch) to an ISO date string (YYYY-MM-DD) in UTC.
+ * Convert a Unix timestamp (seconds since epoch) to an ISO date string (YYYY-MM-DD)
+ * in US Eastern Time (DST-aware, year-round) using the IANA zone "America/New_York".
  *
  * Notes:
- * - Uses UTC, not local time.
- * - Truncates the time portion; output is always exactly "YYYY-MM-DD".
+ * - The same epoch second can map to different calendar dates in different timezones.
+ * - This returns the calendar date as observed in Eastern Time, not UTC.
+ * - Output is always exactly "YYYY-MM-DD".
  *
- * @param unixSeconds - Unix timestamp in seconds.
- * @returns ISO date string in UTC (YYYY-MM-DD).
+ * @param unixSeconds Unix timestamp in seconds.
+ * @returns ISO date string in Eastern Time (YYYY-MM-DD).
  *
  * @example
- * unixToIsoDate(0) // "1970-01-01"
+ * // 2025-01-01T04:30:00Z is still 2024-12-31 in Eastern Time
+ * unixToIsoDate(1735705800) // "2024-12-31" (ET)
  */
 export function unixToIsoDate(unixSeconds: number): string {
-    return new Date(unixSeconds * 1000).toISOString().slice(0, 10);
+    const inst = Temporal.Instant.fromEpochMilliseconds(unixSeconds * 1000);
+    const zdt = inst.toZonedDateTimeISO("America/New_York");
+    const y = String(zdt.year).padStart(4, "0");
+    const m = String(zdt.month).padStart(2, "0");
+    const d = String(zdt.day).padStart(2, "0");
+    return `${y}-${m}-${d}`;
 }
 
 /**
- * Convert an ISO date string (YYYY-MM-DD) to a Unix timestamp (seconds) for the start of that day in UTC.
+ * Convert an ISO date string (YYYY-MM-DD) to epoch seconds at the start of that day
+ * in US Eastern Time (DST-aware, year-round) using the IANA zone "America/New_York".
  *
- * Notes:
- * - Interprets the input as a calendar date, not a datetime.
- * - Result corresponds to 00:00:00 UTC on that date.
+ * Semantics:
+ * - Interprets the input date as a calendar date in Eastern Time.
+ * - Returns the Unix timestamp (seconds) for 00:00:00 Eastern on that date.
+ * - Works correctly regardless of the machine/browser timezone.
  *
- * @param dateStr - Date in "YYYY-MM-DD" format.
- * @returns Unix timestamp in seconds for 00:00:00 UTC on the given date.
- *
- * @example
- * isoDateToUnixStart("2025-01-01") // 1735689600 (UTC)
+ * @param dateStr ISO date string in the form "YYYY-MM-DD".
+ * @returns Unix timestamp (seconds since 1970-01-01T00:00:00Z) for the start of day in ET.
+ * @throws If `dateStr` is not a valid ISO date.
  */
 export function isoDateToUnixStart(dateStr: string): number {
-    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
-    return Math.floor(Date.UTC(y, m - 1, d, 0, 0, 0) / 1000);
+    const d = Temporal.PlainDate.from(dateStr);
+    const zdt = d.toZonedDateTime({
+        timeZone: "America/New_York",
+        plainTime: Temporal.PlainTime.from("00:00:00"),
+    });
+    return Math.floor(zdt.epochMilliseconds / 1000);
 }
 
 /**
- * Convert an ISO date string (YYYY-MM-DD) to a Unix timestamp (seconds) for the "end" of that day in UTC.
+ * Convert an ISO date string (YYYY-MM-DD) to epoch seconds at the inclusive end of that day
+ * in US Eastern Time (DST-aware, year-round) using the IANA zone "America/New_York".
  *
- * Notes:
- * - This implementation returns 23:50:00 UTC, not 23:59:59.
- *   If you intended true day-end, change it to 23:59:59 (or use next-day-start minus 1 second).
+ * Semantics:
+ * - Interprets the input date as a calendar date in Eastern Time.
+ * - Returns the Unix timestamp (seconds) for 23:59:59 Eastern on that date.
+ * - Computed as (start of next day in ET) minus 1 second to avoid DST edge cases.
+ * - Works correctly regardless of the machine/browser timezone.
  *
- * @param dateStr - Date in "YYYY-MM-DD" format.
- * @returns Unix timestamp in seconds for 23:50:00 UTC on the given date.
- *
- * @example
- * isoDateToUnixEnd("2025-01-01") // timestamp for 2025-01-01T23:50:00Z
+ * @param dateStr ISO date string in the form "YYYY-MM-DD".
+ * @returns Unix timestamp (seconds since 1970-01-01T00:00:00Z) for 23:59:59 in ET.
+ * @throws If `dateStr` is not a valid ISO date.
  */
 export function isoDateToUnixEnd(dateStr: string): number {
-    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
-    return Math.floor(Date.UTC(y, m - 1, d, 23, 50, 0) / 1000);
-}
-
-/**
- * Format a Unix timestamp (seconds) as a short date string (YYYY-MM-DD) in UTC.
- *
- * @param unixSeconds - Unix timestamp in seconds.
- * @returns ISO date string in UTC (YYYY-MM-DD).
- */
-export function fmtDateShort(unixSeconds: number): string {
-    return unixToIsoDate(unixSeconds);
+    const d = Temporal.PlainDate.from(dateStr);
+    const startNext = d.add({ days: 1 }).toZonedDateTime({
+        timeZone: "America/New_York",
+        plainTime: Temporal.PlainTime.from("00:00:00"),
+    });
+    return Math.floor(startNext.epochMilliseconds / 1000) - 1;
 }
 

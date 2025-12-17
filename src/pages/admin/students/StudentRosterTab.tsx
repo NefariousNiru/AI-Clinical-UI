@@ -626,7 +626,7 @@ function Field({label, children}: { label: string; children: React.ReactNode }) 
 function Pill({label, state}: { label: string; state: "on" | "off" | "pending" }) {
     const cls =
         state === "on"
-            ? "bg-secondary-soft-alt text-secondary border border-secondary"
+            ? "bg-status-grading text-status-grading border border-status-grading"
             : "bg-surface-subtle text-muted border border-subtle";
 
     const value = state === "on" ? "ON" : state === "off" ? "OFF" : "NEW";

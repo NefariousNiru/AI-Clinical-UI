@@ -9,7 +9,7 @@ export default function RubricPage() {
 
     return (
         <div>
-            <div className="rounded-3xl border border-subtle shadow-sm ring-1 ring-black/5 p-4">
+            <div className="rounded-3xl border border-subtle shadow-sm p-4">
                 <h1 className="text-sm font-semibold text-primary mb-2">Rubric Library</h1>
                 <p className="text-sm text-muted">Search, add, and modify your rubrics</p>
                 <div className="py-2">

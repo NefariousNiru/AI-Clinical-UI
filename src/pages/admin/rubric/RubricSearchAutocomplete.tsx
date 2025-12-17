@@ -164,9 +164,9 @@ export default function RubricSearchAutocomplete({
             <div className="space-y-1">
                 <label className="block text-xs font-medium text-muted">{label}</label>
                 <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
-            <Search className="h-4 w-4 text-muted" aria-hidden="true"/>
-          </span>
+                    <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
+                        <Search className="h-4 w-4 text-muted" aria-hidden="true"/>
+                    </span>
                     <input
                         type="text"
                         value={query}

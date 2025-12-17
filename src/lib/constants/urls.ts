@@ -57,5 +57,5 @@ export const ADMIN_SEMESTER_BASE = API_BASE_V1 + "/admin/semester"
 export const ADMIN_ALL_SEMESTER = ADMIN_SEMESTER_BASE + "/all"
 
 // Admin Weeks
-export const ADMIN_WEEKLY_WORKUP_BASE = API_BASE_V1 + "/weekly_workup"
+export const ADMIN_WEEKLY_WORKUP_BASE = API_BASE_V1 + "/admin/weekly_workup"
 export const ADMIN_WEEKLY_WORKUP_SEMESTER = ADMIN_WEEKLY_WORKUP_BASE + "/semester"

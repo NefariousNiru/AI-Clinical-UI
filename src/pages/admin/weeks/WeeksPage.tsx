@@ -5,6 +5,7 @@ import SubHeader from "../../../components/SubHeader";
 import SemesterDropdown from "../semester/SemesterDropdown.tsx";
 import type {Semester} from "../../../lib/types/semester.ts";
 import CreateSemesterButton from "../semester/CreateSemesterButton.tsx";
+import WeeklyWorkups from "./WeeklyWorkups.tsx";
 
 export default function WeeksPage() {
     const [semester, setSemester] = useState<Semester | null>(null);
@@ -24,7 +25,7 @@ export default function WeeksPage() {
             />
 
             <section className="py-4 px-2">
-                {/*<WeeklyWorkups semester={semester} />*/}
+                <WeeklyWorkups semester={semester} />
             </section>
         </div>
     );

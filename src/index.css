@@ -65,24 +65,24 @@ body {
 
     /* Pills*/
     /* STATUS: LOCKED */
-    --color-status-locked-bg: #f1f5f9;      /* slate-100 */
-    --color-status-locked-text: #64748b;    /* slate-500 */
+    --color-status-locked-bg: #f4f4f5;      /* zinc-100 */
+    --color-status-locked-text: #71717a;    /* zinc-500 */
 
     /* STATUS: IN PROGRESS */
     --color-status-progress-bg: #ccfbf1;    /* teal-100 */
     --color-status-progress-text: #115e59;  /* teal-800 */
 
     /* STATUS: SUBMITTED */
-    --color-status-submitted-bg: #cffafe;   /* cyan-100 */
-    --color-status-submitted-text: #155e75; /* cyan-800 */
+    --color-status-submitted-bg: #e0f2fe;   /* sky-100 */
+    --color-status-submitted-text: #075985; /* sky-800 */
 
     /* STATUS: SYSTEM DOING SOMETHING */
-    --color-status-grading-bg: #fef3c7;     /* amber-100 */
-    --color-status-grading-text: #92400e;   /* amber-800 */
+    --color-status-grading-bg: #ffedd5;     /* orange-100 */
+    --color-status-grading-text: #9a3412;   /* orange-800 */
 
     /* STATUS: RESULT AVAILABLE AFTER SYSTEM DID SOMETHING */
-    --color-status-feedback-bg: #ede9fe;    /* violet-100 */
-    --color-status-feedback-text: #5b21b6;  /* violet-800 */
+    --color-status-feedback-bg: #ede9fe;    /* purple-100 */
+    --color-status-feedback-text: #6b21a8;  /* purple-800 */
 
     /* STATUS: NOT SUBMITTED */
     --color-status-missed-bg: #ffe4e6;      /* rose-100 */

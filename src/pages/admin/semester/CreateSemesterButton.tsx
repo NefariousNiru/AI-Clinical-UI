@@ -4,6 +4,7 @@ import {useMemo, useState} from "react";
 import Modal from "../../../components/Modal";
 import type {Semester, SemesterCreateRequest} from "../../../lib/types/semester";
 import {useCreateSemester} from "../hooks/semester";
+import {isoDateToUnixEnd, isoDateToUnixStart} from "../../../lib/utils/functions.ts";
 
 type Props = {
     onCreated?: (s: Semester) => void;
@@ -11,18 +12,6 @@ type Props = {
 };
 
 type SemesterName = "Spring" | "Summer" | "Fall";
-
-function toEpochSecondsAtStartOfDay(dateStr: string): number {
-    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
-    const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
-    return Math.floor(dt.getTime() / 1000);
-}
-
-function toEpochSecondsAtEndOfDay(dateStr: string): number {
-    const [y, m, d] = dateStr.split("-").map((x) => Number(x));
-    const dt = new Date(y, m - 1, d, 23, 59, 59, 0);
-    return Math.floor(dt.getTime() / 1000);
-}
 
 export default function CreateSemesterButton({className = ""}: Props) {
     const [open, setOpen] = useState(false);
@@ -41,8 +30,8 @@ export default function CreateSemesterButton({className = ""}: Props) {
         if (!/^\d+$/.test(y)) return false;
         if (!startDate || !endDate) return false;
 
-        const start = toEpochSecondsAtStartOfDay(startDate);
-        const end = toEpochSecondsAtEndOfDay(endDate);
+        const start = isoDateToUnixStart(startDate);
+        const end = isoDateToUnixEnd(endDate);
         return start <= end;
     }, [year, startDate, endDate]);
 
@@ -62,8 +51,8 @@ export default function CreateSemesterButton({className = ""}: Props) {
         const payload: SemesterCreateRequest = {
             name,
             year: year.trim(),
-            start: toEpochSecondsAtStartOfDay(startDate),
-            end: toEpochSecondsAtEndOfDay(endDate),
+            start: isoDateToUnixStart(startDate),
+            end: isoDateToUnixEnd(startDate),
             isCurrent: isCurrent,
         };
 
@@ -181,7 +170,7 @@ export default function CreateSemesterButton({className = ""}: Props) {
                     </div>
 
                     <div className="text-[11px] text-muted">
-                        Dates are saved as local-day boundaries: start at 12:00 AM, end at 11:59 PM.
+                        Dates are saved as US-Eastern with Daylight Saving: start at 12:00 AM, end at 11:59 PM.
                     </div>
                 </div>
             </Modal>
