@@ -9,8 +9,9 @@ import {
 import {useLocation, useNavigate} from "react-router-dom";
 import Header from "../../components/Header";
 import {Bot, Info, KeyRound, CheckCircle2} from "lucide-react";
-import {useEnrollmentActivation} from "./hooks/auth";
+import {useBootstrapUserRole, useEnrollmentActivation} from "./hooks/auth";
 import {EnrollmentActivationRequest} from "../../lib/types/auth";
+import {ADMIN, AUTH, STUDENT} from "../../routes.ts";
 
 type FieldErrors = {
     form?: string;
@@ -40,6 +41,16 @@ export default function EnrollmentActivationPage() {
 
     const tokenMissing = !token || !token.trim();
 
+    const {status: bootstrapStatus, role: bootstrapRole} = useBootstrapUserRole();
+
+    useEffect(() => {
+        if (bootstrapStatus === "success" && bootstrapRole) {
+            const dest = bootstrapRole === "admin" ? ADMIN : STUDENT ;
+            nav(dest, {replace: true});
+        }
+        // On "error" we do nothing: user stays on login page.
+    }, [bootstrapStatus, bootstrapRole, nav]);
+
     // On success, show a success card and start a countdown to login.
     useEffect(() => {
         if (!success) return;
@@ -52,7 +63,7 @@ export default function EnrollmentActivationPage() {
                 if (prev === null) return prev;
                 if (prev <= 1) {
                     window.clearInterval(intervalId);
-                    nav("/login", {replace: true});
+                    nav(AUTH + "/login", {replace: true});
                     return 0;
                 }
                 return prev - 1;
@@ -162,7 +173,7 @@ export default function EnrollmentActivationPage() {
                         </p>
                         <button
                             type="button"
-                            onClick={() => nav("/login", {replace: true})}
+                            onClick={() => nav(AUTH + "/login", {replace: true})}
                             className="h-9 rounded-md bg-accent text-on-accent text-xs font-medium px-4 hover:opacity-90"
                         >
                             Go to login now

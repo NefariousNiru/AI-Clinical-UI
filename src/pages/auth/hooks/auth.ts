@@ -6,6 +6,7 @@ import {me} from "../../../lib/api/shared/user";
 import type {MeResponse, Role} from "../../../lib/types/user";
 import {activateAccount, activateEnrollment} from "../../../lib/api/public/auth";
 import type {EnrollmentActivationRequest, UserActivationRequest} from "../../../lib/types/auth";
+import {ADMIN, AUTH, STUDENT} from "../../../routes.ts";
 
 export type BootstrapStatus = "idle" | "loading" | "success" | "error";
 
@@ -102,7 +103,7 @@ export function useAuthGuard(allowedRoles?: Role[]): UseAuthGuardResult {
 
                 if (!isAllowed) {
                     // Enforce role: admin -> /admin, student -> /student
-                    const dest = info.role === "admin" ? "/admin" : "/student";
+                    const dest = info.role === "admin" ? ADMIN : STUDENT;
                     nav(dest, {replace: true});
                     return;
                 }
@@ -113,7 +114,7 @@ export function useAuthGuard(allowedRoles?: Role[]): UseAuthGuardResult {
                 if (!alive) return;
 
                 // Not authenticated -> go to login, remember where they came from
-                nav("/login", {replace: true, state: {from: loc.pathname}});
+                nav(AUTH + "/login", {replace: true, state: {from: loc.pathname}});
             }
         })();
 

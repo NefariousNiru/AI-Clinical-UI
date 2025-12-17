@@ -27,6 +27,7 @@ import {me} from "../../lib/api/shared/user";
 import type {MeResponse} from "../../lib/types/user";
 import {Info, KeyRound, LucideRectangleEllipsis, LucideMail, Bot, Eye, EyeOff} from "lucide-react";
 import {useBootstrapUserRole} from "./hooks/auth";
+import {ADMIN, STUDENT} from "../../routes.ts";
 
 type LocationState = { from?: string };
 type FieldErrors = { email?: string; password?: string; form?: string };
@@ -49,7 +50,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (bootstrapStatus === "success" && bootstrapRole) {
-            const dest = bootstrapRole === "admin" ? "/admin" : "/student";
+            const dest = bootstrapRole === "admin" ? ADMIN : STUDENT;
             nav(dest, {replace: true});
         }
         // On "error" we do nothing: user stays on login page.
@@ -95,7 +96,7 @@ export default function LoginPage() {
             // 3.4) Fetch role and route
             const u: MeResponse = await me();
             const dest =
-                loc.state?.from || (u.role === "admin" ? "/admin" : "/student");
+                loc.state?.from || (u.role === "admin" ? ADMIN : STUDENT);
             nav(dest, {replace: true});
         } catch (err: unknown) {
             // 3.5) Normalize server/transport errors to a user-friendly message

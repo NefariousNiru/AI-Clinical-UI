@@ -17,15 +17,17 @@ import StatisticsPage from "./pages/admin/statistics/StatisticsPage";
 import SkipLink from "./components/SkipLink";
 import AccountActivationPage from "./pages/auth/AccountActivationPage.tsx";
 import EnrollmentActivationPage from "./pages/auth/EnrollmentActivationPage.tsx";
+import {ADMIN, AUTH, BASE_AUTO, STUDENT} from "./routes.ts";
+import StudentLayout from "./pages/student/StudentLayout.tsx";
 
 
 const router = createBrowserRouter([
     // Decide Home Based on Auth
-    {path: "/", element: <AutoHome/>},
+    {path: BASE_AUTO, element: <AutoHome/>},
 
     //  Auth Route
     {
-        path: "/auth",
+        path: AUTH,
         children: [
             {
                 path: "activate",
@@ -38,9 +40,9 @@ const router = createBrowserRouter([
         ],
     },
 
-    // Admin routes -> Require auth re-routes if not admin
+    // Admin routes -> Require auth. Re-routes if not admin
     {
-        path: "/admin",
+        path: ADMIN,
         element: (
             <RequireAuth allowedRoles={["admin"]}>
                 <AdminLayout/>
@@ -55,14 +57,16 @@ const router = createBrowserRouter([
             {path: "statistics", element: <StatisticsPage/>},
         ]
     },
-    // {
-    //   path: "/student",
-    //   element: (
-    //     <RequireAuth allowedRoles={["student"]}>
-    //       <StudentLayout />
-    //     </RequireAuth>
-    //   ),
-    // },
+
+    // Student routes -> Require auth. Re-routes if not admin
+    {
+      path: STUDENT,
+      element: (
+        <RequireAuth allowedRoles={["student"]}>
+          <StudentLayout />
+        </RequireAuth>
+      ),
+    },
 
     {path: "*", element: <Navigate to="/" replace/>},
 ]);

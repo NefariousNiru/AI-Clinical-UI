@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBootstrapUserRole } from "./hooks/auth";
+import {ADMIN, STUDENT, AUTH} from "../../routes.ts";
 
 export default function AutoHome() {
     const nav = useNavigate();
@@ -11,10 +12,10 @@ export default function AutoHome() {
     // Decide where to go based on bootstrap status
     useEffect(() => {
         if (status === "success" && role) {
-            const dest = role === "admin" ? "/admin" : "/student";
+            const dest = role === "admin" ? ADMIN : STUDENT;
             nav(dest, { replace: true });
         } else if (status === "error") {
-            nav("/auth/login", { replace: true });
+            nav(AUTH + "/login", { replace: true });
         }
     }, [status, role, nav]);
 

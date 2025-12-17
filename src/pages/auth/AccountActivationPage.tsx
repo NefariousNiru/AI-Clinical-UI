@@ -1,14 +1,15 @@
 // file: src/pages/auth/AccountActivationPage.tsx
 
-import { type FormEvent, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { type FormEvent, useMemo, useState, useEffect } from "react";
+import {useLocation, useNavigate} from "react-router-dom";
 import Header from "../../components/Header";
 import {Bot, Eye, EyeOff, Info, KeyRound, Lock, CheckCircle2, Check} from "lucide-react";
-import { useAccountActivation } from "./hooks/auth";
+import {useAccountActivation, useBootstrapUserRole} from "./hooks/auth";
 import {
     PasswordSchema,
     UserActivationRequest,
 } from "../../lib/types/auth";
+import {ADMIN, STUDENT} from "../../routes.ts";
 
 type FieldErrors = {
     password?: string;
@@ -17,6 +18,7 @@ type FieldErrors = {
 };
 
 export default function AccountActivationPage() {
+    const nav = useNavigate();
     const loc = useLocation();
 
     const searchParams = useMemo(
@@ -30,6 +32,17 @@ export default function AccountActivationPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState<FieldErrors>({});
+
+    // 1) If already signed in, route by role (shared hook with AutoHome)
+    const {status: bootstrapStatus, role: bootstrapRole} = useBootstrapUserRole();
+
+    useEffect(() => {
+        if (bootstrapStatus === "success" && bootstrapRole) {
+            const dest = bootstrapRole === "admin" ? ADMIN : STUDENT;
+            nav(dest, {replace: true});
+        }
+        // On "error" we do nothing: user stays on login page.
+    }, [bootstrapStatus, bootstrapRole, nav]);
 
     const {loading, error: apiError, success, activate} =
         useAccountActivation();
