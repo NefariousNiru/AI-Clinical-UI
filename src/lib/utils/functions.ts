@@ -33,7 +33,7 @@ export function capitalizeFirst(str: string): string {
  * Download JSON by passing a JSON string and filename
  * @param jsonString The JSON String
  * @param filename The filename of the file
-*/
+ */
 export function downloadJSON(jsonString: string, filename: string) {
     const blob = new Blob([jsonString], {
         type: "application/json;charset=utf-8",
@@ -158,41 +158,52 @@ export function parseCsvToStudents(text: string): { students: NewRosterStudent[]
 
 
 /**
- * Convert a Unix timestamp (seconds since epoch) into an ISO calendar date string in UTC.
+ * Convert a Unix timestamp (seconds since epoch) to an ISO date string (YYYY-MM-DD) in UTC.
  *
- * - Output format: `YYYY-MM-DD`
- * - Uses UTC (not local time).
+ * Notes:
+ * - Uses UTC, not local time.
+ * - Truncates the time portion; output is always exactly "YYYY-MM-DD".
  *
  * @param unixSeconds - Unix timestamp in seconds.
- * @returns ISO date string (UTC) in `YYYY-MM-DD` format.
+ * @returns ISO date string in UTC (YYYY-MM-DD).
+ *
+ * @example
+ * unixToIsoDate(0) // "1970-01-01"
  */
 export function unixToIsoDate(unixSeconds: number): string {
-    // YYYY-MM-DD in UTC
     return new Date(unixSeconds * 1000).toISOString().slice(0, 10);
 }
 
 /**
- * Convert an ISO calendar date string (`YYYY-MM-DD`) into a Unix timestamp (UTC start of day).
+ * Convert an ISO date string (YYYY-MM-DD) to a Unix timestamp (seconds) for the start of that day in UTC.
  *
- * - Interprets the date as UTC midnight at the start of that day: `00:00:00Z`.
+ * Notes:
+ * - Interprets the input as a calendar date, not a datetime.
+ * - Result corresponds to 00:00:00 UTC on that date.
  *
- * @param dateStr - ISO date string in `YYYY-MM-DD` format.
- * @returns Unix timestamp in seconds for `YYYY-MM-DDT00:00:00Z`.
+ * @param dateStr - Date in "YYYY-MM-DD" format.
+ * @returns Unix timestamp in seconds for 00:00:00 UTC on the given date.
+ *
+ * @example
+ * isoDateToUnixStart("2025-01-01") // 1735689600 (UTC)
  */
 export function isoDateToUnixStart(dateStr: string): number {
-    // dateStr is YYYY-MM-DD
     const [y, m, d] = dateStr.split("-").map((x) => Number(x));
     return Math.floor(Date.UTC(y, m - 1, d, 0, 0, 0) / 1000);
 }
 
 /**
- * Convert an ISO calendar date string (`YYYY-MM-DD`) into a Unix timestamp near the end of that day (UTC).
+ * Convert an ISO date string (YYYY-MM-DD) to a Unix timestamp (seconds) for the "end" of that day in UTC.
  *
- * - This implementation returns `23:50:00Z` (not `23:59:59Z`).
- * - If you meant "inclusive end-of-day", consider using `23:59:59Z` instead.
+ * Notes:
+ * - This implementation returns 23:50:00 UTC, not 23:59:59.
+ *   If you intended true day-end, change it to 23:59:59 (or use next-day-start minus 1 second).
  *
- * @param dateStr - ISO date string in `YYYY-MM-DD` format.
- * @returns Unix timestamp in seconds for `YYYY-MM-DDT23:50:00Z`.
+ * @param dateStr - Date in "YYYY-MM-DD" format.
+ * @returns Unix timestamp in seconds for 23:50:00 UTC on the given date.
+ *
+ * @example
+ * isoDateToUnixEnd("2025-01-01") // timestamp for 2025-01-01T23:50:00Z
  */
 export function isoDateToUnixEnd(dateStr: string): number {
     const [y, m, d] = dateStr.split("-").map((x) => Number(x));
@@ -200,13 +211,12 @@ export function isoDateToUnixEnd(dateStr: string): number {
 }
 
 /**
- * Format a Unix timestamp (seconds) as a short date string.
- *
- * - Currently identical to `unixToIsoDate` (UTC `YYYY-MM-DD`).
+ * Format a Unix timestamp (seconds) as a short date string (YYYY-MM-DD) in UTC.
  *
  * @param unixSeconds - Unix timestamp in seconds.
- * @returns ISO date string (UTC) in `YYYY-MM-DD` format.
+ * @returns ISO date string in UTC (YYYY-MM-DD).
  */
 export function fmtDateShort(unixSeconds: number): string {
     return unixToIsoDate(unixSeconds);
 }
+
