@@ -39,7 +39,7 @@ export default function StudentLayout() {
                 onClose={() => setSettingsOpen(false)}
                 onLoggedOut={() => {
                     // central redirect on logout
-                    nav(AUTH + "/login", {replace: true});
+                    nav(AUTH + "/intro", {replace: true});
                 }}
             />
         </div>

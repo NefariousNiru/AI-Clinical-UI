@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
+    "framer-motion": "^12.23.26",
     "highlight.js": "^11.11.1",
     "lucide-react": "^0.555.0",
     "react": "^19.1.1",

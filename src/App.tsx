@@ -19,13 +19,14 @@ import AccountActivationPage from "./pages/auth/AccountActivationPage.tsx";
 import EnrollmentActivationPage from "./pages/auth/EnrollmentActivationPage.tsx";
 import {ADMIN, AUTH, BASE_AUTO, STUDENT} from "./routes.ts";
 import StudentLayout from "./pages/student/StudentLayout.tsx";
+import ProductInfo from "./pages/auth/ProductInfo.tsx";
 
 
 const router = createBrowserRouter([
     // Decide Home Based on Auth
     {path: BASE_AUTO, element: <AutoHome/>},
 
-    //  Auth Route
+    //  Public and Auth Route
     {
         path: AUTH,
         children: [
@@ -36,7 +37,8 @@ const router = createBrowserRouter([
                     {path: "enrollment", element: <EnrollmentActivationPage/>},
                 ],
             },
-            {path: "login", element: <LoginPage/>}, // optional
+            {path: "intro", element: <ProductInfo/>},
+            {path: "login", element: <LoginPage/>},
         ],
     },
 
@@ -60,12 +62,12 @@ const router = createBrowserRouter([
 
     // Student routes -> Require auth. Re-routes if not admin
     {
-      path: STUDENT,
-      element: (
-        <RequireAuth allowedRoles={["student"]}>
-          <StudentLayout />
-        </RequireAuth>
-      ),
+        path: STUDENT,
+        element: (
+            <RequireAuth allowedRoles={["student"]}>
+                <StudentLayout/>
+            </RequireAuth>
+        ),
     },
 
     {path: "*", element: <Navigate to="/" replace/>},

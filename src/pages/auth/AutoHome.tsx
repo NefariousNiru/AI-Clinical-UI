@@ -15,7 +15,7 @@ export default function AutoHome() {
             const dest = role === "admin" ? ADMIN : STUDENT;
             nav(dest, { replace: true });
         } else if (status === "error") {
-            nav(AUTH + "/login", { replace: true });
+            nav(AUTH + "/intro", { replace: true });
         }
     }, [status, role, nav]);
 
