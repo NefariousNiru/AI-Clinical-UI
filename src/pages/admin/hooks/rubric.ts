@@ -1,7 +1,7 @@
 // file: src/pages/admin/hooks/rubric.ts
 
 import {useCallback, useMemo, useRef, useState} from "react";
-import {addRubric, getRubricById, updateRubric} from "../../../lib/api/admin/rubric";
+import {addRubric, getRubricByUnique, updateRubric} from "../../../lib/api/admin/rubric";
 import type {RubricRequest} from "../../../lib/types/rubric";
 import {
     RubricJsonSchema,
@@ -10,12 +10,15 @@ import {
     type RubricStatus
 } from "../../../lib/types/rubricSchema";
 import {canonicalizeAndValidate} from "../../../lib/utils/rubricEdit";
+import {normalizeKeysToCamelDeep} from "../../../lib/utils/functions.ts";
 
 export type RubricEditorMode = "idle" | "create" | "edit";
+export type OpenEditResult = "ok" | "not_found" | "error";
 
 export type UseRubricEditorResult = {
     mode: RubricEditorMode;
     rubricId: string | null;
+    patientLastName: string | null;
 
     view: "form" | "json";
     setView: (v: "form" | "json") => void;
@@ -45,8 +48,8 @@ export type UseRubricEditorResult = {
     saving: boolean;
     error: string | null;
 
-    openCreate: (rubricId: string) => void;
-    openEdit: (rubricId: string) => Promise<void>;
+    openCreate: (diseaseName: string, patientLastName: string) => void;
+    openEdit: (diseaseName: string, patientLastName: string) => Promise<OpenEditResult>;
     close: () => void;
 
     save: (opts?: { confirmReplace?: boolean }) => Promise<boolean>;
@@ -156,7 +159,8 @@ type ValidationResult =
     | { ok: false; canonical: null; errors: string[] };
 
 function validateFileUnknown(nextUnknown: unknown, expectedRubricId: string | null): ValidationResult {
-    const parsed = RubricJsonSchema.safeParse(nextUnknown);
+    const normalized = normalizeKeysToCamelDeep(nextUnknown);
+    const parsed = RubricJsonSchema.safeParse(normalized);
     if (!parsed.success) {
         return {
             ok: false,
@@ -190,9 +194,26 @@ function validateMeta(instructorName: string, status: string | null): string[] {
     return errs;
 }
 
+function isNotFoundError(e: unknown): boolean {
+    if (!e || typeof e !== "object") return false;
+    const anyE = e as any;
+
+    // Common patterns in custom http wrappers
+    if (anyE.status === 404) return true;
+    if (anyE.status_code === 404) return true;
+    if (anyE.response && anyE.response.status === 404) return true;
+    if (anyE.response && anyE.response.statusCode === 404) return true;
+
+    // Some wrappers attach a "code"
+    if (typeof anyE.code === "string" && anyE.code.toUpperCase().includes("NOT_FOUND")) return true;
+
+    return false;
+}
+
 export function useRubricEditor(): UseRubricEditorResult {
     const [mode, setMode] = useState<RubricEditorMode>("idle");
     const [rubricId, setRubricId] = useState<string | null>(null);
+    const [patientLastName, setPatientLastName] = useState<string | null>(null);
 
     const [view, _setView] = useState<"form" | "json">("form");
 
@@ -310,10 +331,11 @@ export function useRubricEditor(): UseRubricEditorResult {
         }
     }, [rubricId, instructorName, status, validationVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const openCreate = useCallback((id: string) => {
+    const openCreate = useCallback((diseaseName: string, patient: string) => {
         setError(null);
         setMode("create");
-        setRubricId(id);
+        setRubricId(diseaseName);
+        setPatientLastName(patient);
         setView("form");
         setValidationVisible(false);
 
@@ -321,8 +343,8 @@ export function useRubricEditor(): UseRubricEditorResult {
         _setStatus("testing");
         _setNotes("");
 
-        const skel = makeSkeletonRubric(id);
-        const fileRes = validateFileUnknown(skel, id);
+        const skel = makeSkeletonRubric(diseaseName);
+        const fileRes = validateFileUnknown(skel, diseaseName);
         const metaErrs = validateMeta("", "testing");
 
         if (fileRes.ok) {
@@ -336,22 +358,23 @@ export function useRubricEditor(): UseRubricEditorResult {
         applyValidationSnapshot(false, [...metaErrs, ...(fileRes.ok ? [] : fileRes.errors)]);
     }, [setView]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const openEdit = useCallback(async (id: string) => {
+    const openEdit = useCallback(async (diseaseName: string, patient: string): Promise<OpenEditResult> => {
         setError(null);
         setLoading(true);
         setMode("edit");
-        setRubricId(id);
+        setRubricId(diseaseName);
+        setPatientLastName(patient);
         setView("form");
         setValidationVisible(false);
 
         try {
-            const resp = await getRubricById(id);
+            const resp = await getRubricByUnique(diseaseName, patient);
 
             _setInstructorName(resp.instructorName ?? "");
             _setStatus(resp.status);
             _setNotes(resp.notes ?? "");
 
-            const fileRes = validateFileUnknown(resp.file, id);
+            const fileRes = validateFileUnknown(resp.file, diseaseName);
             const metaErrs = validateMeta(resp.instructorName ?? "", resp.status);
 
             if (fileRes.ok) {
@@ -363,12 +386,24 @@ export function useRubricEditor(): UseRubricEditorResult {
                 _setRaw(JSON.stringify(resp.file, null, 2));
                 applyValidationSnapshot(false, [...metaErrs, ...fileRes.errors]);
             }
+
+            return "ok";
         } catch (e) {
             console.error("[rubric] openEdit failed:", e);
+
+            if (isNotFoundError(e)) {
+                // Do not poison editor state with a generic error, let caller decide (often openCreate).
+                _setFileDraft(null);
+                _setRaw("");
+                applyValidationSnapshot(false, []);
+                return "not_found";
+            }
+
             setError("Failed to load rubric.");
             _setFileDraft(null);
             _setRaw("");
             applyValidationSnapshot(false, []);
+            return "error";
         } finally {
             setLoading(false);
         }
@@ -377,6 +412,7 @@ export function useRubricEditor(): UseRubricEditorResult {
     const close = useCallback(() => {
         setMode("idle");
         setRubricId(null);
+        setPatientLastName(null);
 
         _setFileDraft(null);
         _setRaw("");
@@ -399,6 +435,7 @@ export function useRubricEditor(): UseRubricEditorResult {
 
     const save = useCallback(async (opts?: { confirmReplace?: boolean }) => {
         if (!rubricId) return false;
+        if (!patientLastName) return false;
 
         setValidationVisible(true);
 
@@ -421,6 +458,7 @@ export function useRubricEditor(): UseRubricEditorResult {
 
         const payload: RubricRequest = {
             diseaseName: rubricId,
+            patientLastName: patientLastName.trim(),
             instructorName: instructorName.trim(),
             status,
             notes: notes.trim() ? notes.trim() : null,
@@ -450,7 +488,7 @@ export function useRubricEditor(): UseRubricEditorResult {
         } finally {
             setSaving(false);
         }
-    }, [rubricId, instructorName, status, notes, fileDraft, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [rubricId, patientLastName, instructorName, status, notes, fileDraft, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useMemo(() => {
         if (validationVisible) setErrors(lastErrorsRef.current);
@@ -460,6 +498,7 @@ export function useRubricEditor(): UseRubricEditorResult {
     return useMemo(() => ({
         mode,
         rubricId,
+        patientLastName,
 
         view,
         setView,
@@ -497,6 +536,7 @@ export function useRubricEditor(): UseRubricEditorResult {
     }), [
         mode,
         rubricId,
+        patientLastName,
         view,
         setView,
         raw,

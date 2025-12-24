@@ -36,6 +36,7 @@ export const ADMIN_TEST_CHAT = ADMIN_TEST_BASE + "/chat";
 export const ADMIN_RUBRIC_BASE = API_BASE_V1 + "/admin/rubric";
 export const ADMIN_RUBRIC_SEARCH_AUTOCOMPLETE = ADMIN_RUBRIC_BASE + "/search"
 export const ADMIN_RUBRIC_IDS = ADMIN_RUBRIC_BASE + "/ids";
+export const ADMIN_RUBRIC_ALL_PATIENTS = ADMIN_RUBRIC_BASE + "/patients";
 
 // Admin Student Base
 const ADMIN_STUDENT_BASE = API_BASE_V1 + "/admin/student";

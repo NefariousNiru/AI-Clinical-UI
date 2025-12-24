@@ -2,7 +2,7 @@
 
 import type {NewRosterStudent} from "../types/roster.ts";
 import type {Semester} from "../types/semester.ts";
-import { Temporal } from "@js-temporal/polyfill";
+import {Temporal} from "@js-temporal/polyfill";
 
 /**
  * Title-case helper that drops the last segment after the final underscore.
@@ -220,10 +220,46 @@ export function isoDateToUnixStart(dateStr: string): number {
  */
 export function isoDateToUnixEnd(dateStr: string): number {
     const d = Temporal.PlainDate.from(dateStr);
-    const startNext = d.add({ days: 1 }).toZonedDateTime({
+    const startNext = d.add({days: 1}).toZonedDateTime({
         timeZone: "America/New_York",
         plainTime: Temporal.PlainTime.from("00:00:00"),
     });
     return Math.floor(startNext.epochMilliseconds / 1000) - 1;
 }
 
+function _toCamelKey(k: string): string {
+    // Fast path
+    if (!k.includes("_")) return k;
+
+    // snake_case -> camelCase
+    return k.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+}
+
+function _isPlainObject(v: unknown): v is Record<string, unknown> {
+    if (v === null || typeof v !== "object") return false;
+    if (Array.isArray(v)) return false;
+    const proto = Object.getPrototypeOf(v);
+    return proto === Object.prototype || proto === null;
+}
+
+/**
+ * Recursively converts object keys from snake_case to camelCase.
+ * Leaves arrays and primitives intact (arrays are mapped).
+ *
+ * Notes:
+ * - Only transforms plain objects (not Date, Map, File, etc.)
+ * - Safe to run on already-camelCase objects (idempotent-ish)
+ */
+export function normalizeKeysToCamelDeep<T = unknown>(input: T): T {
+    if (Array.isArray(input)) {
+        return input.map((x) => normalizeKeysToCamelDeep(x)) as unknown as T;
+    }
+
+    if (!_isPlainObject(input)) return input;
+
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input)) {
+        out[_toCamelKey(k)] = normalizeKeysToCamelDeep(v);
+    }
+    return out as T;
+}

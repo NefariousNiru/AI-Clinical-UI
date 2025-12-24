@@ -11,6 +11,7 @@ import {titleizeDiseaseName} from "../../../lib/utils/functions";
 type Props = {
     mode: "create" | "edit";
     rubricId: string;
+    patientLastName: string | null;
 
     view: "form" | "json";
     setView: (v: "form" | "json") => void;
@@ -48,6 +49,7 @@ export default function RubricEditorPanel(props: Props) {
     const {
         mode,
         rubricId,
+        patientLastName,
         view,
         setView,
         raw,
@@ -72,7 +74,6 @@ export default function RubricEditorPanel(props: Props) {
     } = props;
 
     const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
-
     const [localDraft, setLocalDraft] = useState<RubricJson | null>(fileDraft);
 
     useEffect(() => {
@@ -84,7 +85,7 @@ export default function RubricEditorPanel(props: Props) {
         if (view === "form") setValidationVisible(false);
     }, [rubricId, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const title = mode === "edit" ? "View/Edit rubric" : "Create rubric";
+    const title = mode === "edit" ? "View/Edit Rubric" : "Create New Rubric";
     const rubricName = titleizeDiseaseName(rubricId);
     const canInteract = !(saving || loading);
 
@@ -118,6 +119,12 @@ export default function RubricEditorPanel(props: Props) {
                 <div className="min-w-0">
                     <h2 className="text-sm font-semibold text-primary">
                         {title}: <span className="text-secondary">{rubricName}</span>
+                        {patientLastName ? (
+                            <span className="text-primary">
+                                <span className="text-primary ml-1 mr-1">|</span>
+                                <span className="text-secondary">{patientLastName}</span>
+                            </span>
+                        ) : null}
                     </h2>
                     <p className="mt-1 text-xs text-muted">
                         Upload a JSON file or edit using the Form/JSON tabs. Saving replaces the previous rubric.
@@ -140,6 +147,7 @@ export default function RubricEditorPanel(props: Props) {
                 </div>
             </div>
 
+            {/* rest of file unchanged */}
             <div className="mt-3 space-y-2">
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                     <label className="space-y-1">
@@ -177,7 +185,9 @@ export default function RubricEditorPanel(props: Props) {
                     </label>
 
                     <label className="space-y-1 md:col-span-3">
-                        <div className="text-[11px] font-medium text-muted">Notes (optional comments for the rubric; not used by LLM)</div>
+                        <div className="text-[11px] font-medium text-muted">Notes (optional comments for the rubric; not
+                            used by LLM)
+                        </div>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
@@ -312,7 +322,8 @@ export default function RubricEditorPanel(props: Props) {
                 <div className="space-y-3 text-sm">
                     <p className="text-muted">
                         This will replace the existing rubric for{" "}
-                        <span className="font-semibold text-primary">{rubricName}</span>.
+                        <span className="font-semibold text-primary">{rubricName}</span>
+                        {patientLastName ? <span className="text-primary"> | {patientLastName}</span> : null}.
                     </p>
 
                     <div className="flex justify-end gap-2 pt-2">
@@ -339,4 +350,3 @@ export default function RubricEditorPanel(props: Props) {
         </section>
     );
 }
-

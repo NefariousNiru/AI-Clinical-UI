@@ -200,7 +200,7 @@ export default function RubricSearchAutocomplete({
                                 <div className="min-w-0 flex-1">
                                     <div className="truncate text-primary">{titleizeDiseaseName(item.diseaseName)}</div>
                                     <div className="mt-0.5 text-[11px] text-muted">
-                                        {item.rubricExists ? "Rubric exists for this disease." : "No rubric yet for this disease."}
+                                        {item.rubricExists ? "Rubric exists for this disease. (One or More Patients)" : "No rubric yet for this disease. (Zero Patients)"}
                                     </div>
                                 </div>
 

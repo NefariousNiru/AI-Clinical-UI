@@ -6,6 +6,7 @@ import {RubricJsonSchema, RubricStatusSchema} from "./rubricSchema";
 export const RubricRequestSchema = z
     .object({
         diseaseName: z.string().trim().min(1),
+        patientLastName: z.string().trim().min(1),
         instructorName: z.string().trim().min(1),
         status: RubricStatusSchema,
         notes: z.string().optional().nullable(),
@@ -19,6 +20,7 @@ export const RubricResponseSchema = z
     .object({
         id: z.number().int(),
         diseaseName: z.string().trim().min(1),
+        patientLastName: z.string().trim().min(1),
         instructorName: z.string().trim().min(1),
         created: z.number().int(),
         modified: z.number().int(),
