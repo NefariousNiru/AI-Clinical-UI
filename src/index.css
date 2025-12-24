@@ -92,40 +92,58 @@ body {
 /* --------------- DARK THEME OVERRIDES --------------- */
 
 .theme-dark {
-    /* 🌑 DARK THEME: AMOLED with neutral/indigo accents */
-
     /* BACKGROUNDS */
-    --color-bg: #000000;              /* Pure black */
-    --color-surface-subtle: #09090b;  /* near-black shell */
-    --color-surface: #111827;         /* slate-like card */
+    --color-bg: #131313;              /* Canvas */
+    --color-surface-subtle: #282a2c;  /* Shell / header */
+    --color-surface: #1e1f20;         /* Card / surface */
 
     /* BORDERS */
-    --color-border-subtle: #1f2937;   /* slate-800 */
-    --color-border-strong: #374151;   /* slate-700 */
+    --color-border-subtle: #2c2c2c;
+    --color-border-strong: #3a3a3a;
 
     /* TEXT */
-    --color-text-primary: #e5e7eb;    /* slate-200 */
-    --color-text-muted: #9ca3af;      /* gray-400 */
-    --color-text-on-accent: #000000;  /* accent is light */
-    --color-text-on-secondary: #ffffff;
+    --color-text-primary: #f3f4f6;    /* near-white, not harsh */
+    --color-text-muted: #a1a1aa;      /* muted gray */
+    --color-text-on-accent: #131313;  /* dark text on light accent */
+    --color-text-on-secondary: #0f0f0f;
 
-    /* PRIMARY ACCENT (light neutral complement on black) */
-    --color-accent: #e5e7eb;          /* very light neutral */
-    --color-accent-soft: #111827;     /* subtle halo/background */
-    --color-accent-border: #e5e7eb;
+    /* PRIMARY ACCENT (keep it clean + “OpenAI-ish”) */
+    --color-accent: #e5e7eb;          /* CTA, primary buttons */
+    --color-accent-soft: #2a2a2a;     /* subtle neutral fill */
+    --color-accent-border: #e5e7eb;   /* focus ring / outline */
 
-    /* SECONDARY ACCENT (blue family, same as light) */
-    --color-secondary: #6366f1;
-    --color-secondary-soft: #312e81;  /* indigo-900 */
-    --color-secondary-border: #818cf8;
+    /* SECONDARY ACCENT (indigo stays, tuned for dark) */
+    --color-secondary: #818cf8;       /* indigo-400 */
+    --color-secondary-soft: #1a1a2e;  /* deep indigo tint */
+    --color-secondary-soft-alt: #202043;
+    --color-secondary-border: #a5b4fc;/* indigo-300 */
 
     /* DANGER */
-    --color-danger-bg: #2b0b0b;
+    --color-danger-bg: #2a0f10;
     --color-danger-border: #7f1d1d;
-    --color-danger-text: #fecaca;
+    --color-danger-text: #fca5a5;
 
     /* INPUTS */
-    --color-input-bg: #020617;        /* slate-950-like, above pure black */
+    --color-input-bg: #1a1a1a;
+
+    /* Pills */
+    --color-status-locked-bg: #1c1c1c;
+    --color-status-locked-text: #a1a1aa;
+
+    --color-status-progress-bg: #0b2b26;    /* teal tint */
+    --color-status-progress-text: #5eead4;
+
+    --color-status-submitted-bg: #0a2233;   /* sky tint */
+    --color-status-submitted-text: #7dd3fc;
+
+    --color-status-grading-bg: #2b1b06;     /* orange tint */
+    --color-status-grading-text: #fdba74;
+
+    --color-status-feedback-bg: #23123a;    /* purple tint */
+    --color-status-feedback-text: #d8b4fe;
+
+    --color-status-missed-bg: #2b0b12;      /* rose tint */
+    --color-status-missed-text: #fda4af;
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */

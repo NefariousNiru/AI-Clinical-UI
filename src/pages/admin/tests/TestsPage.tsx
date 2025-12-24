@@ -78,7 +78,7 @@ export default function TestsPage() {
         () =>
             subs.map((s: TestSubmission) => ({
                 id: s.id,
-                title: `Test #${s.id}`,
+                title: `${s.patientLastName} #${s.id}`,
                 subtitle: s.tags.join(", "),
             })),
         [subs],

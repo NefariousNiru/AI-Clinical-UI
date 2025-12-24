@@ -65,7 +65,7 @@ export default function SubmissionViewer({
             onClose={onClose}
             title={
                 <>
-                    Submission #{submission.id}{" "}
+                    {submission.patientLastName} #{submission.id}{" "}
                     {submission.tags.length > 0 && (
                         <span className="text-xs text-muted">
               ({submission.tags.join(", ")})

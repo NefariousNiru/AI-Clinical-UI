@@ -32,6 +32,7 @@ export type PopulateUI = z.infer<typeof PopulateUISchema>;
 export const TestSubmissionSchema = z.object({
     id: z.number().int(),
     tags: z.array(z.string()),
+    patientLastName: z.string(),
     problems: z.array(DrugRelatedProblemSchema),
 });
 
