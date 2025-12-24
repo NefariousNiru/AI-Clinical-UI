@@ -68,6 +68,7 @@ export default function WeeksListCard({
                         {weeks.map((w) => {
                             const isActive = activeWeekId === w.id;
                             const actionLabel = w.status === "locked" ? "Edit" : "View";
+                            const patientDisplay = `${w.patientFirstName} ${w.patientLastName}`.trim();
 
                             return (
                                 <button
@@ -80,7 +81,7 @@ export default function WeeksListCard({
                                     onClick={() => onSelectWeek(w.id, w.status)}
                                 >
                                     <div className="col-span-1 text-sm">{w.weekNo}</div>
-                                    <div className="col-span-4 text-sm">{w.patientName}</div>
+                                    <div className="col-span-4 text-sm">{patientDisplay || "—"}</div>
                                     <div className="col-span-2 text-sm text-muted">{unixToIsoDate(w.start)}</div>
                                     <div className="col-span-2 text-sm text-muted">{unixToIsoDate(w.end)}</div>
                                     <div className="col-span-2 text-sm text-muted"><StatusPill status={w.status}/></div>

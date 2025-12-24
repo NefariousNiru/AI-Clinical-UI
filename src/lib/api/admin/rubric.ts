@@ -78,8 +78,17 @@ export async function deleteRubricById(rubric_id: string): Promise<void> {
     await http.del<unknown>(url);
 }
 
-export async function getAllRubricIds(limit = 20, offset = 0): Promise<string[]> {
-    const url = withQuery(ADMIN_RUBRIC_IDS, {limit, offset});
+/**
+ * Fetch rubric ids (disease slugs) for a given patient last name.
+ *
+ * Backend:
+ *   GET /api/v1/admin/rubric/ids?patient_last_name=...&limit=...&offset=...
+ *
+ * Note:
+ * - Returns ONLY diseases where a rubric exists for that patient last name.
+ */
+export async function getAllRubricIds(patientLastName: string, limit = 20, offset = 0): Promise<string[]> {
+    const url = withQuery(ADMIN_RUBRIC_IDS, {patient_last_name: patientLastName, limit, offset});
     const resp = await http.get<unknown>(url);
     return z.array(z.string()).parse(resp);
 }

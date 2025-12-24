@@ -16,7 +16,8 @@ export const WeeklyWorkupListItemSchema = z.object({
     id: z.number().int(),
     semesterId: z.number().int(),
     weekNo: z.number().int(),
-    patientName: z.string(),
+    patientFirstName: z.string(),
+    patientLastName: z.string(),
     start: z.number().int(), // unix seconds
     end: z.number().int(), // unix seconds
     status: WeeklyWorkupStatusSchema,
@@ -29,7 +30,8 @@ export const WeeklyWorkupDetailSchema = z.object({
     semesterName: z.string(),
     semesterYear: z.string(),
     weekNo: z.number().int(),
-    patientName: z.string(),
+    patientFirstName: z.string(),
+    patientLastName: z.string(),
     start: z.number().int(), // unix seconds
     end: z.number().int(), // unix seconds
     diseaseNames: z.array(z.string()),
@@ -40,7 +42,8 @@ export const WeeklyWorkupCreateRequestSchema = z.object({
     semesterName: z.string().min(1),
     semesterYear: z.string().regex(/^\d+$/, "semesterYear must be numeric"),
     weekNo: z.number().int(),
-    patientName: z.string().min(1),
+    patientFirstName: z.string(),
+    patientLastName: z.string(),
     start: z.number().int(),
     end: z.number().int(),
     diseaseNames: z.array(z.string()).default([]),

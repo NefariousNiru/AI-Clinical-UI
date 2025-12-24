@@ -1,7 +1,7 @@
 // file: src/pages/admin/hooks/rubric.ts
 
-import {useCallback, useMemo, useRef, useState} from "react";
-import {addRubric, getRubricByUnique, updateRubric} from "../../../lib/api/admin/rubric";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {addRubric, getAllRubricPatients, getRubricByUnique, updateRubric} from "../../../lib/api/admin/rubric";
 import type {RubricRequest} from "../../../lib/types/rubric";
 import {
     RubricJsonSchema,
@@ -11,6 +11,7 @@ import {
 } from "../../../lib/types/rubricSchema";
 import {canonicalizeAndValidate} from "../../../lib/utils/rubricEdit";
 import {normalizeKeysToCamelDeep} from "../../../lib/utils/functions.ts";
+import {ApiError} from "../../../lib/api/http.ts";
 
 export type RubricEditorMode = "idle" | "create" | "edit";
 export type OpenEditResult = "ok" | "not_found" | "error";
@@ -560,4 +561,37 @@ export function useRubricEditor(): UseRubricEditorResult {
         close,
         save,
     ]);
+}
+
+function errMsg(e: unknown): string {
+    if (e instanceof ApiError) return e.message;
+    if (e instanceof Error) return e.message;
+    return "Something went wrong.";
+}
+
+export function usePatientLastNames() {
+    const [patients, setPatients] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const refresh = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const xs = await getAllRubricPatients();
+            const cleaned = (xs ?? []).map((s) => String(s).trim()).filter(Boolean);
+            setPatients(cleaned);
+        } catch (e) {
+            setPatients([]);
+            setError(errMsg(e));
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        void refresh();
+    }, [refresh]);
+
+    return {patients, loading, error, refresh};
 }

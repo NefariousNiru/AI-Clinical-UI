@@ -118,7 +118,7 @@ export function useWeeklyWorkupMutations() {
     return {create, update, saving, error};
 }
 
-export function useRubricIdPager(limit = 20) {
+export function useRubricIdPager(patientLastName: string, limit = 20) {
     const [offset, setOffset] = useState(0);
     const [ids, setIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -132,11 +132,26 @@ export function useRubricIdPager(limit = 20) {
         return `Page ${page}`;
     }, [offset, limit]);
 
+    // Reset paging whenever last name changes
+    useEffect(() => {
+        setOffset(0);
+        setIds([]);
+        setError(null);
+        setLoading(false);
+    }, [patientLastName]);
+
     const fetchPage = useCallback(async () => {
+        if (!patientLastName.trim()) {
+            setIds([]);
+            setError(null);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
-            const xs = await getAllRubricIds(limit, offset);
+            const xs = await getAllRubricIds(patientLastName.trim(), limit, offset);
             setIds(xs);
         } catch (e) {
             setError(errMsg(e));
@@ -144,7 +159,7 @@ export function useRubricIdPager(limit = 20) {
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [patientLastName, limit, offset]);
 
     useEffect(() => {
         void fetchPage();
@@ -158,7 +173,7 @@ export function useRubricIdPager(limit = 20) {
     const next = useCallback(() => {
         if (!canNext) return;
         setOffset((x) => x + limit);
-    }, [canNext, limit]);
+    }, [canNext]);
 
     const reset = useCallback(() => {
         setOffset(0);

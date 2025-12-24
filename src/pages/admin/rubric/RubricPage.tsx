@@ -1,11 +1,11 @@
 // file: src/pages/admin/rubric/RubricPage.tsx
 
-import {useEffect, useMemo, useState} from "react";
+import {useState} from "react";
 import RubricSearchAutocomplete from "./RubricSearchAutocomplete";
 import RubricEditorPanel from "./RubricEditorPanel";
 import {useRubricEditor} from "../hooks/rubric";
 import Modal from "../../../components/Modal";
-import {getAllRubricPatients} from "../../../lib/api/admin/rubric";
+import PatientLastNamePicker from "./PatientLastNamePicker";
 
 type PickerIntent = "create" | "edit";
 
@@ -16,57 +16,15 @@ export default function RubricPage() {
     const [pickerIntent, setPickerIntent] = useState<PickerIntent>("edit");
     const [pickerDisease, setPickerDisease] = useState<string | null>(null);
 
-    const [patients, setPatients] = useState<string[]>([]);
-    const [patientsLoading, setPatientsLoading] = useState(false);
-    const [patientsError, setPatientsError] = useState<string | null>(null);
-
     const [selectedPatient, setSelectedPatient] = useState<string>("");
-
-    const canPick = useMemo(() => patients.length > 0, [patients.length]);
 
     function openPicker(intent: PickerIntent, diseaseName: string) {
         setPickerIntent(intent);
         setPickerDisease(diseaseName);
         setPickerOpen(true);
-        setPatientsError(null);
+        // optional: reset so it re-autoselects first option
+        setSelectedPatient("");
     }
-
-    useEffect(() => {
-        if (!pickerOpen) return;
-
-        // Fetch once per session (constant list)
-        if (patients.length > 0) {
-            setSelectedPatient((prev) => prev || patients[0] || "");
-            return;
-        }
-
-        let cancelled = false;
-        setPatientsLoading(true);
-        setPatientsError(null);
-
-        getAllRubricPatients()
-            .then((list) => {
-                if (cancelled) return;
-                const cleaned = (list ?? []).map((s) => String(s).trim()).filter(Boolean);
-                setPatients(cleaned);
-                setSelectedPatient(cleaned[0] ?? "");
-            })
-            .catch((e) => {
-                console.error("[rubric] failed to load patients:", e);
-                if (cancelled) return;
-                setPatientsError("Failed to load patient list.");
-                setPatients([]);
-                setSelectedPatient("");
-            })
-            .finally(() => {
-                if (cancelled) return;
-                setPatientsLoading(false);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [pickerOpen, patients.length]);
 
     async function handlePickerContinue() {
         if (!pickerDisease || !selectedPatient) return;
@@ -78,10 +36,8 @@ export default function RubricPage() {
             return;
         }
 
-        // edit intent
         const res = await editor.openEdit(pickerDisease, selectedPatient);
         if (res === "not_found") {
-            // Smooth UX: if user picked a patient with no rubric for this disease, open create prefilled.
             editor.openCreate(pickerDisease, selectedPatient);
         }
     }
@@ -137,27 +93,14 @@ export default function RubricPage() {
                 className="w-[min(460px,95vw)]"
             >
                 <div className="space-y-3 text-sm">
-                    <p className="text-muted">
-                        Choose which patient this rubric is tied to.
-                    </p>
+                    <p className="text-muted">Choose which patient this rubric is tied to.</p>
 
-                    {patientsError ? (
-                        <p className="text-xs text-danger" role="alert">{patientsError}</p>
-                    ) : null}
-
-                    <label className="block space-y-1">
-                        <span className="text-xs font-medium text-muted">Patient last name</span>
-                        <select
-                            value={selectedPatient}
-                            onChange={(e) => setSelectedPatient(e.target.value)}
-                            disabled={patientsLoading || !canPick}
-                            className="mt-1 h-9 w-full rounded-md border border-subtle bg-input px-2 text-sm text-primary"
-                        >
-                            {patients.map((p) => (
-                                <option key={p} value={p}>{p}</option>
-                            ))}
-                        </select>
-                    </label>
+                    <PatientLastNamePicker
+                        label="Patient last name"
+                        value={selectedPatient}
+                        onChange={setSelectedPatient}
+                        required
+                    />
 
                     <div className="flex justify-end gap-2 pt-2">
                         <button
@@ -171,7 +114,7 @@ export default function RubricPage() {
                         <button
                             type="button"
                             onClick={() => void handlePickerContinue()}
-                            disabled={patientsLoading || !pickerDisease || !selectedPatient}
+                            disabled={!pickerDisease || !selectedPatient}
                             className="inline-flex h-8 items-center rounded-4xl bg-secondary px-3 text-xs font-medium text-on-secondary hover:opacity-90 disabled:opacity-60"
                         >
                             {pickerIntent === "create" ? "Create rubric" : "Open rubric"}

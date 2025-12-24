@@ -34,7 +34,6 @@ export default function WeeklyWorkups({semester}: { semester: Semester | null })
     const {create, update, saving, error: mutationError} = useWeeklyWorkupMutations();
 
     useEffect(() => {
-        // Semester changed - clear right panel selection and banners.
         setMode("empty");
         setSelectedWeekId(null);
         setSuccessMessage(null);
@@ -60,7 +59,8 @@ export default function WeeklyWorkups({semester}: { semester: Semester | null })
 
     async function onSubmitAdd(payload: {
         weekNo: number;
-        patientName: string;
+        patientFirstName: string;
+        patientLastName: string;
         startIso: string;
         endIso: string;
         diseaseNames: string[];
@@ -71,7 +71,8 @@ export default function WeeklyWorkups({semester}: { semester: Semester | null })
             semesterName: semester.name,
             semesterYear: String(semester.year),
             weekNo: payload.weekNo,
-            patientName: payload.patientName,
+            patientFirstName: payload.patientFirstName,
+            patientLastName: payload.patientLastName,
             start: isoDateToUnixStart(payload.startIso),
             end: isoDateToUnixEnd(payload.endIso),
             diseaseNames: payload.diseaseNames,
@@ -88,7 +89,8 @@ export default function WeeklyWorkups({semester}: { semester: Semester | null })
 
     async function onSubmitEdit(payload: {
         weekNo: number;
-        patientName: string;
+        patientFirstName: string;
+        patientLastName: string;
         startIso: string;
         endIso: string;
         diseaseNames: string[];
@@ -100,7 +102,8 @@ export default function WeeklyWorkups({semester}: { semester: Semester | null })
             semesterName: semester.name,
             semesterYear: String(semester.year),
             weekNo: payload.weekNo,
-            patientName: payload.patientName,
+            patientFirstName: payload.patientFirstName,
+            patientLastName: payload.patientLastName,
             start: isoDateToUnixStart(payload.startIso),
             end: isoDateToUnixEnd(payload.endIso),
             diseaseNames: payload.diseaseNames,

@@ -5,6 +5,7 @@ import type {Semester} from "../../../lib/types/semester";
 import type {WeeklyWorkupDetail, WeeklyWorkupListItem} from "../../../lib/types/weeks";
 import {unixToIsoDate, titleizeDiseaseName} from "../../../lib/utils/functions";
 import RubricIdPicker from "./RubricIdPicker";
+import PatientLastNamePicker from "../rubric/PatientLastNamePicker.tsx";
 
 type Mode = "empty" | "view" | "edit" | "add";
 
@@ -21,11 +22,12 @@ type Props = {
     mutationError: string | null;
 
     successMessage: string | null;
-    resetToken: number; // bump to reset add form after a successful create
+    resetToken: number;
 
     onSubmitAdd: (payload: {
         weekNo: number;
-        patientName: string;
+        patientFirstName: string;
+        patientLastName: string;
         startIso: string;
         endIso: string;
         diseaseNames: string[];
@@ -33,7 +35,8 @@ type Props = {
 
     onSubmitEdit: (payload: {
         weekNo: number;
-        patientName: string;
+        patientFirstName: string;
+        patientLastName: string;
         startIso: string;
         endIso: string;
         diseaseNames: string[];
@@ -66,7 +69,8 @@ export default function WeekDetailsCard({
                 semesterName: semester?.name ?? "",
                 semesterYear: semester ? String(semester.year) : "",
                 weekNo: 0,
-                patientName: "",
+                patientFirstName: "",
+                patientLastName: "",
                 startIso: "",
                 endIso: "",
                 diseaseNames: [] as string[],
@@ -78,7 +82,8 @@ export default function WeekDetailsCard({
                 semesterName: detail.semesterName,
                 semesterYear: detail.semesterYear,
                 weekNo: detail.weekNo,
-                patientName: detail.patientName,
+                patientFirstName: detail.patientFirstName,
+                patientLastName: detail.patientLastName,
                 startIso: unixToIsoDate(detail.start),
                 endIso: unixToIsoDate(detail.end),
                 diseaseNames: detail.diseaseNames ?? [],
@@ -89,23 +94,25 @@ export default function WeekDetailsCard({
             semesterName: "",
             semesterYear: "",
             weekNo: selectedWeekSummary?.weekNo ?? 0,
-            patientName: selectedWeekSummary?.patientName ?? "",
+            patientFirstName: selectedWeekSummary?.patientFirstName ?? "",
+            patientLastName: selectedWeekSummary?.patientLastName ?? "",
             startIso: selectedWeekSummary ? unixToIsoDate(selectedWeekSummary.start) : "",
             endIso: selectedWeekSummary ? unixToIsoDate(selectedWeekSummary.end) : "",
             diseaseNames: [] as string[],
         };
-        // resetToken intentionally included so Add form clears after successful create
     }, [mode, semester, detail, selectedWeekSummary, resetToken]);
 
     const [weekNo, setWeekNo] = useState<number>(initial.weekNo);
-    const [patientName, setPatientName] = useState<string>(initial.patientName);
+    const [patientFirstName, setPatientFirstName] = useState<string>(initial.patientFirstName);
+    const [patientLastName, setPatientLastName] = useState<string>(initial.patientLastName);
     const [startIso, setStartIso] = useState<string>(initial.startIso);
     const [endIso, setEndIso] = useState<string>(initial.endIso);
     const [diseaseNames, setDiseaseNames] = useState<string[]>(initial.diseaseNames);
 
     useEffect(() => {
         setWeekNo(initial.weekNo);
-        setPatientName(initial.patientName);
+        setPatientFirstName(initial.patientFirstName);
+        setPatientLastName(initial.patientLastName);
         setStartIso(initial.startIso);
         setEndIso(initial.endIso);
         setDiseaseNames(initial.diseaseNames);
@@ -126,9 +133,9 @@ export default function WeekDetailsCard({
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (mode === "add") {
-            await onSubmitAdd({weekNo, patientName, startIso, endIso, diseaseNames});
+            await onSubmitAdd({weekNo, patientFirstName, patientLastName, startIso, endIso, diseaseNames});
         } else if (mode === "edit") {
-            await onSubmitEdit({weekNo, patientName, startIso, endIso, diseaseNames});
+            await onSubmitEdit({weekNo, patientFirstName, patientLastName, startIso, endIso, diseaseNames});
         }
     }
 
@@ -199,15 +206,27 @@ export default function WeekDetailsCard({
                             </div>
 
                             <div className="flex flex-col gap-1">
-                                {fieldLabel("Patient Name")}
+                                {fieldLabel("Patient First Name")}
                                 <input
                                     className="bg-input border border-subtle rounded-xl px-3 py-2 text-sm"
-                                    value={patientName}
-                                    onChange={(e) => setPatientName(e.target.value)}
+                                    value={patientFirstName}
+                                    onChange={(e) => setPatientFirstName(e.target.value)}
                                     disabled={viewOnly || submitDisabled}
-                                    placeholder="e.g. John Doe"
+                                    placeholder="e.g. John"
                                 />
                             </div>
+
+                            <PatientLastNamePicker
+                                value={patientLastName}
+                                onChange={(v) => {
+                                    setPatientLastName(v);
+                                    // If last name changes, reset diseases since available list is last-name scoped
+                                    setDiseaseNames([]);
+                                }}
+                                disabled={viewOnly || submitDisabled}
+                                required={!viewOnly}
+                                helperText={viewOnly ? undefined : "Used to load diseases with existing rubrics for this patient."}
+                            />
 
                             <div className="flex flex-col gap-1">
                                 {fieldLabel("Start Date")}
@@ -245,13 +264,14 @@ export default function WeekDetailsCard({
                                                 className="inline-flex items-center rounded-full bg-secondary-soft border border-secondary px-3 py-1 text-sm"
                                                 title={titleizeDiseaseName(x)}
                                             >
-                                                {titleizeDiseaseName(x)}
-                                            </span>
+                        {titleizeDiseaseName(x)}
+                      </span>
                                         ))
                                     )}
                                 </div>
                             ) : (
                                 <RubricIdPicker
+                                    patientLastName={patientLastName}
                                     value={diseaseNames}
                                     onChange={setDiseaseNames}
                                     disabled={submitDisabled}
@@ -274,7 +294,8 @@ export default function WeekDetailsCard({
                                 </button>
 
                                 <div className="text-xs text-muted">
-                                    Dates are saved as US-Eastern with Daylight Saving: start at 12:00 AM, end at 11:59 PM.
+                                    Dates are saved as US-Eastern with Daylight Saving: start at 12:00 AM, end at 11:59
+                                    PM.
                                 </div>
                             </div>
                         )}
