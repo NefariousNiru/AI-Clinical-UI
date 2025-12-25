@@ -25,7 +25,10 @@ export type UseRosterResult = {
     setPending: (fn: (prev: NewRosterStudent[]) => NewRosterStudent[]) => void;
 
     saving: boolean;
+
     actionBusy: boolean;
+    actionBusyKey: string | null;
+    actionToast: { tone: "success" | "danger"; text: string } | null;
 
     selectedEnrollmentIds: Set<string>;
     toggleEnrollmentSelected: (enrollmentId: string) => void;
@@ -46,8 +49,15 @@ export type UseRosterResult = {
 export function useRoster(semester: Semester | null): UseRosterResult {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [actionBusy, setActionBusy] = useState(false);
+
+    // REPLACE coarse busy with a key, but keep boolean export
+    const [actionBusyKey, setActionBusyKey] = useState<string | null>(null);
+    const actionBusy = Boolean(actionBusyKey);
+
     const [error, setError] = useState<string | null>(null);
+
+    const [actionToast, setActionToast] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
+    const toastTimerRef = useRef<number | null>(null);
 
     const [existing, setExisting] = useState<RosterStudent[]>([]);
     const [pending, setPendingState] = useState<NewRosterStudent[]>([]);
@@ -59,8 +69,31 @@ export function useRoster(semester: Semester | null): UseRosterResult {
     // prevent stale async writes on quick semester switch
     const loadToken = useRef(0);
 
+    function clearToastTimer() {
+        if (toastTimerRef.current) {
+            window.clearTimeout(toastTimerRef.current);
+            toastTimerRef.current = null;
+        }
+    }
+
+    function pushToast(tone: "success" | "danger", text: string) {
+        clearToastTimer();
+        setActionToast({tone, text});
+        toastTimerRef.current = window.setTimeout(() => {
+            setActionToast(null);
+            toastTimerRef.current = null;
+        }, 4500);
+    }
+
+    useEffect(() => {
+        return () => {
+            clearToastTimer();
+        };
+    }, []);
+
     useEffect(() => {
         setError(null);
+        setActionToast(null);
         setExisting([]);
         setPendingState([]);
         setSelectedEnrollmentIds(new Set());
@@ -68,7 +101,7 @@ export function useRoster(semester: Semester | null): UseRosterResult {
         const maybeId = semester?.id;
         if (typeof maybeId !== "number") return;
 
-        const rosterSemesterId: number = maybeId; // <- hard-narrow here
+        const rosterSemesterId: number = maybeId;
 
         let active = true;
         const token = (loadToken.current += 1);
@@ -77,7 +110,7 @@ export function useRoster(semester: Semester | null): UseRosterResult {
             setLoading(true);
             setError(null);
             try {
-                const resp = await fetchRoster(rosterSemesterId); // number
+                const resp = await fetchRoster(rosterSemesterId);
                 if (!active) return;
                 if (token !== loadToken.current) return;
                 setExisting(resp.students);
@@ -122,7 +155,6 @@ export function useRoster(semester: Semester | null): UseRosterResult {
         let n = 0;
         for (const s of existing) {
             if (!selectedEnrollmentIds.has(s.enrollmentId)) continue;
-            // eligible: only active enrollment (and user active usually implied by your UI rules)
             if (s.isActiveUser && s.isActiveSemester) n += 1;
         }
         return n;
@@ -142,120 +174,128 @@ export function useRoster(semester: Semester | null): UseRosterResult {
                 students: pending,
             });
 
-            // server returns new student roster entries - append/merge into existing
             setExisting((prev) => mergeRoster(prev, resp.students));
             setPendingState([]);
+            pushToast("success", "Students added.");
         } catch (e) {
             const msg =
                 e instanceof Error && e.message.trim()
                     ? e.message
                     : "Failed to add students.";
             setError(msg);
+            pushToast("danger", msg);
         } finally {
             setSaving(false);
         }
     }
 
-    async function resendUserActivation(s: RosterStudent): Promise<void> {
-        if (!semester) return;
-        setActionBusy(true);
+    async function runAction(opts: {
+        key: string;
+        successText: string;
+        fn: () => Promise<void>;
+        errorFallback: string;
+    }): Promise<void> {
+        if (actionBusyKey) return; // keep "one action at a time" semantics you already had
+        setActionBusyKey(opts.key);
         setError(null);
+        setActionToast(null);
+
         try {
-            await notifyAccountActivation({
-                userId: s.userId,
-                enrollmentId: s.enrollmentId,
-                email: s.email,
-                semesterName: semester.name,
-                semesterYear: String(semester.year),
-            });
+            await opts.fn();
+            pushToast("success", opts.successText);
         } catch (e) {
             const msg =
                 e instanceof Error && e.message.trim()
                     ? e.message
-                    : "Failed to send activation email.";
+                    : opts.errorFallback;
             setError(msg);
+            pushToast("danger", msg);
+            throw e;
         } finally {
-            setActionBusy(false);
+            setActionBusyKey(null);
         }
+    }
+
+    async function resendUserActivation(s: RosterStudent): Promise<void> {
+        if (!semester) return;
+
+        await runAction({
+            key: `user:${s.userId}:resend_user`,
+            successText: "User activation email queued.",
+            errorFallback: "Failed to send activation email.",
+            fn: async () => {
+                await notifyAccountActivation({
+                    userId: s.userId,
+                    enrollmentId: s.enrollmentId,
+                    email: s.email,
+                    semesterName: semester.name,
+                    semesterYear: String(semester.year),
+                });
+            },
+        });
     }
 
     async function resendEnrollmentActivation(s: RosterStudent): Promise<void> {
         if (!semester) return;
-        setActionBusy(true);
-        setError(null);
-        try {
-            await notifyEnrollmentActivation({
-                userId: s.userId,
-                enrollmentId: s.enrollmentId,
-                email: s.email,
-                semesterName: semester.name,
-                semesterYear: String(semester.year),
-            });
-        } catch (e) {
-            const msg =
-                e instanceof Error && e.message.trim()
-                    ? e.message
-                    : "Failed to send enrollment email.";
-            setError(msg);
-        } finally {
-            setActionBusy(false);
-        }
+
+        await runAction({
+            key: `enr:${s.enrollmentId}:resend_enrollment`,
+            successText: "Enrollment activation email queued.",
+            errorFallback: "Failed to send enrollment email.",
+            fn: async () => {
+                await notifyEnrollmentActivation({
+                    userId: s.userId,
+                    enrollmentId: s.enrollmentId,
+                    email: s.email,
+                    semesterName: semester.name,
+                    semesterYear: String(semester.year),
+                });
+            },
+        });
     }
 
     async function deactivateUser(s: RosterStudent): Promise<void> {
-        // risky: one at a time
-        setActionBusy(true);
-        setError(null);
-        try {
-            await deactivateUserAccount(s.userId);
+        await runAction({
+            key: `user:${s.userId}:deactivate`,
+            successText: "User deactivated.",
+            errorFallback: "Failed to deactivate user.",
+            fn: async () => {
+                await deactivateUserAccount(s.userId);
 
-            // pessimistic UI update
-            setExisting((prev) =>
-                prev.map((x) =>
-                    x.userId === s.userId
-                        ? {...x, isActiveUser: false, isActiveSemester: false}
-                        : x,
-                ),
-            );
-        } catch (e) {
-            const msg =
-                e instanceof Error && e.message.trim()
-                    ? e.message
-                    : "Failed to deactivate user.";
-            setError(msg);
-        } finally {
-            setActionBusy(false);
-        }
+                setExisting((prev) =>
+                    prev.map((x) =>
+                        x.userId === s.userId
+                            ? {...x, isActiveUser: false, isActiveSemester: false}
+                            : x,
+                    ),
+                );
+            },
+        });
     }
 
     async function deactivateEnrollment(s: RosterStudent): Promise<void> {
-        setActionBusy(true);
-        setError(null);
-        try {
-            await deactivateSemesterEnrollments([s.enrollmentId]);
+        await runAction({
+            key: `enr:${s.enrollmentId}:disenroll`,
+            successText: "Student disenrolled from the semester.",
+            errorFallback: "Failed to deactivate enrollment.",
+            fn: async () => {
+                await deactivateSemesterEnrollments([s.enrollmentId]);
 
-            setExisting((prev) =>
-                prev.map((x) =>
-                    x.enrollmentId === s.enrollmentId
-                        ? {...x, isActiveSemester: false}
-                        : x,
-                ),
-            );
+                setExisting((prev) =>
+                    prev.map((x) =>
+                        x.enrollmentId === s.enrollmentId
+                            ? {...x, isActiveSemester: false}
+                            : x,
+                    ),
+                );
 
-            setSelectedEnrollmentIds((prev) => {
-                const next = new Set(prev);
-                next.delete(s.enrollmentId);
-                return next;
-            });
-        } catch (e) {
-            const msg =
-                e instanceof Error && e.message.trim()
-                    ? e.message
-                    : "Failed to deactivate enrollment.";
-            setError(msg);
-        } finally {
-            setActionBusy(false);
-        }
+                setSelectedEnrollmentIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(s.enrollmentId);
+                    return next;
+                });
+            },
+        });
     }
 
     async function bulkDeactivateSemester(): Promise<void> {
@@ -272,34 +312,28 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 
         if (targets.length === 0) return;
 
-        setActionBusy(true);
-        setError(null);
-        try {
-            await deactivateSemesterEnrollments(targets);
+        await runAction({
+            key: `bulk:disenroll:${targets.length}`,
+            successText: `Disenrolled ${targets.length} enrollment(s).`,
+            errorFallback: "Failed to bulk deactivate enrollments.",
+            fn: async () => {
+                await deactivateSemesterEnrollments(targets);
 
-            setExisting((prev) =>
-                prev.map((x) =>
-                    targets.includes(x.enrollmentId)
-                        ? {...x, isActiveSemester: false}
-                        : x,
-                ),
-            );
+                setExisting((prev) =>
+                    prev.map((x) =>
+                        targets.includes(x.enrollmentId)
+                            ? {...x, isActiveSemester: false}
+                            : x,
+                    ),
+                );
 
-            // clear those selections
-            setSelectedEnrollmentIds((prev) => {
-                const next = new Set(prev);
-                for (const id of targets) next.delete(id);
-                return next;
-            });
-        } catch (e) {
-            const msg =
-                e instanceof Error && e.message.trim()
-                    ? e.message
-                    : "Failed to bulk deactivate enrollments.";
-            setError(msg);
-        } finally {
-            setActionBusy(false);
-        }
+                setSelectedEnrollmentIds((prev) => {
+                    const next = new Set(prev);
+                    for (const id of targets) next.delete(id);
+                    return next;
+                });
+            },
+        });
     }
 
     return {
@@ -309,7 +343,11 @@ export function useRoster(semester: Semester | null): UseRosterResult {
         pending,
         setPending,
         saving,
+
         actionBusy,
+        actionBusyKey,
+        actionToast,
+
         selectedEnrollmentIds,
         toggleEnrollmentSelected,
         clearEnrollmentSelection,

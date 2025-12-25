@@ -35,6 +35,8 @@ export default function StudentRosterTab({semester}: Props) {
         savePendingToDb,
         saving,
         actionBusy,
+        actionBusyKey,
+        actionToast,
     } = useRoster(semester);
 
     const [name, setName] = useState("");
@@ -291,6 +293,14 @@ export default function StudentRosterTab({semester}: Props) {
                     <div className="min-w-0">
                         <h2 className="text-sm font-semibold text-primary">Roster</h2>
                         <p className="text-xs text-muted mt-1">{rosterSubtitle}</p>
+                        {actionToast ? (
+                            <div className="mt-2">
+                                <InlineNotice
+                                    tone={actionToast.tone === "success" ? "success" : "danger"}
+                                    text={actionToast.text}
+                                />
+                            </div>
+                        ) : null}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
@@ -402,6 +412,7 @@ export default function StudentRosterTab({semester}: Props) {
                                         onDeactivateUser={() => void deactivateUser(s)}
                                         onDisenroll={() => void deactivateEnrollment(s)}
                                         busy={actionBusy}
+                                        busyKey={actionBusyKey}
                                         viewOnly={isViewOnly}
                                     />
                                 ))}
@@ -486,6 +497,7 @@ function ExistingRow({
                          onDeactivateUser,
                          onDisenroll,
                          busy,
+                         busyKey,
                          viewOnly,
                      }: {
     student: RosterStudent;
@@ -496,6 +508,7 @@ function ExistingRow({
     onDeactivateUser: () => void;
     onDisenroll: () => void;
     busy: boolean;
+    busyKey: string | null;
     viewOnly: boolean;
 }) {
     const showResendUserActivation = !student.isActiveUser;
@@ -505,6 +518,11 @@ function ExistingRow({
     const showDisenroll = student.isActiveUser && student.isActiveSemester;
 
     const actionsDisabled = busy || viewOnly;
+
+    const isResendUserBusy = busyKey === `user:${student.userId}:resend_user`;
+    const isResendEnrollBusy = busyKey === `enr:${student.enrollmentId}:resend_enrollment`;
+    const isDeactivateUserBusy = busyKey === `user:${student.userId}:deactivate`;
+    const isDisenrollBusy = busyKey === `enr:${student.enrollmentId}:disenroll`;
 
     return (
         <div className={[tableGrid, "px-4 py-3 items-center row-item"].join(" ")} role="row">
@@ -525,8 +543,8 @@ function ExistingRow({
                 <div className="flex flex-wrap gap-2 justify-end">
                     {showResendUserActivation ? (
                         <ActionChip
-                            label="Resend user activation"
-                            mobileLabel="Resend user"
+                            label={isResendUserBusy ? "Sending..." : "Resend user activation"}
+                            mobileLabel={isResendUserBusy ? "Sending..." : "Resend user"}
                             onClick={onNotifyUser}
                             disabled={actionsDisabled}
                             ariaLabel={`Resend user activation email to ${student.email}`}
@@ -535,8 +553,8 @@ function ExistingRow({
 
                     {showResendEnrollmentActivation ? (
                         <ActionChip
-                            label="Resend enrollment activation"
-                            mobileLabel="Resend enroll"
+                            label={isResendEnrollBusy ? "Sending..." : "Resend enrollment activation"}
+                            mobileLabel={isResendEnrollBusy ? "Sending..." : "Resend enroll"}
                             onClick={onNotifyEnrollment}
                             disabled={actionsDisabled}
                             ariaLabel={`Resend enrollment activation email to ${student.email}`}
@@ -545,8 +563,8 @@ function ExistingRow({
 
                     {showDeactivateUser ? (
                         <ActionChip
-                            label="Deactivate user"
-                            mobileLabel="Deactivate user"
+                            label={isDeactivateUserBusy ? "Deactivating..." : "Deactivate user"}
+                            mobileLabel={isDeactivateUserBusy ? "Deactivating..." : "Deactivate user"}
                             tone="danger"
                             onClick={onDeactivateUser}
                             disabled={actionsDisabled}
@@ -557,8 +575,8 @@ function ExistingRow({
 
                     {showDisenroll ? (
                         <ActionChip
-                            label="Disenroll"
-                            mobileLabel="Disenroll"
+                            label={isDisenrollBusy ? "Disenrolling..." : "Disenroll"}
+                            mobileLabel={isDisenrollBusy ? "Disenrolling..." : "Disenroll"}
                             tone="danger"
                             onClick={onDisenroll}
                             disabled={actionsDisabled}
@@ -568,6 +586,7 @@ function ExistingRow({
                     ) : null}
                 </div>
             </div>
+
 
             <div className="flex justify-end pr-1">
                 <input
@@ -689,11 +708,13 @@ function ActionChip({
     );
 }
 
-function InlineNotice({tone, text}: { tone: "danger" | "info"; text: string }) {
+function InlineNotice({tone, text}: { tone: "danger" | "info" | "success"; text: string }) {
     const cls =
         tone === "danger"
             ? "bg-danger-soft text-danger border border-danger"
-            : "bg-surface-subtle text-muted border border-subtle";
+            : tone === "success"
+                ? "bg-secondary-soft-alt text-secondary border border-secondary"
+                : "bg-surface-subtle text-muted border border-subtle";
 
     return <div className={["rounded-2xl px-3 py-2 text-xs border", cls].join(" ")}>{text}</div>;
 }
