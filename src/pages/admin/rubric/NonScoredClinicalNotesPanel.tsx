@@ -1,4 +1,4 @@
-// file: src/pages/admin/rubric/components/NonScoredClinicalNotesPanel.tsx
+// file: src/pages/admin/rubric/NonScoredClinicalNotesPanel.tsx
 
 import {FieldLabel, SmallButton, TextArea, TooltipBadge} from "./RubricFormAtoms";
 

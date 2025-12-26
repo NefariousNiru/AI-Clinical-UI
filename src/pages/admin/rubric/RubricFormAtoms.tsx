@@ -1,4 +1,4 @@
-// file: src/pages/admin/rubric/components/RubricFormAtoms.tsx
+// file: src/pages/admin/rubric/RubricFormAtoms.tsx
 
 import React, {useEffect, useState} from "react";
 import {ChevronDown, ChevronUp} from "lucide-react";

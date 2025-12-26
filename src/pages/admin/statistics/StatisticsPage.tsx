@@ -1,4 +1,4 @@
-// file: src/pages/admin/tests/StatisticsPage.tsx
+// file: src/pages/admin/statistics/StatisticsPage.tsx
 
 export default function StatisticsPage() {
   return (

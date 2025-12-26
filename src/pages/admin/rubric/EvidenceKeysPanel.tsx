@@ -1,4 +1,4 @@
-// file: src/pages/admin/rubric/components/EvidenceKeysPanel.tsx
+// file: src/pages/admin/rubric/EvidenceKeysPanel.tsx
 
 import {FieldLabel, SmallButton, TextInput, TooltipBadge} from "./RubricFormAtoms";
 import {isValidSnakeKey} from "../../../lib/utils/rubricEdit.ts";

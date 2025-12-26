@@ -1,4 +1,4 @@
-// file: src/pages/admin/student/StudentRosterTab.tsx
+// file: src/pages/admin/students/StudentRosterTab.tsx
 
 import {useMemo, useState, type ChangeEvent} from "react";
 import type {Semester} from "../../../lib/types/semester";

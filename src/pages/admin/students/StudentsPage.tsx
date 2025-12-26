@@ -1,4 +1,4 @@
-// file: src/pages/admin/tests/StudentsPage.tsx
+// file: src/pages/admin/students/StudentsPage.tsx
 
 import {useState} from "react";
 import SubHeader from "../../../components/SubHeader";

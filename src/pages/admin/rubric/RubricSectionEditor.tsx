@@ -1,4 +1,4 @@
-// file: src/pages/admin/rubric/components/RubricSectionEditor.tsx
+// file: src/pages/admin/rubric/RubricSectionEditor.tsx
 
 import React from "react";
 import {

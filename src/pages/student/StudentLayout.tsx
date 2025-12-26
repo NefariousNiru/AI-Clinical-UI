@@ -5,6 +5,7 @@ import {Outlet, useNavigate} from "react-router-dom";
 import Header from "../../components/Header";
 import SettingsModalShared from "../shared/SettingsModalShared.tsx";
 import {AUTH} from "../../routes.ts";
+import {useSettingsProfile} from "../shared/hooks/settings.ts";
 
 
 export default function StudentLayout() {
@@ -16,13 +17,16 @@ export default function StudentLayout() {
         setSettingsOpen(true);
     }
 
+    const {profile} = useSettingsProfile(true);
+
     return (
         <div className="min-h-screen app-bg text-primary flex flex-col">
             <Header
-                title="AI Clinical Student"
+                title="AI Clinical - IPC Workup System"
                 onSettingsClick={handleOpenSettings}
                 onOpenDrawer={() => setDrawerOpen(true)}
                 isDrawerOpen={drawerOpen}
+                tabs={`Welcome, ${profile?.name}`}
             />
 
             <main
