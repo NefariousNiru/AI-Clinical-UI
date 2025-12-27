@@ -23,6 +23,12 @@ export const PROFILE = SHARED_USER_BASE + "/profile";
 const SHARED_SETTINGS_BASE = API_BASE_V1 + "/shared/settings";
 export const SHARED_MRP_TOOL = SHARED_SETTINGS_BASE + "/mrp_tool_status"
 
+// Student
+const SHARED_STUDENT_BASE = API_BASE_V1 + "/shared/student";
+export const STUDENT_WEEKS = SHARED_STUDENT_BASE + "/weeks";
+export const STUDENT_MRP_FORM_DATA = SHARED_STUDENT_BASE + "/mrp_form";
+export const STUDENT_SUBMISSION = SHARED_STUDENT_BASE + "/submission";
+
 
 // Admin Endpoints ---------------------
 
