@@ -97,9 +97,7 @@ export function useAuthGuard(allowedRoles?: Role[]): UseAuthGuardResult {
                 const info = await me();
                 if (!alive) return;
 
-                const roles = allowedRoles;
-                const isAllowed =
-                    !roles || roles.includes(info.role) || info.role === "admin";
+                const isAllowed = !allowedRoles || allowedRoles.includes(info.role);
 
                 if (!isAllowed) {
                     // Enforce role: admin -> /admin, student -> /student

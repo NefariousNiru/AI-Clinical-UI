@@ -20,7 +20,7 @@ import {
 } from "../../constants/urls.ts";
 
 /**
- * GET /api/v1/admin/student/roster?semester_id=some_int
+ * GET /api/v1/admin/roster?semester_id=some_int
  */
 export async function fetchRoster(semesterId: number): Promise<RosterResponse> {
     const url = `${ADMIN_STUDENT_ROSTER}?semester_id=${encodeURIComponent(
@@ -31,7 +31,7 @@ export async function fetchRoster(semesterId: number): Promise<RosterResponse> {
 }
 
 /**
- * POST /api/v1/admin/student/roster
+ * POST /api/v1/admin/roster
  */
 export async function addRosterStudents(body: AddRosterRequest): Promise<RosterResponse> {
     const payload = AddRosterRequestSchema.parse(body);
@@ -40,7 +40,7 @@ export async function addRosterStudents(body: AddRosterRequest): Promise<RosterR
 }
 
 /**
- * PATCH /api/v1/admin/student/disable/semester
+ * PATCH /api/v1/admin/roster/disable/semester
  */
 export async function deactivateSemesterEnrollments(
     enrollmentIds: string[],
@@ -52,7 +52,7 @@ export async function deactivateSemesterEnrollments(
 }
 
 /**
- * PATCH /api/v1/admin/student/disable/user?user_id=UUID
+ * PATCH /api/v1/admin/roster/disable/user?user_id=UUID
  */
 export async function deactivateUserAccount(userId: string): Promise<void> {
     const url = `${ADMIN_DISABLE_USER}?user_id=${encodeURIComponent(userId)}`;
@@ -60,7 +60,7 @@ export async function deactivateUserAccount(userId: string): Promise<void> {
 }
 
 /**
- * POST /api/v1/admin/student/notify/account
+ * POST /api/v1/admin/roster/notify/account
  */
 export async function notifyAccountActivation(
     body: NotifyActivationRequest,
@@ -70,7 +70,7 @@ export async function notifyAccountActivation(
 }
 
 /**
- * POST /api/v1/admin/student/notify/enrollment
+ * POST /api/v1/admin/roster/notify/enrollment
  */
 export async function notifyEnrollmentActivation(
     body: NotifyActivationRequest,

@@ -60,7 +60,7 @@ const router = createBrowserRouter([
         ]
     },
 
-    // Student routes -> Require auth. Re-routes if not admin
+    // Student routes -> Require auth. Re-routes if not student (or not allowedRoles)
     {
         path: STUDENT,
         element: (

@@ -39,12 +39,12 @@ export const ADMIN_RUBRIC_IDS = ADMIN_RUBRIC_BASE + "/ids";
 export const ADMIN_RUBRIC_ALL_PATIENTS = ADMIN_RUBRIC_BASE + "/patients";
 
 // Admin Student Base
-const ADMIN_STUDENT_BASE = API_BASE_V1 + "/admin/student";
-export const ADMIN_STUDENT_ROSTER = ADMIN_STUDENT_BASE + "/roster";
-export const ADMIN_DISABLE_SEMESTER = ADMIN_STUDENT_BASE + "/disable/semester";
-export const ADMIN_DISABLE_USER = ADMIN_STUDENT_BASE + "/disable/user";
-export const ADMIN_NOTIFY_ACCOUNT = ADMIN_STUDENT_BASE + "/notify/account";
-export const ADMIN_NOTIFY_ENROLLMENT = ADMIN_STUDENT_BASE + "/notify/enrollment";
+const ADMIN_ROSTER_BASE = API_BASE_V1 + "/admin/roster";
+export const ADMIN_STUDENT_ROSTER = ADMIN_ROSTER_BASE;
+export const ADMIN_DISABLE_SEMESTER = ADMIN_ROSTER_BASE + "/disable/semester";
+export const ADMIN_DISABLE_USER = ADMIN_ROSTER_BASE + "/disable/user";
+export const ADMIN_NOTIFY_ACCOUNT = ADMIN_ROSTER_BASE + "/notify/account";
+export const ADMIN_NOTIFY_ENROLLMENT = ADMIN_ROSTER_BASE + "/notify/enrollment";
 
 // Admin Disease
 export const ADMIN_DISEASE = API_BASE_V1 + "/admin/disease"
