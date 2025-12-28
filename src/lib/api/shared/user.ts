@@ -11,10 +11,9 @@ import { http } from "../http";
  * Uses zod to validate the server response.
  */
 export async function me() {
-  const raw = await http.get<unknown>(ME);
-  return MeResponse.parse(raw);
+	const raw = await http.get<unknown>(ME);
+	return MeResponse.parse(raw);
 }
-
 
 /**
  * GET /api/v1/shared/user/profile
@@ -23,6 +22,6 @@ export async function me() {
  * Uses zod to validate the server response.
  */
 export async function userProfile() {
-    const raw = await http.get<unknown>(PROFILE);
-    return UserProfile.parse(raw);
+	const raw = await http.get<unknown>(PROFILE);
+	return UserProfile.parse(raw);
 }
