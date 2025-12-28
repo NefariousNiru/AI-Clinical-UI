@@ -1,4 +1,4 @@
-// file: src/lib/types/studentWeeks.ts
+// file: src/lib/types/studentSubmission.ts
 
 import {z} from "zod";
 import {SemesterNameSchema} from "./semester";
@@ -32,6 +32,7 @@ export const WeeklyWorkupStudentViewSchema = z.object({
     semesterYear: z.string().regex(/^\d{4}$/),
     currentSemester: z.boolean(),
     isEnrolled: z.boolean(),
+    enrollmentId: z.uuidv4(),
     weeklyWorkups: z.array(WeeklyWorkupStudentSchema),
 });
 export type WeeklyWorkupStudentView = z.infer<typeof WeeklyWorkupStudentViewSchema>;

@@ -3,9 +3,10 @@
 import {z} from "zod";
 
 /**
- * PatientInfo (frontend - camelCase)
- * Backend does its own conversion, so we keep camelCase here.
+ * PatientInfo
  */
+
+const ReflectionAnswersSchema = z.record(z.string(), z.string()).optional();
 
 export const ProgressNotesSchema = z.object({
     chiefComplaint: z.string().optional(),
@@ -13,11 +14,13 @@ export const ProgressNotesSchema = z.object({
     immunizations: z.string().optional(),
     progressNotes: z.string().optional(),
     preliminaryProblemList: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const LabResultSchema = z.object({
     labsImagingMicrobiology: z.string().optional(),
     renalFunctionAssessment: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const MedicationHistorySchema = z.object({
@@ -33,12 +36,14 @@ export const MedicationListSchema = z.object({
     ivAccessLineTubes: z.string().optional(),
     otcCam: z.string().optional(),
     medicationAdherence: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const MedicalHistorySchema = z.object({
     problemList: z.string().optional(),
     pastMedicalHistory: z.string().optional(),
     familyHistory: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const SocialHistorySchema = z.object({
@@ -62,11 +67,13 @@ export const PatientDemographicsSchema = z.object({
     insurance: z.string().optional(),
     vitalSigns: z.string().optional(),
     allergies: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const MrpToolDataSchema = z.object({
     patientScenario: z.string().optional(),
     encounterSetting: z.string().optional(),
+    reflectionAnswers: ReflectionAnswersSchema,
 });
 
 export const PatientInfoSchema = z.object({
@@ -103,6 +110,7 @@ export function makeEmptyPatientInfo(): PatientInfo {
             insurance: undefined,
             vitalSigns: undefined,
             allergies: undefined,
+            reflectionAnswers: undefined,
         },
         socialHistory: {
             occupation: undefined,
@@ -117,6 +125,7 @@ export function makeEmptyPatientInfo(): PatientInfo {
             problemList: undefined,
             pastMedicalHistory: undefined,
             familyHistory: undefined,
+            reflectionAnswers: undefined,
         },
         medicationList: {
             medications: [],
@@ -126,10 +135,12 @@ export function makeEmptyPatientInfo(): PatientInfo {
             ivAccessLineTubes: undefined,
             otcCam: undefined,
             medicationAdherence: undefined,
+            reflectionAnswers: undefined,
         },
         labResult: {
             labsImagingMicrobiology: undefined,
             renalFunctionAssessment: undefined,
+            reflectionAnswers: undefined,
         },
         progressNotes: {
             chiefComplaint: undefined,
@@ -137,6 +148,43 @@ export function makeEmptyPatientInfo(): PatientInfo {
             immunizations: undefined,
             progressNotes: undefined,
             preliminaryProblemList: undefined,
+            reflectionAnswers: undefined,
         },
     };
 }
+
+
+export const StudentDrpAnswerSchema = z.object({
+    name: z.string(),
+    isPriority: z.boolean(),
+    identification: z.string().optional(),
+    explanation: z.string().optional(),
+    planRecommendation: z.string().optional(),
+    monitoring: z.string().optional(),
+});
+
+export type StudentDrpAnswer = z.infer<typeof StudentDrpAnswerSchema>;
+
+export const StudentSubmissionPayloadSchema = z.object({
+    patientInfo: PatientInfoSchema,
+    studentDrpAnswers: z.array(StudentDrpAnswerSchema).default([]),
+});
+
+export type StudentSubmissionPayload = z.infer<typeof StudentSubmissionPayloadSchema>;
+
+export const MrpFormDataSchema = z.object({
+    guidanceText: z.string().default(""),
+    reflectionQuestions: z.record(z.string(), z.string()).default({}),
+});
+
+export type MrpFormData = z.infer<typeof MrpFormDataSchema>;
+
+
+/**
+ * Query params required by submission endpoints.
+ * Move this type to types, not API file.
+ */
+export type StudentSubmissionQuery = {
+    weeklyWorkupId: number;
+    studentEnrollmentId: string; // UUID
+};
