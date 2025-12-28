@@ -3,9 +3,9 @@
 import { http } from "../http";
 import { ADMIN_DISEASE } from "../../constants/urls";
 import {
-    DiseaseRequest as DiseaseRequestSchema,
-    DiseaseResponse as DiseaseResponseSchema,
-    type DiseaseResponse,
+	DiseaseRequest as DiseaseRequestSchema,
+	DiseaseResponse as DiseaseResponseSchema,
+	type DiseaseResponse,
 } from "../../types/disease";
 
 /**
@@ -20,11 +20,9 @@ import {
  *   Zod-validated DiseaseResponse: { created: string[], skipped: string[] }.
  */
 export async function addDisease(name: string): Promise<DiseaseResponse> {
-    const payload = DiseaseRequestSchema.parse({
-        diseases: [name],
-    });
-
-    const resp = await http.post<unknown>(ADMIN_DISEASE, payload);
-
-    return DiseaseResponseSchema.parse(resp);
+	const payload = DiseaseRequestSchema.parse({
+		diseases: [name],
+	});
+	const resp = await http.post<unknown>(ADMIN_DISEASE, payload);
+	return DiseaseResponseSchema.parse(resp);
 }

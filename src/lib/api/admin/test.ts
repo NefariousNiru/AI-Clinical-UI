@@ -1,23 +1,14 @@
 // file: src/lib/api/admin/test.ts
 
-import {http} from "../http";
+import { http } from "../http";
+import { ADMIN_TEST_CHAT, ADMIN_TEST_POPULATE_UI, ADMIN_TEST_SUBMISSION, } from "../../constants/urls";
+import type { PopulateUI, TestChatRequest, TestChatResponse, TestSubmissionResponse, } from "../../types/test.ts";
 import {
-    ADMIN_TEST_CHAT,
-    ADMIN_TEST_POPULATE_UI,
-    ADMIN_TEST_SUBMISSION,
-} from "../../constants/urls";
-import {
-    PopulateUISchema,
-    TestSubmissionResponseSchema,
-    TestChatRequestSchema,
-    TestChatResponseSchema,
+	PopulateUISchema,
+	TestChatRequestSchema,
+	TestChatResponseSchema,
+	TestSubmissionResponseSchema,
 } from "../../types/test.ts";
-import type {
-    PopulateUI,
-    TestSubmissionResponse,
-    TestChatRequest,
-    TestChatResponse
-} from "../../types/test.ts"
 
 /**
  * GET /api/v1/admin/test/populate_ui
@@ -26,8 +17,8 @@ import type {
  * Python: populate_test_ui() -> PopulateUI
  */
 export async function fetchTestUiConfig(): Promise<PopulateUI> {
-    const raw = await http.get<unknown>(ADMIN_TEST_POPULATE_UI);
-    return PopulateUISchema.parse(raw);
+	const raw = await http.get<unknown>(ADMIN_TEST_POPULATE_UI);
+	return PopulateUISchema.parse(raw);
 }
 
 /**
@@ -37,16 +28,16 @@ export async function fetchTestUiConfig(): Promise<PopulateUI> {
  * Python: get_submission(...) -> TestSubmissionResponse
  */
 export async function listStudentSubmissions(
-    page: number,
-    limit: number,
+	page: number,
+	limit: number,
 ): Promise<TestSubmissionResponse> {
-    const qs = new URLSearchParams({
-        page: String(page),
-        limit: String(limit),
-    }).toString();
+	const qs = new URLSearchParams({
+		page: String(page),
+		limit: String(limit),
+	}).toString();
 
-    const raw = await http.get<unknown>(`${ADMIN_TEST_SUBMISSION}?${qs}`);
-    return TestSubmissionResponseSchema.parse(raw);
+	const raw = await http.get<unknown>(`${ADMIN_TEST_SUBMISSION}?${qs}`);
+	return TestSubmissionResponseSchema.parse(raw);
 }
 
 /**
@@ -55,10 +46,8 @@ export async function listStudentSubmissions(
  *
  * Python: chat(chat_request: TestChatRequest, ...) -> TestChatResponse
  */
-export async function chat(
-    payload: TestChatRequest,
-): Promise<TestChatResponse> {
-    const body = TestChatRequestSchema.parse(payload);
-    const raw = await http.post<unknown>(ADMIN_TEST_CHAT, body);
-    return TestChatResponseSchema.parse(raw);
+export async function chat(payload: TestChatRequest): Promise<TestChatResponse> {
+	const body = TestChatRequestSchema.parse(payload);
+	const raw = await http.post<unknown>(ADMIN_TEST_CHAT, body);
+	return TestChatResponseSchema.parse(raw);
 }
