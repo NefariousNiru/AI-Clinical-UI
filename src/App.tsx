@@ -20,6 +20,7 @@ import EnrollmentActivationPage from "./pages/auth/EnrollmentActivationPage.tsx"
 import {ADMIN, AUTH, BASE_AUTO, STUDENT} from "./routes.ts";
 import StudentLayout from "./pages/student/StudentLayout.tsx";
 import ProductInfo from "./pages/auth/ProductInfo.tsx";
+import WeeklyWorkups from "./pages/student/WeeklyWorkups.tsx";
 
 
 const router = createBrowserRouter([
@@ -68,6 +69,9 @@ const router = createBrowserRouter([
                 <StudentLayout/>
             </RequireAuth>
         ),
+        children: [
+            {path: "", element: <WeeklyWorkups/>}
+        ]
     },
 
     {path: "*", element: <Navigate to="/" replace/>},

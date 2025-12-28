@@ -5,6 +5,19 @@ import type {Semester} from "../types/semester.ts";
 import {Temporal} from "@js-temporal/polyfill";
 
 /**
+ * Title-case helper
+ * @param input - The input disease name eg: "abc_def_gh" -> "Abc Def Gh"
+ */
+export function titleizeCase(input: string): string {
+    return input
+        .split("_")
+        .filter(Boolean)
+        .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+}
+
+
+/**
  * Title-case helper that drops the last segment after the final underscore.
  * @param input - The input disease name eg: "abc_def_gh" -> "Abc Def"
  */

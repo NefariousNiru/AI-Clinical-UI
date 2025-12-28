@@ -3,9 +3,10 @@
 import type { WeeklyWorkupStatus } from "../../../lib/types/weeks";
 
 function statusPillClasses(status: WeeklyWorkupStatus): string {
-    if (status === "feedback_available") return "bg-status-submitted text-status-submitted";
+    if (status === "feedback_available") return "bg-status-feedback text-status-feedback";
     if (status === "locked") return "bg-status-locked text-status-locked";
-    return "bg-status-feedback text-status-feedback";
+    if (status === "available") return "bg-status-available text-status-available";
+    return "bg-secondary-soft text-secondary";
 }
 
 function statusLabel(status: WeeklyWorkupStatus): string {

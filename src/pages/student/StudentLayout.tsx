@@ -6,6 +6,7 @@ import Header from "../../components/Header";
 import SettingsModalShared from "../shared/SettingsModalShared.tsx";
 import {AUTH} from "../../routes.ts";
 import {useSettingsProfile} from "../shared/hooks/settings.ts";
+import {StudentScaffoldDrawer} from "./StudentScaffoldDrawer.tsx";
 
 
 export default function StudentLayout() {
@@ -22,11 +23,21 @@ export default function StudentLayout() {
     return (
         <div className="min-h-screen app-bg text-primary flex flex-col">
             <Header
-                title="AI Clinical - IPC Workup System"
+                title="AI IPC Workup"
                 onSettingsClick={handleOpenSettings}
                 onOpenDrawer={() => setDrawerOpen(true)}
                 isDrawerOpen={drawerOpen}
                 tabs={`Welcome, ${profile?.name}`}
+            />
+
+            <StudentScaffoldDrawer
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                onOpenSettings={() => {
+                    setDrawerOpen(false);
+                    handleOpenSettings();
+                }}
+                studentName={profile?.name ? `Welcome, ${profile.name}` : "Welcome"}
             />
 
             <main

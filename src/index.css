@@ -64,28 +64,33 @@ body {
     --color-input-bg: #ffffff;
 
     /* Pills*/
+
     /* STATUS: LOCKED */
-    --color-status-locked-bg: #f4f4f5;      /* zinc-100 */
+    --color-status-locked-bg: #e4e4e7;      /* zinc-200 */
     --color-status-locked-text: #71717a;    /* zinc-500 */
 
     /* STATUS: IN PROGRESS */
-    --color-status-progress-bg: #ccfbf1;    /* teal-100 */
+    --color-status-progress-bg: #99f6e4;    /* teal-200 */
     --color-status-progress-text: #115e59;  /* teal-800 */
 
     /* STATUS: SUBMITTED */
-    --color-status-submitted-bg: #e0f2fe;   /* sky-100 */
+    --color-status-submitted-bg: #bae6fd;   /* sky-200 */
     --color-status-submitted-text: #075985; /* sky-800 */
 
     /* STATUS: SYSTEM DOING SOMETHING */
-    --color-status-grading-bg: #ffedd5;     /* orange-100 */
+    --color-status-grading-bg: #fed7aa;     /* orange-200 */
     --color-status-grading-text: #9a3412;   /* orange-800 */
 
     /* STATUS: RESULT AVAILABLE AFTER SYSTEM DID SOMETHING */
-    --color-status-feedback-bg: #ede9fe;    /* purple-100 */
-    --color-status-feedback-text: #6b21a8;  /* purple-800 */
+    --color-status-feedback-bg: #d9f99d;    /* lime-200 */
+    --color-status-feedback-text: #3f6212;  /* lime-800 */
+
+    /* AVAILABLE */
+    --color-status-available-bg: #c7d2fe;   /* indigo-200 */
+    --color-status-available-text: #3730A3; /* indigo-800 */
 
     /* STATUS: NOT SUBMITTED */
-    --color-status-missed-bg: #ffe4e6;      /* rose-100 */
+    --color-status-missed-bg: #fecdd3;      /* rose-200 */
     --color-status-missed-text: #9f1239;    /* rose-800 */
 }
 
@@ -127,23 +132,33 @@ body {
     --color-input-bg: #131313;
 
     /* Pills */
-    --color-status-locked-bg: #1c1c1c;
-    --color-status-locked-text: #a1a1aa;
+    /* STATUS: LOCKED */
+    --color-status-locked-bg: #27272a;      /* zinc-800 */
+    --color-status-locked-text: #d4d4d8;    /* zinc-300 */
 
-    --color-status-progress-bg: #0b2b26;    /* teal tint */
-    --color-status-progress-text: #5eead4;
+    /* STATUS: IN PROGRESS */
+    --color-status-progress-bg: #134e4a;    /* teal-900 */
+    --color-status-progress-text: #99f6e4;  /* teal-200 */
 
-    --color-status-submitted-bg: #0a2233;   /* sky tint */
-    --color-status-submitted-text: #7dd3fc;
+    /* STATUS: SUBMITTED */
+    --color-status-submitted-bg: #0c4a6e;   /* sky-900 */
+    --color-status-submitted-text: #bae6fd; /* sky-200 */
 
-    --color-status-grading-bg: #2b1b06;     /* orange tint */
-    --color-status-grading-text: #fdba74;
+    /* STATUS: SYSTEM DOING SOMETHING */
+    --color-status-grading-bg: #7c2d12;     /* orange-900 */
+    --color-status-grading-text: #fed7aa;   /* orange-200 */
 
-    --color-status-feedback-bg: #23123a;    /* purple tint */
-    --color-status-feedback-text: #d8b4fe;
+    /* STATUS: RESULT AVAILABLE AFTER SYSTEM DID SOMETHING */
+    --color-status-feedback-bg: #365314;    /* lime-900 */
+    --color-status-feedback-text: #d9f99d;  /* lime-200 */
 
-    --color-status-missed-bg: #2b0b12;      /* rose tint */
-    --color-status-missed-text: #fda4af;
+    /* AVAILABLE */
+    --color-status-available-bg: #312e81;   /* indigo-900 */
+    --color-status-available-text: #c7d2fe; /* indigo-200 */
+
+    /* STATUS: NOT SUBMITTED */
+    --color-status-missed-bg: #881337;      /* rose-900 */
+    --color-status-missed-text: #fecdd3;    /* rose-200 */
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */
@@ -246,29 +261,48 @@ body {
 }
 
 /* Pills */
+
 /* LOCKED */
 .bg-status-locked { background-color: var(--color-status-locked-bg); }
 .text-status-locked { color: var(--color-status-locked-text); }
+.border-status-locked { border-color: var(--color-status-locked-bg); }
+.bg-status-locked-card { background-color: color-mix(in srgb, var(--color-status-locked-bg) 8%, var(--color-bg)); }
 
 /* IN PROGRESS */
 .bg-status-progress { background-color: var(--color-status-progress-bg); }
 .text-status-progress { color: var(--color-status-progress-text); }
+.border-status-progress { border-color: var(--color-status-progress-bg); }
+.bg-status-progress-card { background-color: color-mix(in srgb, var(--color-status-progress-bg) 8%, var(--color-bg)); }
 
 /* SUBMITTED */
 .bg-status-submitted { background-color: var(--color-status-submitted-bg); }
 .text-status-submitted { color: var(--color-status-submitted-text); }
+.border-status-submitted { border-color: var(--color-status-submitted-bg); }
+.bg-status-submitted-card { background-color: color-mix(in srgb, var(--color-status-submitted-bg) 8%, var(--color-bg)); }
 
 /* GRADING */
 .bg-status-grading { background-color: var(--color-status-grading-bg); }
 .text-status-grading { color: var(--color-status-grading-text); }
+.border-status-grading { border-color: var(--color-status-grading-bg); }
+.bg-status-grading-card { background-color: color-mix(in srgb, var(--color-status-grading-bg) 8%, var(--color-bg)); }
 
 /* FEEDBACK AVAILABLE */
 .bg-status-feedback { background-color: var(--color-status-feedback-bg); }
 .text-status-feedback { color: var(--color-status-feedback-text); }
+.border-status-feedback { border-color: var(--color-status-feedback-bg); }
+.bg-status-feedback-card { background-color: color-mix(in srgb, var(--color-status-feedback-bg) 8%, var(--color-bg)); }
 
 /* NOT SUBMITTED */
 .bg-status-missed { background-color: var(--color-status-missed-bg); }
 .text-status-missed { color: var(--color-status-missed-text); }
+.border-status-missed { border-color: var(--color-status-missed-bg); }
+.bg-status-missed-card { background-color: color-mix(in srgb, var(--color-status-missed-bg) 8%, var(--color-bg)); }
+
+/* AVAILABLE */
+.bg-status-available { background-color: var(--color-status-available-bg); }
+.text-status-available { color: var(--color-status-available-text); }
+.border-status-available { border-color: var(--color-status-available-bg); }
+.bg-status-available-card { background-color: color-mix(in srgb, var(--color-status-available-bg) 8%, var(--color-bg)); }
 
 /* btn base + hover using theme tokens */
 .btn-hover {
