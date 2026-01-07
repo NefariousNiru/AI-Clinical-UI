@@ -1,4 +1,4 @@
-// file: src/lib/api/admin/weeks.ts
+// file: src/lib/api/admin/weekly_workup.ts
 
 import { http } from "../http";
 import { ADMIN_WEEKLY_WORKUP_BASE, ADMIN_WEEKLY_WORKUP_SEMESTER } from "../../constants/urls";

@@ -1,7 +1,7 @@
 // file: src/lib/api/admin/rubric.ts
 
 import { z } from "zod";
-import { http } from "../http";
+import { http, withQuery } from "../http";
 import {
 	ADMIN_RUBRIC_ALL_PATIENTS,
 	ADMIN_RUBRIC_BASE,
@@ -15,19 +15,6 @@ import {
 	RubricResponseSchema,
 	RubricSearchResponseSchema,
 } from "../../types/rubric";
-
-function withQuery(
-	path: string,
-	params: Record<string, string | number | boolean | null | undefined>,
-): string {
-	const qs = new URLSearchParams();
-	for (const [key, value] of Object.entries(params)) {
-		if (value === null || value === undefined) continue;
-		qs.set(key, String(value));
-	}
-	const query = qs.toString();
-	return query ? `${path}?${query}` : path;
-}
 
 /**
  * Search rubrics for autocomplete.

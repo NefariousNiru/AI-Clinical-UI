@@ -7,6 +7,7 @@ import SettingsModalShared from "../shared/SettingsModalShared.tsx";
 import {AUTH} from "../../routes.ts";
 import {useSettingsProfile} from "../shared/hooks/settings.ts";
 import {StudentScaffoldDrawer} from "./StudentScaffoldDrawer.tsx";
+import {useStudentLayoutTabText} from "./hooks/studentLayout.ts";
 
 
 export default function StudentLayout() {
@@ -19,6 +20,7 @@ export default function StudentLayout() {
     }
 
     const {profile} = useSettingsProfile(true);
+    const tabText = useStudentLayoutTabText({profileName: profile?.name});
 
     return (
         <div className="min-h-screen app-bg text-primary flex flex-col">
@@ -27,7 +29,7 @@ export default function StudentLayout() {
                 onSettingsClick={handleOpenSettings}
                 onOpenDrawer={() => setDrawerOpen(true)}
                 isDrawerOpen={drawerOpen}
-                tabs={`Welcome, ${profile?.name}`}
+                tabs={tabText}
             />
 
             <StudentScaffoldDrawer

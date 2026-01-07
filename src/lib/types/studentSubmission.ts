@@ -1,89 +1,116 @@
-// file: src/lib/types/studentSubmission.ts
+// file: src/lib/types/student.ts
 
-import {z} from "zod";
+import { z } from "zod";
+
+/**
+ * Helpers
+ * - Backend requires keys present (nullable ok).
+ * - UI prefers undefined over null.
+ */
+
+const optString = z
+	.string()
+	.nullable()
+	.optional()
+	.transform((v) => (v == null ? undefined : v));
+
+const optBool = z
+	.boolean()
+	.nullable()
+	.optional()
+	.transform((v) => (v == null ? undefined : v));
+
+const optReflectionAnswers = z
+	.record(z.string(), z.string())
+	.nullable()
+	.optional()
+	.transform((v) => (v == null ? undefined : v));
 
 /**
  * PatientInfo
  */
 
-const ReflectionAnswersSchema = z.record(z.string(), z.string()).optional();
-
 export const ProgressNotesSchema = z.object({
-    chiefComplaint: z.string().optional(),
-    historyOfPresentIllness: z.string().optional(),
-    immunizations: z.string().optional(),
-    progressNotes: z.string().optional(),
-    preliminaryProblemList: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	chiefComplaint: optString,
+	historyOfPresentIllness: optString,
+	immunizations: optString,
+	progressNotes: optString,
+	preliminaryProblemList: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const LabResultSchema = z.object({
-    labsImagingMicrobiology: z.string().optional(),
-    renalFunctionAssessment: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	labsImagingMicrobiology: optString,
+	renalFunctionAssessment: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const MedicationHistorySchema = z.object({
-    scheduledStartStopDate: z.string().optional(),
-    prn: z.string().optional(),
+	scheduledStartStopDate: optString,
+	prn: optString,
 });
 
 export const MedicationListSchema = z.object({
-    medications: z.array(MedicationHistorySchema).default([]),
-    sup: z.boolean().optional(),
-    vtePpx: z.boolean().optional(),
-    bowelRegimen: z.boolean().optional(),
-    ivAccessLineTubes: z.string().optional(),
-    otcCam: z.string().optional(),
-    medicationAdherence: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	// If backend ever returns null, we still want [] in the UI.
+	medications: z
+		.array(MedicationHistorySchema)
+		.nullable()
+		.optional()
+		.transform((v) => v ?? []),
+	sup: optBool,
+	vtePpx: optBool,
+	bowelRegimen: optBool,
+	ivAccessLineTubes: optString,
+	otcCam: optString,
+	medicationAdherence: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const MedicalHistorySchema = z.object({
-    problemList: z.string().optional(),
-    pastMedicalHistory: z.string().optional(),
-    familyHistory: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	problemList: optString,
+	pastMedicalHistory: optString,
+	familyHistory: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const SocialHistorySchema = z.object({
-    occupation: z.string().optional(),
-    supportSystem: z.string().optional(),
-    tobaccoUse: z.string().optional(),
-    thcUse: z.string().optional(),
-    alcoholUse: z.string().optional(),
-    cocaineUse: z.string().optional(),
-    otherSubstanceUse: z.string().optional(),
+	occupation: optString,
+	supportSystem: optString,
+	tobaccoUse: optString,
+	thcUse: optString,
+	alcoholUse: optString,
+	cocaineUse: optString,
+	otherSubstanceUse: optString,
 });
 
 export const PatientDemographicsSchema = z.object({
-    name: z.string().optional(),
-    ageDob: z.string().optional(),
-    sex: z.string().optional(),
-    height: z.string().optional(),
-    weight: z.string().optional(),
-    bmi: z.string().optional(),
-    admitVisitDate: z.string().optional(),
-    insurance: z.string().optional(),
-    vitalSigns: z.string().optional(),
-    allergies: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	name: optString,
+	ageDob: optString,
+	sex: optString,
+	height: optString,
+	weight: optString,
+	bmi: optString,
+	admitVisitDate: optString,
+	insurance: optString,
+	vitalSigns: optString,
+	allergies: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const MrpToolDataSchema = z.object({
-    patientScenario: z.string().optional(),
-    encounterSetting: z.string().optional(),
-    reflectionAnswers: ReflectionAnswersSchema,
+	patientScenario: optString,
+	encounterSetting: optString,
+	reflectionAnswers: optReflectionAnswers,
 });
 
 export const PatientInfoSchema = z.object({
-    mrpToolData: MrpToolDataSchema.optional(),
-    patientDemographics: PatientDemographicsSchema,
-    socialHistory: SocialHistorySchema,
-    medicalHistory: MedicalHistorySchema,
-    medicationList: MedicationListSchema,
-    labResult: LabResultSchema,
-    progressNotes: ProgressNotesSchema,
+	mrpToolData: MrpToolDataSchema,
+	patientDemographics: PatientDemographicsSchema,
+	socialHistory: SocialHistorySchema,
+	medicalHistory: MedicalHistorySchema,
+	medicationList: MedicationListSchema,
+	labResult: LabResultSchema,
+	progressNotes: ProgressNotesSchema,
 });
 
 export type ProgressNotes = z.infer<typeof ProgressNotesSchema>;
@@ -97,94 +124,113 @@ export type MrpToolData = z.infer<typeof MrpToolDataSchema>;
 export type PatientInfo = z.infer<typeof PatientInfoSchema>;
 
 export function makeEmptyPatientInfo(): PatientInfo {
-    return {
-        mrpToolData: undefined,
-        patientDemographics: {
-            name: undefined,
-            ageDob: undefined,
-            sex: undefined,
-            height: undefined,
-            weight: undefined,
-            bmi: undefined,
-            admitVisitDate: undefined,
-            insurance: undefined,
-            vitalSigns: undefined,
-            allergies: undefined,
-            reflectionAnswers: undefined,
-        },
-        socialHistory: {
-            occupation: undefined,
-            supportSystem: undefined,
-            tobaccoUse: undefined,
-            thcUse: undefined,
-            alcoholUse: undefined,
-            cocaineUse: undefined,
-            otherSubstanceUse: undefined,
-        },
-        medicalHistory: {
-            problemList: undefined,
-            pastMedicalHistory: undefined,
-            familyHistory: undefined,
-            reflectionAnswers: undefined,
-        },
-        medicationList: {
-            medications: [],
-            sup: undefined,
-            vtePpx: undefined,
-            bowelRegimen: undefined,
-            ivAccessLineTubes: undefined,
-            otcCam: undefined,
-            medicationAdherence: undefined,
-            reflectionAnswers: undefined,
-        },
-        labResult: {
-            labsImagingMicrobiology: undefined,
-            renalFunctionAssessment: undefined,
-            reflectionAnswers: undefined,
-        },
-        progressNotes: {
-            chiefComplaint: undefined,
-            historyOfPresentIllness: undefined,
-            immunizations: undefined,
-            progressNotes: undefined,
-            preliminaryProblemList: undefined,
-            reflectionAnswers: undefined,
-        },
-    };
+	return {
+		mrpToolData: {
+			patientScenario: undefined,
+			encounterSetting: undefined,
+			reflectionAnswers: undefined,
+		},
+		patientDemographics: {
+			name: undefined,
+			ageDob: undefined,
+			sex: undefined,
+			height: undefined,
+			weight: undefined,
+			bmi: undefined,
+			admitVisitDate: undefined,
+			insurance: undefined,
+			vitalSigns: undefined,
+			allergies: undefined,
+			reflectionAnswers: undefined,
+		},
+		socialHistory: {
+			occupation: undefined,
+			supportSystem: undefined,
+			tobaccoUse: undefined,
+			thcUse: undefined,
+			alcoholUse: undefined,
+			cocaineUse: undefined,
+			otherSubstanceUse: undefined,
+		},
+		medicalHistory: {
+			problemList: undefined,
+			pastMedicalHistory: undefined,
+			familyHistory: undefined,
+			reflectionAnswers: undefined,
+		},
+		medicationList: {
+			medications: [],
+			sup: undefined,
+			vtePpx: undefined,
+			bowelRegimen: undefined,
+			ivAccessLineTubes: undefined,
+			otcCam: undefined,
+			medicationAdherence: undefined,
+			reflectionAnswers: undefined,
+		},
+		labResult: {
+			labsImagingMicrobiology: undefined,
+			renalFunctionAssessment: undefined,
+			reflectionAnswers: undefined,
+		},
+		progressNotes: {
+			chiefComplaint: undefined,
+			historyOfPresentIllness: undefined,
+			immunizations: undefined,
+			progressNotes: undefined,
+			preliminaryProblemList: undefined,
+			reflectionAnswers: undefined,
+		},
+	};
 }
 
-
 export const StudentDrpAnswerSchema = z.object({
-    name: z.string(),
-    isPriority: z.boolean(),
-    identification: z.string().optional(),
-    explanation: z.string().optional(),
-    planRecommendation: z.string().optional(),
-    monitoring: z.string().optional(),
+	name: z.string(),
+	isPriority: z.boolean(),
+	identification: optString,
+	explanation: optString,
+	planRecommendation: optString,
+	monitoring: optString,
 });
 
 export type StudentDrpAnswer = z.infer<typeof StudentDrpAnswerSchema>;
 
 export const StudentSubmissionPayloadSchema = z.object({
-    patientInfo: PatientInfoSchema,
-    studentDrpAnswers: z.array(StudentDrpAnswerSchema).default([]),
+	patientInfo: PatientInfoSchema,
+	studentDrpAnswers: z
+		.array(StudentDrpAnswerSchema)
+		.nullable()
+		.optional()
+		.transform((v) => v ?? []),
 });
 
 export type StudentSubmissionPayload = z.infer<typeof StudentSubmissionPayloadSchema>;
 
 export const MrpFormDataSchema = z.object({
-    guidanceText: z.string().default(""),
-    reflectionQuestions: z.record(z.string(), z.string()).default({}),
+	guidanceText: z.string().default(""),
+	reflectionQuestions: z.record(z.string(), z.string()).default({}),
 });
 
 export type MrpFormData = z.infer<typeof MrpFormDataSchema>;
 
+export type StudentSubmissionQuery = {
+	weeklyWorkupId: number;
+	studentEnrollmentId: string; // UUID
+};
 
 /**
- * Query params required by submission endpoints.
- * Move this type to types, not API file.
+ * Outgoing JSON helper:
+ * JSON.stringify drops undefined fields -> backend complains "missing".
+ * Convert undefined -> null recursively so all keys are present.
  */
-export type StudentSubmissionQuery = {
-    weeklyWorkupId: number;
-    studentEnrollmentId: string; // UUID
-};
+export function toApiJson<T>(value: T): any {
+	if (value === undefined) return null;
+	if (value === null) return null;
+	if (Array.isArray(value)) return value.map((x) => toApiJson(x));
+	if (typeof value === "object") {
+		const out: Record<string, any> = {};
+		for (const [k, v] of Object.entries(value as any)) out[k] = toApiJson(v);
+		return out;
+	}
+	return value;
+}

@@ -9,7 +9,7 @@ import { z } from "zod";
  *   diseases: list of disease names (plain text, backend handles slugging).
  */
 export const DiseaseRequest = z.object({
-    diseases: z.array(z.string()),
+	diseases: z.array(z.string()),
 });
 export type DiseaseRequest = z.infer<typeof DiseaseRequest>;
 
@@ -21,7 +21,14 @@ export type DiseaseRequest = z.infer<typeof DiseaseRequest>;
  *   skipped: list of diseases that were skipped (e.g. already existed).
  */
 export const DiseaseResponse = z.object({
-    created: z.array(z.string()),
-    skipped: z.array(z.string()),
+	created: z.array(z.string()),
+	skipped: z.array(z.string()),
 });
 export type DiseaseResponse = z.infer<typeof DiseaseResponse>;
+
+/**
+ * Backend returns a plain list of disease names special strings underscored with abbreviations at the last.
+ * Example: ["diabetes_mellitus_dm", ...]
+ */
+export const DiseaseSearchResponseSchema = z.array(z.string().min(0));
+export type DiseaseSearchResponse = z.infer<typeof DiseaseSearchResponseSchema>;

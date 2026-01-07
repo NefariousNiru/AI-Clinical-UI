@@ -5,41 +5,49 @@ import FormField from "./FormField";
 import type { MedicalHistory } from "../../../lib/types/studentSubmission";
 
 type Props = {
-    value: MedicalHistory;
-    onChange: (next: MedicalHistory) => void;
-    readOnly?: boolean;
-    className?: string;
+	value: MedicalHistory;
+	onChange: (next: MedicalHistory) => void;
+	readOnly?: boolean;
+	className?: string;
 };
 
 export default function MedicalHistoryForm({ value, onChange, readOnly, className = "" }: Props) {
-    const set = <K extends keyof MedicalHistory>(k: K, next?: MedicalHistory[K]) =>
-        onChange({ ...value, [k]: next });
+	const set = <K extends keyof MedicalHistory>(k: K, next?: MedicalHistory[K]) =>
+		onChange({ ...value, [k]: next });
 
-    return (
-        <FormCard title="medicalHistory" className={className}>
-            <div className="flex flex-col gap-3">
-                <FormField
-                    label="problemList"
-                    value={value.problemList}
-                    onChange={(x) => set("problemList", x)}
-                    readOnly={readOnly}
-                    multiline
-                />
-                <FormField
-                    label="pastMedicalHistory"
-                    value={value.pastMedicalHistory}
-                    onChange={(x) => set("pastMedicalHistory", x)}
-                    readOnly={readOnly}
-                    multiline
-                />
-                <FormField
-                    label="familyHistory"
-                    value={value.familyHistory}
-                    onChange={(x) => set("familyHistory", x)}
-                    readOnly={readOnly}
-                    multiline
-                />
-            </div>
-        </FormCard>
-    );
+	return (
+		<FormCard title="Problem List & Medical History" className={className}>
+			<div className="flex flex-col gap-3">
+				<FormField
+					label="Problem List"
+					value={value.problemList}
+					onChange={(x) => set("problemList", x)}
+					readOnly={readOnly}
+					placeholder={"List all relevant current problems"}
+					multiline
+					limit={"medium"}
+					showCounter
+				/>
+				<FormField
+					label="Medical History"
+					value={value.pastMedicalHistory}
+					onChange={(x) => set("pastMedicalHistory", x)}
+					readOnly={readOnly}
+					placeholder={"List all relevant medical history"}
+					multiline
+					limit={"medium"}
+					showCounter
+				/>
+				<FormField
+					label="Family History"
+					value={value.familyHistory}
+					onChange={(x) => set("familyHistory", x)}
+					readOnly={readOnly}
+					multiline
+					limit={"medium"}
+					showCounter
+				/>
+			</div>
+		</FormCard>
+	);
 }

@@ -1,13 +1,9 @@
 // file: src/pages/admin/hooks/settings.ts
 
-import { useEffect, useState } from "react";
-import {
-    toggleMrpToolStatus,
-} from "../../../lib/api/admin/settings";
-import {
-    fetchMrpToolStatus,
-} from "../../../lib/api/shared/settings";
-import type { UserProfile } from "../../../lib/types/user";
+import {useCallback, useEffect, useMemo, useState} from "react";
+import {toggleMrpToolStatus} from "../../../lib/api/admin/settings";
+import {useMrpToolStatus as useMrpToolStatusShared} from "../../shared/hooks/mrpToolStatus";
+import type {UserProfile} from "../../../lib/types/user";
 
 export type MrpToolStatus = "on" | "off";
 
@@ -19,61 +15,44 @@ export type UseMrpToolStatusResult = {
 };
 
 /**
- * Hook to manage MRP tool (training wheels) status.
+ * Admin adapter around shared MRP status hook.
  *
- * - Loads status when `open` becomes true.
- * - Exposes `status`, `loading`, `error`, and `toggle()`.
- * - Only admins should see UI driven by this; hook itself just manages state.
+ * - Only loads shared status when `open` is true.
+ * - Toggle calls admin endpoint, then refreshes shared status.
  */
-export function useMrpToolStatus(open: boolean): UseMrpToolStatusResult {
-    const [status, setStatus] = useState<MrpToolStatus | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+export function useAdminMrpToolStatus(open: boolean): UseMrpToolStatusResult {
+    const shared = useMrpToolStatusShared(); // { enabled, loading, error, refresh }
+
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Load status whenever the modal opens
+    // Load when modal opens
     useEffect(() => {
         if (!open) return;
+        void shared.refresh();
+        // clear any prior admin errors when opening
+        setError(null);
+    }, [open, shared]);
 
-        let active = true;
+    const status: MrpToolStatus | null = useMemo(() => {
+        if (!open) return null; // don't show stale state while closed
+        if (shared.loading) return null;
+        return shared.enabled ? "on" : "off";
+    }, [open, shared.enabled, shared.loading]);
 
-        async function loadStatus(): Promise<void> {
-            setLoading(true);
-            setError(null);
-            try {
-                const value = await fetchMrpToolStatus();
-                if (!active) return;
-                setStatus(value ? "on" : "off");
-            } catch (e) {
-                if (!active) return;
-                const msg =
-                    e instanceof Error && e.message.trim()
-                        ? e.message
-                        : "Failed to load MRP tool status.";
-                setError(msg);
-            } finally {
-                if (active) {
-                    setLoading(false);
-                }
-            }
-        }
+    const combinedLoading = loading || (open && shared.loading);
+    const combinedError = error ?? (open ? shared.error : null);
 
-        void loadStatus();
+    const toggle = useCallback(async () => {
+        if (!open) return;
+        if (combinedLoading) return;
 
-        return () => {
-            active = false;
-        };
-    }, [open]);
-
-    async function toggle(): Promise<void> {
-        if (loading || status === null) return;
-
-        const next: MrpToolStatus = status === "on" ? "off" : "on";
         setLoading(true);
         setError(null);
 
         try {
             await toggleMrpToolStatus();
-            setStatus(next);
+            await shared.refresh();
         } catch (e) {
             const msg =
                 e instanceof Error && e.message.trim()
@@ -83,15 +62,11 @@ export function useMrpToolStatus(open: boolean): UseMrpToolStatusResult {
         } finally {
             setLoading(false);
         }
-    }
+    }, [open, combinedLoading, shared]);
 
-    return { status, loading, error, toggle };
+    return {status, loading: combinedLoading, error: combinedError, toggle};
 }
 
-/**
- * Helper: check if admin and MRP tooling should be visible.
- * Not strictly required, but can be useful if you reuse admin extras.
- */
 export function isAdmin(profile: UserProfile | null): boolean {
     return !!profile && profile.role === "admin";
 }

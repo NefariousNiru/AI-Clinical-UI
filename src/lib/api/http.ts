@@ -72,6 +72,19 @@ function makeHeaders(body?: unknown): HeadersInit {
 	return headers;
 }
 
+export function withQuery(
+	path: string,
+	params: Record<string, string | number | boolean | null | undefined>,
+): string {
+	const qs = new URLSearchParams();
+	for (const [key, value] of Object.entries(params)) {
+		if (value === null || value === undefined) continue;
+		qs.set(key, String(value));
+	}
+	const query = qs.toString();
+	return query ? `${path}?${query}` : path;
+}
+
 type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {

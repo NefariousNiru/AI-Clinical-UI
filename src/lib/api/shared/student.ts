@@ -1,4 +1,4 @@
-// file: src/lib/api/shared/studentSubmission.ts
+// file: src/lib/api/shared/student.ts
 
 import { StudentWeeksResponseSchema } from "../../types/studentWeeks";
 import { http } from "../http";
