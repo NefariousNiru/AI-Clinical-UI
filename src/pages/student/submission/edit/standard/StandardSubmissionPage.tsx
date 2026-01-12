@@ -1,6 +1,6 @@
 // file: src/pages/student/submission/edit/standard/StandardSubmissionPage.tsx
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import type { StudentSubmissionState } from "../../WeeklyWorkup";
 import Tabs from "../../../../../components/Tabs";
 import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup";
@@ -16,7 +16,7 @@ function TabPanel({
 	active: boolean;
 	id: string;
 	label: string;
-	children: React.ReactNode;
+	children: ReactNode;
 }) {
 	/**
 	 * Keep mounted to preserve internal component state.
@@ -43,7 +43,7 @@ export function StandardSubmissionPage({
 	const tabItems = useMemo(
 		() => [
 			{ value: "patient", label: "Patient Information" },
-			{ value: "meds", label: "Current Medications & History" },
+			{ value: "meds", label: "Current Medications" },
 			{ value: "drp", label: "Health Care Problems" },
 		],
 		[],
@@ -53,28 +53,31 @@ export function StandardSubmissionPage({
 
 	return (
 		<div className="mx-auto w-full max-w-7xl">
-			{/* Tabs row OUTSIDE the card */}
-			<div className="mb-8 flex items-center justify-between">
-				<Tabs
-					value={tab}
-					onChange={(v) => setTab(v as TabKey)}
-					items={tabItems}
-					fullWidth
-				/>
-				<BackToWeeklyWorkup />
+			{/* Tabs + Back; break to next line on small screens*/}
+			<div className="mb-8 flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
+				<div className="w-full md:w-auto">
+					<Tabs
+						value={tab}
+						onChange={(v) => setTab(v as TabKey)}
+						items={tabItems}
+						fullWidth
+					/>
+				</div>
+
+				<div className="w-full md:w-auto md:flex md:justify-end">
+					<BackToWeeklyWorkup />
+				</div>
 			</div>
 
 			{/* Content card */}
-			<div className="rounded-xl border border-subtle app-bg p-5">
+			<div className="rounded-4xl border border-subtle app-bg p-8">
 				{/* Keep all panels mounted so state is preserved across tab switches */}
 				<TabPanel
 					active={tab === "patient"}
 					id="tab-panel-patient"
 					label="Patient Information"
 				>
-					<div className="text-sm font-semibold text-primary">
-						Patient Information (standard editor - TODO)
-					</div>
+					<div className="text-sm font-semibold text-primary">Patient Information</div>
 					<div className="mt-1 text-sm text-muted">
 						Not implemented. weeklyWorkupId={weeklyWorkupId} studentEnrollmentId=
 						{studentEnrollmentId}
@@ -87,15 +90,13 @@ export function StandardSubmissionPage({
 					label="Current Medications & History"
 				>
 					<div className="text-sm font-semibold text-primary">
-						Current Medications & History (standard editor - TODO)
+						Current Medications & History
 					</div>
 					<div className="mt-1 text-sm text-muted">Not implemented.</div>
 				</TabPanel>
 
 				<TabPanel active={tab === "drp"} id="tab-panel-drp" label="Health Care Problems">
-					<div className="text-sm font-semibold text-primary">
-						Health Care Problems (standard editor - TODO)
-					</div>
+					<div className="text-sm font-semibold text-primary">Health Care Problems</div>
 					<div className="mt-1 text-sm text-muted">Not implemented.</div>
 				</TabPanel>
 			</div>
