@@ -1,8 +1,9 @@
-// file: src/pages/student/mrpTool/MrpStepScaffold.tsx
+// file: src/pages/student/submission/edit/mrpTool/MrpToolScaffold.tsx
 
 import type { ReactNode } from "react";
-import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save } from "lucide-react";
-import FormField from "../forms/FormField.tsx";
+import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save, } from "lucide-react";
+import FormField from "../../../forms/FormField.tsx";
+import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
 
 type Props = {
 	step: number;
@@ -98,7 +99,7 @@ function StepNode({
 	);
 }
 
-export default function MrpStepScaffold(props: Props) {
+export default function MrpToolScaffold(props: Props) {
 	const {
 		step,
 		stepsTotal,
@@ -131,9 +132,7 @@ export default function MrpStepScaffold(props: Props) {
 			{/* Top header + stepper */}
 			<div className="mb-10">
 				<div className="flex items-center">
-					<div className="text-sm text-muted">
-						Step {step} of {stepsTotal}
-					</div>
+					<BackToWeeklyWorkup></BackToWeeklyWorkup>
 					<div className="ml-auto text-sm text-muted">
 						{completedCount} of {stepsTotal} completed
 					</div>

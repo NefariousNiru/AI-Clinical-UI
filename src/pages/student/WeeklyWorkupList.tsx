@@ -1,4 +1,4 @@
-// file: src/pages/student/WeeklyWorkups.tsx
+// file: src/pages/student/WeeklyWorkupList.tsx
 
 import { useMemo } from "react";
 import { Calendar, Clock } from "lucide-react";
@@ -6,8 +6,8 @@ import { useStudentWeeks } from "./hooks/studentWeeks";
 import type { WeeklyWorkupStudent, WeeklyWorkupStudentStatus } from "../../lib/types/studentWeeks";
 import { titleizeCase, unixToIsoDate } from "../../lib/utils/functions";
 import { useNavigate } from "react-router-dom";
-import { useMrpToolStatus } from "../shared/hooks/mrpToolStatus.ts";
 import { STATUS_HELP } from "./hooks/constants.ts";
+import { STUDENT_WORKUP } from "../../routes.ts";
 
 type StatusCfg = {
 	pill: string;
@@ -61,40 +61,12 @@ const STATUS_UI: Record<WeeklyWorkupStudentStatus, StatusCfg> = {
 	},
 };
 
-const FALLBACK: StatusCfg = {
-	pill: "bg-secondary-soft text-secondary",
-	border: "border-subtle",
-	cardBg: "bg-subtle",
-	action: "View",
-};
-
-function cfg(status: WeeklyWorkupStudentStatus): StatusCfg {
-	return STATUS_UI[status] ?? FALLBACK;
+function uiConfig(status: WeeklyWorkupStudentStatus): StatusCfg {
+	return STATUS_UI[status];
 }
 
-function canOpenMrp(status: WeeklyWorkupStudentStatus): boolean {
-	return (
-		status === "available" ||
-		status === "in_progress" ||
-		status === "submitted" ||
-		status === "grading"
-	);
-}
-
-export function workupTileCardBgClasses(status: WeeklyWorkupStudentStatus): string {
-	return cfg(status).cardBg;
-}
-
-export function workupTileBorderClasses(status: WeeklyWorkupStudentStatus): string {
-	return cfg(status).border;
-}
-
-export function workupStatusPillClasses(status: WeeklyWorkupStudentStatus): string {
-	return cfg(status).pill;
-}
-
-export function workupPrimaryActionLabel(status: WeeklyWorkupStudentStatus): string {
-	return cfg(status).action;
+function isWorkupDisabled(status: WeeklyWorkupStudentStatus): boolean {
+	return status === "locked" || status === "not_submitted";
 }
 
 function cx(...xs: Array<string | false | null | undefined>) {
@@ -112,7 +84,7 @@ function StatusPill({ status }: { status: WeeklyWorkupStudent["status"] }) {
 		<span
 			className={cx(
 				"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-				workupStatusPillClasses(status),
+				uiConfig(status).pill,
 			)}
 			aria-label={`Status: ${titleizeCase(status)}`}
 		>
@@ -165,7 +137,7 @@ function StatusHelpPanel() {
 						<span
 							className={cx(
 								"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0",
-								workupStatusPillClasses(it.status),
+								uiConfig(it.status).pill,
 							)}
 						>
 							{it.label}
@@ -179,24 +151,47 @@ function StatusHelpPanel() {
 	);
 }
 
+function routeToWorkup(
+	nav: ReturnType<typeof useNavigate>,
+	args: {
+		status: WeeklyWorkupStudentStatus;
+		id: number;
+		enrollmentId: string;
+		weekNo: number;
+		patientName: string;
+	},
+) {
+	const { status, id, enrollmentId, weekNo, patientName } = args;
+
+	if (isWorkupDisabled(status)) return;
+
+	nav(STUDENT_WORKUP, {
+		state: {
+			weeklyWorkupId: id,
+			studentEnrollmentId: enrollmentId,
+			weekNo: weekNo,
+			patientName: patientName,
+			status: status,
+		},
+	});
+}
+
 function WorkupActions({
 	weekNo,
 	id,
 	enrollmentId,
 	status,
 	patientName,
-	mrpEnabled,
 }: {
 	weekNo: number;
 	id: number;
 	enrollmentId: string; // UUID
 	status: WeeklyWorkupStudentStatus;
 	patientName: string;
-	mrpEnabled: boolean;
 }) {
 	const nav = useNavigate();
-	const disabled = status === "locked" || status === "not_submitted";
-	const actionLabel = workupPrimaryActionLabel(status);
+	const disabled = isWorkupDisabled(status);
+	const actionLabel = uiConfig(status).action;
 
 	return (
 		<div className="flex items-center justify-between gap-3 sm:justify-end">
@@ -210,23 +205,15 @@ function WorkupActions({
 					"shrink-0",
 					disabled ? "bg-subtle text-muted" : "bg-accent text-on-accent",
 				)}
-				onClick={() => {
-					// only mount wizard for these statuses AND only if enabled
-					if (mrpEnabled && canOpenMrp(status)) {
-						nav("workup", {
-							state: {
-								weeklyWorkupId: id,
-								studentEnrollmentId: enrollmentId,
-								weekNo: weekNo,
-								patientName: patientName,
-							},
-						});
-						return;
-					}
-
-					// TODO: fallback: keep existing behavior
-					console.log("workup action:", { id, status, mrpEnabled });
-				}}
+				onClick={() =>
+					routeToWorkup(nav, {
+						status,
+						id,
+						enrollmentId,
+						weekNo,
+						patientName,
+					})
+				}
 				aria-label={`${actionLabel} for Week ${weekNo}`}
 			>
 				{actionLabel}
@@ -235,23 +222,15 @@ function WorkupActions({
 	);
 }
 
-function WorkupRow({
-	w,
-	enrollmentId,
-	mrpEnabled,
-}: {
-	w: WeeklyWorkupStudent;
-	enrollmentId: string;
-	mrpEnabled: boolean;
-}) {
-	const disabled = w.status === "locked" || w.status === "not_submitted";
+function WorkupRow({ w, enrollmentId }: { w: WeeklyWorkupStudent; enrollmentId: string }) {
+	const disabled = isWorkupDisabled(w.status);
 
 	return (
 		<div
 			className={cx(
 				"w-full rounded-xl border px-4 py-3",
-				workupTileBorderClasses(w.status),
-				workupTileCardBgClasses(w.status),
+				uiConfig(w.status).border,
+				uiConfig(w.status).cardBg,
 				disabled && "opacity-60",
 				"grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,420px)_240px_auto] sm:items-center sm:gap-4",
 			)}
@@ -274,7 +253,6 @@ function WorkupRow({
 						id={w.id}
 						enrollmentId={enrollmentId}
 						status={w.status}
-						mrpEnabled={mrpEnabled}
 						patientName={w.patientName}
 					/>
 				</div>
@@ -290,7 +268,6 @@ function WorkupRow({
 					id={w.id}
 					enrollmentId={enrollmentId}
 					status={w.status}
-					mrpEnabled={mrpEnabled}
 					patientName={w.patientName}
 				/>
 			</div>
@@ -298,9 +275,8 @@ function WorkupRow({
 	);
 }
 
-export default function WeeklyWorkups() {
+export default function WeeklyWorkupList() {
 	const { data, loading, error, refresh } = useStudentWeeks();
-	const { enabled: mrpEnabled } = useMrpToolStatus();
 
 	const semesters = useMemo(() => {
 		const sems = data ?? [];
@@ -373,7 +349,6 @@ export default function WeeklyWorkups() {
 													key={w.id}
 													w={w}
 													enrollmentId={sem.enrollmentId}
-													mrpEnabled={mrpEnabled}
 												/>
 											))}
 										</div>

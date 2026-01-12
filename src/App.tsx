@@ -13,11 +13,28 @@ import StatisticsPage from "./pages/admin/statistics/StatisticsPage";
 import SkipLink from "./components/SkipLink";
 import AccountActivationPage from "./pages/auth/AccountActivationPage.tsx";
 import EnrollmentActivationPage from "./pages/auth/EnrollmentActivationPage.tsx";
-import { ADMIN, AUTH, BASE_AUTO, STUDENT } from "./routes.ts";
+import {
+	ADMIN,
+	ADMIN_RUBRIC,
+	ADMIN_STATISTICS,
+	ADMIN_STUDENTS,
+	ADMIN_TESTS,
+	ADMIN_WEEK,
+	AUTH,
+	AUTH_ACTIVATE,
+	AUTH_ACTIVATE_ACCOUNT,
+	AUTH_ACTIVATE_ENROLLMENT,
+	AUTH_INTRO,
+	AUTH_LOGIN,
+	BASE_AUTO,
+	STUDENT,
+	STUDENT_WORKUP,
+} from "./routes.ts";
 import StudentLayout from "./pages/student/StudentLayout.tsx";
 import ProductInfo from "./pages/auth/ProductInfo.tsx";
-import WeeklyWorkups from "./pages/student/WeeklyWorkups.tsx";
-import MrpToolPage from "./pages/student/mrpTool/MrpToolPage.tsx";
+import WeeklyWorkupList from "./pages/student/WeeklyWorkupList.tsx";
+import WeeklyWorkup from "./pages/student/submission/WeeklyWorkup.tsx";
+import { Role } from "./lib/types/user.ts";
 
 const router = createBrowserRouter([
 	// Decide Home Based on Auth
@@ -28,14 +45,14 @@ const router = createBrowserRouter([
 		path: AUTH,
 		children: [
 			{
-				path: "activate",
+				path: AUTH_ACTIVATE,
 				children: [
-					{ path: "account", element: <AccountActivationPage /> },
-					{ path: "enrollment", element: <EnrollmentActivationPage /> },
+					{ path: AUTH_ACTIVATE_ACCOUNT, element: <AccountActivationPage /> },
+					{ path: AUTH_ACTIVATE_ENROLLMENT, element: <EnrollmentActivationPage /> },
 				],
 			},
-			{ path: "intro", element: <ProductInfo /> },
-			{ path: "login", element: <LoginPage /> },
+			{ path: AUTH_INTRO, element: <ProductInfo /> },
+			{ path: AUTH_LOGIN, element: <LoginPage /> },
 		],
 	},
 
@@ -43,17 +60,17 @@ const router = createBrowserRouter([
 	{
 		path: ADMIN,
 		element: (
-			<RequireAuth allowedRoles={["admin"]}>
+			<RequireAuth allowedRoles={[Role.enum.admin]}>
 				<AdminLayout />
 			</RequireAuth>
 		),
 		children: [
-			{ index: true, element: <Navigate to="tests" replace /> },
-			{ path: "week", element: <WeeksPage /> },
-			{ path: "rubric", element: <RubricPage /> },
-			{ path: "students", element: <StudentsPage /> },
-			{ path: "tests", element: <TestsPage /> },
-			{ path: "statistics", element: <StatisticsPage /> },
+			{ index: true, element: <Navigate to={ADMIN_TESTS} replace /> },
+			{ path: ADMIN_WEEK, element: <WeeksPage /> },
+			{ path: ADMIN_RUBRIC, element: <RubricPage /> },
+			{ path: ADMIN_STUDENTS, element: <StudentsPage /> },
+			{ path: ADMIN_TESTS, element: <TestsPage /> },
+			{ path: ADMIN_STATISTICS, element: <StatisticsPage /> },
 		],
 	},
 
@@ -61,17 +78,17 @@ const router = createBrowserRouter([
 	{
 		path: STUDENT,
 		element: (
-			<RequireAuth allowedRoles={["student"]}>
+			<RequireAuth allowedRoles={[Role.enum.student]}>
 				<StudentLayout />
 			</RequireAuth>
 		),
 		children: [
-			{ index: true, element: <WeeklyWorkups /> },
-			{ path: "workup", element: <MrpToolPage /> },
+			{ index: true, element: <WeeklyWorkupList /> },
+			{ path: STUDENT_WORKUP, element: <WeeklyWorkup /> },
 		],
 	},
 
-	{ path: "*", element: <Navigate to="/" replace /> },
+	{ path: "*", element: <Navigate to={BASE_AUTO} replace /> },
 ]);
 
 export default function App() {

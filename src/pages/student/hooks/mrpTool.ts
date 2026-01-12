@@ -1,53 +1,87 @@
 // file: src/pages/student/hooks/mrpTool.ts
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import {
 	makeEmptyPatientInfo,
+	makeEmptyStudentSubmissionPayload,
 	type MrpFormData,
+	type PatientInfo,
+	PatientInfoSchema,
 	type StudentDrpAnswer,
 	type StudentSubmissionPayload,
 	type StudentSubmissionQuery,
+	toApiJson,
 } from "../../../lib/types/studentSubmission";
-import { usePatientInfoForm } from "./forms";
 import {
 	getStudentMrpFormData,
 	getStudentSubmission,
 	saveStudentSubmission,
-} from "../../../lib/api/shared/student.ts";
-import { MRP_STEPS, type MrpStepNo } from "./constants.ts";
-import { fillPatientInfoShape, undefinedToNullDeep } from "./payloadShape.ts";
+} from "../../../lib/api/shared/student";
+import { MRP_STEPS, type MrpStepNo } from "./constants";
 
-function normalizeDrp(items: StudentDrpAnswer[]): Array<{
-	name: string;
-	isPriority: boolean;
-	identification: string;
-	explanation: string;
-	planRecommendation: string;
-	monitoring: string;
-}> {
-	// 1) drop invalid/draft cards (no disease selected)
-	const cleaned = (items ?? []).filter((x) => (x?.name ?? "").trim().length > 0);
+/* ----------------------------- Small utilities ----------------------------- */
 
-	// 2) enforce "only one priority" deterministically
-	let prioritySeen = false;
+type AnyObj = Record<string, any>;
 
-	return cleaned.map((x) => {
-		const wantsPriority = Boolean(x.isPriority);
-		const isPriority = wantsPriority && !prioritySeen;
-		if (isPriority) prioritySeen = true;
-
-		return {
-			name: (x.name ?? "").trim(),
-			isPriority,
-			// backend model usually wants these present (non-Optional)
-			identification: (x.identification ?? "").trim(),
-			explanation: (x.explanation ?? "").trim(),
-			planRecommendation: (x.planRecommendation ?? "").trim(),
-			monitoring: (x.monitoring ?? "").trim(),
-		};
-	});
+/** True for plain objects (not arrays, not null). */
+function isPlainObject(v: unknown): v is AnyObj {
+	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+/**
+ * Deep-merge `incoming` into `template`, preserving the template shape.
+ *
+ * Rules:
+ * - Arrays: use incoming array if provided; otherwise template array.
+ * - Objects: recurse over template keys (ensures keys exist).
+ * - Primitives: use incoming if not undefined/null; otherwise template.
+ * - Extra keys from incoming are preserved (forward-compat with backend additions).
+ */
+function mergeWithTemplate<T>(template: T, incoming: unknown): T {
+	// Arrays: prefer incoming array when provided
+	if (Array.isArray(template)) {
+		return (Array.isArray(incoming) ? incoming : template) as any;
+	}
+
+	// Objects: recurse over template keys
+	if (isPlainObject(template)) {
+		const incObj = isPlainObject(incoming) ? incoming : {};
+		const out: AnyObj = { ...template };
+
+		for (const k of Object.keys(out)) {
+			out[k] = mergeWithTemplate(out[k], incObj[k]);
+		}
+
+		// Preserve unknown keys from backend (don’t silently drop data)
+		for (const k of Object.keys(incObj)) {
+			if (!(k in out)) out[k] = incObj[k];
+		}
+
+		return out as T;
+	}
+
+	// Primitives: treat null like "missing" for UI state
+	if (incoming === undefined || incoming === null) return template;
+	return incoming as T;
+}
+
+/**
+ * Hydrate any backend payload (including null/partial) into a full PatientInfo shape.
+ * Also runs a light Zod sanity-check; if Zod fails, we still return the merged template.
+ */
+function hydratePatientInfo(raw: unknown): PatientInfo {
+	const base = makeEmptyPatientInfo();
+	const merged = mergeWithTemplate(base, raw);
+
+	const parsed = PatientInfoSchema.safeParse(merged);
+	return parsed.success ? parsed.data : merged;
+}
+
+/**
+ * A stable JSON snapshot for "dirty" detection.
+ * - Sorts object keys to avoid noise from key-order changes.
+ */
 function stableStringify(value: unknown): string {
 	const seen = new WeakSet<object>();
 
@@ -68,6 +102,12 @@ function stableStringify(value: unknown): string {
 	return JSON.stringify(normalize(value));
 }
 
+/**
+ * Used for step completion. Conservative:
+ * - false is meaningful (user explicitly answered No)
+ * - empty string is not meaningful
+ * - empty object/array is not meaningful
+ */
 function hasAnyMeaningfulValue(v: unknown): boolean {
 	if (v == null) return false;
 	if (typeof v === "string") return v.trim().length > 0;
@@ -78,20 +118,153 @@ function hasAnyMeaningfulValue(v: unknown): boolean {
 	return false;
 }
 
+/**
+ * Normalize DRP cards to match backend expectations:
+ * - Drop draft cards with no `name`
+ * - Enforce at most one priority card (first one wins)
+ * - Ensure required string fields exist (empty string allowed)
+ */
+function normalizeDrp(items: StudentDrpAnswer[]): Array<{
+	name: string;
+	isPriority: boolean;
+	identification: string;
+	explanation: string;
+	planRecommendation: string;
+	monitoring: string;
+}> {
+	const cleaned = (items ?? []).filter((x) => (x?.name ?? "").trim().length > 0);
+
+	let prioritySeen = false;
+
+	return cleaned.map((x) => {
+		const wantsPriority = Boolean(x.isPriority);
+		const isPriority = wantsPriority && !prioritySeen;
+		if (isPriority) prioritySeen = true;
+
+		return {
+			name: (x.name ?? "").trim(),
+			isPriority,
+			identification: (x.identification ?? "").trim(),
+			explanation: (x.explanation ?? "").trim(),
+			planRecommendation: (x.planRecommendation ?? "").trim(),
+			monitoring: (x.monitoring ?? "").trim(),
+		};
+	});
+}
+
+/**
+ * Build a backend-safe payload:
+ * - Guarantees the full shape (all keys exist) via template merge.
+ * - Converts undefined -> null so JSON keeps keys (Pydantic sees the keys).
+ */
+function toBackendPayload(payload: StudentSubmissionPayload) {
+	const patientInfoFull = mergeWithTemplate(makeEmptyPatientInfo(), payload.patientInfo);
+
+	return {
+		patientInfo: toApiJson(patientInfoFull),
+		studentDrpAnswers: normalizeDrp(payload.studentDrpAnswers ?? []),
+	};
+}
+
+/* ----------------------------- usePatientInfoForm ----------------------------- */
+
+/**
+ * PatientInfo state holder with section setters.
+ * Keeps a fully-shaped PatientInfo object in state.
+ */
+function usePatientInfoForm(initial?: unknown) {
+	const [patientInfo, setPatientInfo] = useState<PatientInfo>(() =>
+		hydratePatientInfo(initial ?? makeEmptyPatientInfo()),
+	);
+
+	/** Replace all patient info (used for initial load). */
+	const reset = useCallback((next: unknown) => {
+		setPatientInfo(hydratePatientInfo(next));
+	}, []);
+
+	/** Merge in new data (used when backend sends partial updates). */
+	const hydrate = useCallback((next: unknown) => {
+		setPatientInfo((cur) => mergeWithTemplate(cur, next));
+	}, []);
+
+	// Section setters
+	const setMrpToolData = useCallback((next: PatientInfo["mrpToolData"]) => {
+		setPatientInfo((p) => ({ ...p, mrpToolData: next }));
+	}, []);
+
+	const setPatientDemographics = useCallback((next: PatientInfo["patientDemographics"]) => {
+		setPatientInfo((p) => ({ ...p, patientDemographics: next }));
+	}, []);
+
+	const setSocialHistory = useCallback((next: PatientInfo["socialHistory"]) => {
+		setPatientInfo((p) => ({ ...p, socialHistory: next }));
+	}, []);
+
+	const setMedicalHistory = useCallback((next: PatientInfo["medicalHistory"]) => {
+		setPatientInfo((p) => ({ ...p, medicalHistory: next }));
+	}, []);
+
+	const setMedicationList = useCallback((next: PatientInfo["medicationList"]) => {
+		setPatientInfo((p) => ({ ...p, medicationList: next }));
+	}, []);
+
+	const setLabResult = useCallback((next: PatientInfo["labResult"]) => {
+		setPatientInfo((p) => ({ ...p, labResult: next }));
+	}, []);
+
+	const setProgressNotes = useCallback((next: PatientInfo["progressNotes"]) => {
+		setPatientInfo((p) => ({ ...p, progressNotes: next }));
+	}, []);
+
+	const validation = useMemo(() => PatientInfoSchema.safeParse(patientInfo), [patientInfo]);
+
+	return {
+		patientInfo,
+		setPatientInfo,
+
+		// sections
+		mrpToolData: patientInfo.mrpToolData,
+		patientDemographics: patientInfo.patientDemographics,
+		socialHistory: patientInfo.socialHistory,
+		medicalHistory: patientInfo.medicalHistory,
+		medicationList: patientInfo.medicationList,
+		labResult: patientInfo.labResult,
+		progressNotes: patientInfo.progressNotes,
+
+		// section setters
+		setMrpToolData,
+		setPatientDemographics,
+		setSocialHistory,
+		setMedicalHistory,
+		setMedicationList,
+		setLabResult,
+		setProgressNotes,
+
+		// hydration controls
+		reset,
+		hydrate,
+
+		// validation
+		isValid: validation.success,
+		errors: validation.success ? null : z.treeifyError(validation.error),
+	};
+}
+
+/* ----------------------------- useMrpTool ----------------------------- */
+
 type ReflectionMap = Record<string, string>;
 
 export function useMrpTool(q: StudentSubmissionQuery) {
 	const [step, setStep] = useState<MrpStepNo>(1);
 
-	// patientInfo managed by your existing hook
 	const patient = usePatientInfoForm(makeEmptyPatientInfo());
 	const [studentDrpAnswers, setStudentDrpAnswers] = useState<StudentDrpAnswer[]>([]);
 
-	// per-step guidance + questions
 	const [mrpFormData, setMrpFormData] = useState<MrpFormData>({
 		guidanceText: "",
 		reflectionQuestions: {},
 	});
+
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -119,7 +292,7 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 	const completedByStep = useMemo(() => {
 		const p = patient.patientInfo;
 
-		const completed: Record<MrpStepNo, boolean> = {
+		return {
 			1: hasAnyMeaningfulValue(p.mrpToolData),
 			2:
 				hasAnyMeaningfulValue(p.patientDemographics) ||
@@ -128,30 +301,28 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 			4: hasAnyMeaningfulValue(p.medicationList),
 			5: hasAnyMeaningfulValue(p.labResult),
 			6: hasAnyMeaningfulValue(p.progressNotes),
-			7: studentDrpAnswers.length > 0,
-		};
-
-		return completed;
+			7: (studentDrpAnswers ?? []).length > 0,
+		} satisfies Record<MrpStepNo, boolean>;
 	}, [patient.patientInfo, studentDrpAnswers]);
 
-	const completedCount = useMemo(() => {
-		return Object.values(completedByStep).filter(Boolean).length;
-	}, [completedByStep]);
+	const completedCount = useMemo(
+		() => Object.values(completedByStep).filter(Boolean).length,
+		[completedByStep],
+	);
 
 	const maxUnlockedStep = useMemo<MrpStepNo>(() => {
 		let unlocked: number = 1;
+
 		for (let i = 1 as MrpStepNo; i <= 7; i = (i + 1) as MrpStepNo) {
 			if (i === 7) break;
 			if (completedByStep[i]) unlocked = i + 1;
 			else break;
 		}
-		// unlocked is in [1..7]
+
 		return Math.min(7, Math.max(1, unlocked)) as MrpStepNo;
 	}, [completedByStep]);
 
-	const canAdvanceFromCurrentStep = useMemo(() => {
-		return completedByStep[step] === true;
-	}, [completedByStep, step]);
+	const canAdvanceFromCurrentStep = useMemo(() => completedByStep[step], [completedByStep, step]);
 
 	const getReflectionAnswersForStep = useCallback(
 		(s: MrpStepNo): ReflectionMap => {
@@ -170,20 +341,27 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 				case 6:
 					return p.progressNotes.reflectionAnswers ?? {};
 				case 7:
-					return {}; // typically empty or ignored
+					return {};
 			}
 		},
 		[patient.patientInfo],
 	);
 
+	/**
+	 * Update a reflection answer for the current step.
+	 * - Trims whitespace.
+	 * - Deletes the entry when user clears the answer.
+	 * - Keeps the reflectionAnswers key present (undefined allowed in UI; serializer sends null).
+	 */
 	const setReflectionAnswerForStep = useCallback(
 		(s: MrpStepNo, key: string, value: string) => {
-			const v = value.trim();
-			const nextVal = v.length === 0 ? undefined : v;
+			const trimmed = value.trim();
+			const nextVal = trimmed.length === 0 ? undefined : trimmed;
 
 			const upsert = (m?: ReflectionMap): ReflectionMap | undefined => {
 				const cur = m ?? {};
 				const next: ReflectionMap = { ...cur };
+
 				if (nextVal == null) delete next[key];
 				else next[key] = nextVal;
 
@@ -193,53 +371,48 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 			const p = patient.patientInfo;
 
 			switch (s) {
-				case 1: {
-					const cur = p.mrpToolData ?? {
-						patientScenario: undefined,
-						encounterSetting: undefined,
-						reflectionAnswers: undefined,
-					};
+				case 1:
 					patient.setMrpToolData({
-						...cur,
-						reflectionAnswers: upsert(cur.reflectionAnswers),
+						...p.mrpToolData,
+						reflectionAnswers: upsert(p.mrpToolData.reflectionAnswers),
 					});
 					return;
-				}
-				case 2: {
+
+				case 2:
 					patient.setPatientDemographics({
 						...p.patientDemographics,
 						reflectionAnswers: upsert(p.patientDemographics.reflectionAnswers),
 					});
 					return;
-				}
-				case 3: {
+
+				case 3:
 					patient.setMedicalHistory({
 						...p.medicalHistory,
 						reflectionAnswers: upsert(p.medicalHistory.reflectionAnswers),
 					});
 					return;
-				}
-				case 4: {
+
+				case 4:
 					patient.setMedicationList({
 						...p.medicationList,
 						reflectionAnswers: upsert(p.medicationList.reflectionAnswers),
 					});
 					return;
-				}
-				case 5: {
+
+				case 5:
 					patient.setLabResult({
 						...p.labResult,
 						reflectionAnswers: upsert(p.labResult.reflectionAnswers),
 					});
 					return;
-				}
-				case 6: {
+
+				case 6:
 					patient.setProgressNotes({
 						...p.progressNotes,
 						reflectionAnswers: upsert(p.progressNotes.reflectionAnswers),
 					});
 					return;
-				}
+
 				case 7:
 					return;
 			}
@@ -247,46 +420,64 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 		[patient],
 	);
 
+	/**
+	 * Initial load:
+	 * - Fetch submission + current step form data.
+	 * - Submission might be empty/partial - hydrate into full shape.
+	 *
+	 * Intentionally called once on mount; callers should remount if `q` changes.
+	 */
 	const load = useCallback(async () => {
 		setLoading(true);
 		setError(null);
+
 		try {
-			const [submission, form] = await Promise.all([
+			const [rawSubmission, form] = await Promise.all([
 				getStudentSubmission(q),
 				getStudentMrpFormData(step),
 			]);
 
-			patient.hydrate(fillPatientInfoShape(submission.patientInfo));
+			const submission = mergeWithTemplate(
+				makeEmptyStudentSubmissionPayload(),
+				rawSubmission,
+			);
+
+			patient.reset(hydratePatientInfo(submission.patientInfo));
 			setStudentDrpAnswers(submission.studentDrpAnswers ?? []);
 
-			const snap = stableStringify(submission);
-			lastSavedSnapshotRef.current = snap;
-
+			lastSavedSnapshotRef.current = stableStringify(submission);
 			setMrpFormData(form);
 		} catch (e: any) {
 			setError(e?.message ?? "Failed to load MRP tool data");
 		} finally {
 			setLoading(false);
 		}
-	}, [q, step, patient]);
+	}, [patient, q, step]);
 
 	useEffect(() => {
 		void load();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []); // only on mount, per your requirement
+	}, []);
 
+	/**
+	 * Step change fetches guidance/questions only.
+	 * It does not re-fetch the full submission.
+	 */
 	useEffect(() => {
-		// step change only refreshes guidance/questions (no submission GET)
 		(async () => {
 			try {
 				const form = await getStudentMrpFormData(step);
 				setMrpFormData(form);
 			} catch {
-				// keep prior
+				// Keep prior data if the form fetch fails.
 			}
 		})();
 	}, [step]);
 
+	/**
+	 * Save if the current payload differs from last saved snapshot.
+	 * Produces a backend-valid JSON payload (keys present, nulls allowed).
+	 */
 	const saveIfDirty = useCallback(async () => {
 		if (saving) return false;
 		if (lastSavedSnapshotRef.current && lastSavedSnapshotRef.current === currentSnapshot)
@@ -294,12 +485,12 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 
 		setSaving(true);
 		setError(null);
+
 		try {
-			const payloadForBackend = {
-				studentDrpAnswers: normalizeDrp(payload.studentDrpAnswers),
-				patientInfo: undefinedToNullDeep(fillPatientInfoShape(payload.patientInfo)),
-			};
+			const payloadForBackend = toBackendPayload(payload);
 			const saved = await saveStudentSubmission(q, payloadForBackend);
+
+			// Snapshot should reflect what backend returns (source of truth)
 			lastSavedSnapshotRef.current = stableStringify(saved);
 			return true;
 		} catch (e: any) {
@@ -308,7 +499,7 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 		} finally {
 			setSaving(false);
 		}
-	}, [saving, currentSnapshot, q, payload]);
+	}, [currentSnapshot, payload, q, saving]);
 
 	const goPrev = useCallback(() => {
 		setStep((s) => (s > 1 ? ((s - 1) as MrpStepNo) : s));

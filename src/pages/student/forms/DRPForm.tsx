@@ -1,6 +1,6 @@
 // file: src/pages/student/forms/DRPForm.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from "lucide-react";
 import FormField from "./FormField";
 import type { StudentDrpAnswer } from "../../../lib/types/studentSubmission.ts";
@@ -75,11 +75,12 @@ function DiseaseAutocomplete({
 	const [text, setText] = useState<string>(value ? titleizeDiseaseName(value) : "");
 	const [touched, setTouched] = useState(false);
 
-	// Keep display text in sync when parent value changes (e.g., load/reset)
 	const displayForValue = value ? titleizeDiseaseName(value) : "";
-	if (text === "" && displayForValue !== "") {
-		setText(displayForValue);
-	}
+
+	useEffect(() => {
+		if (!value) return;
+		setText((cur) => (cur.trim().length === 0 ? displayForValue : cur));
+	}, [value, displayForValue]);
 
 	const { data, loading, error } = useDiseaseSearch(text);
 
@@ -102,7 +103,6 @@ function DiseaseAutocomplete({
 					const nextText = e.target.value;
 					setText(nextText);
 					setOpen(true);
-					// If user edits after selecting, clear stored value so they must re-select
 					if (value) onChange("");
 				}}
 				onFocus={() => setOpen(true)}

@@ -1,13 +1,23 @@
-// file: src/lib/types/student.ts
+// file: src/lib/types/studentSubmission.ts
 
 import { z } from "zod";
 
 /**
- * Helpers
- * - Backend requires keys present (nullable ok).
- * - UI prefers undefined over null.
+ * Student Submission - Frontend Model
+ *
+ * Goals:
+ * - UI works with `undefined` for "empty" fields.
+ * - Backend accepts `null` (converted from `undefined`) but requires keys to be present.
+ * - Backend might return partial payloads or nulls; UI should still hydrate safely.
+ *
+ * Notes:
+ * - Reflection answers are modeled as Record<string, string> in TS because JSON object keys are strings.
+ *   Pydantic dict[int, ...] typically coerces numeric string keys ("1") to int.
  */
 
+/* ----------------------------- Zod helpers ----------------------------- */
+
+/** Convert null/undefined -> undefined for UI fields. */
 const optString = z
 	.string()
 	.nullable()
@@ -27,91 +37,194 @@ const optReflectionAnswers = z
 	.transform((v) => (v == null ? undefined : v));
 
 /**
- * PatientInfo
+ * If backend returns null for an object section, treat it as {} so parsing can proceed.
+ * We still hydrate defaults separately in the hooks layer.
  */
+function nullishToObject<T extends z.ZodTypeAny>(schema: T) {
+	return z.preprocess((v) => (v == null ? {} : v), schema);
+}
 
-export const ProgressNotesSchema = z.object({
-	chiefComplaint: optString,
-	historyOfPresentIllness: optString,
-	immunizations: optString,
-	progressNotes: optString,
-	preliminaryProblemList: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+/* ----------------------------- Schemas ----------------------------- */
 
-export const LabResultSchema = z.object({
-	labsImagingMicrobiology: optString,
-	renalFunctionAssessment: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+export const ProgressNotesSchema = nullishToObject(
+	z
+		.object({
+			chiefComplaint: optString,
+			historyOfPresentIllness: optString,
+			immunizations: optString,
+			progressNotes: optString,
+			preliminaryProblemList: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
 
-export const MedicationHistorySchema = z.object({
-	scheduledStartStopDate: optString,
-	prn: optString,
-});
+export const LabResultSchema = nullishToObject(
+	z
+		.object({
+			labsImagingMicrobiology: optString,
+			renalFunctionAssessment: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
 
-export const MedicationListSchema = z.object({
-	// If backend ever returns null, we still want [] in the UI.
-	medications: z
-		.array(MedicationHistorySchema)
-		.nullable()
-		.optional()
-		.transform((v) => v ?? []),
-	sup: optBool,
-	vtePpx: optBool,
-	bowelRegimen: optBool,
-	ivAccessLineTubes: optString,
-	otcCam: optString,
-	medicationAdherence: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+export const MedicationHistorySchema = nullishToObject(
+	z
+		.object({
+			scheduledStartStopDate: optString,
+			prn: optString,
+		})
+		.passthrough(),
+);
 
-export const MedicalHistorySchema = z.object({
-	problemList: optString,
-	pastMedicalHistory: optString,
-	familyHistory: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+export const MedicationListSchema = nullishToObject(
+	z
+		.object({
+			/**
+			 * Backend requires the key; list may be empty.
+			 * If backend returns null, normalize to [] for UI.
+			 */
+			medications: z
+				.array(MedicationHistorySchema)
+				.nullable()
+				.optional()
+				.transform((v) => v ?? []),
 
-export const SocialHistorySchema = z.object({
-	occupation: optString,
-	supportSystem: optString,
-	tobaccoUse: optString,
-	thcUse: optString,
-	alcoholUse: optString,
-	cocaineUse: optString,
-	otherSubstanceUse: optString,
-});
+			sup: optBool,
+			vtePpx: optBool,
+			bowelRegimen: optBool,
+			ivAccessLineTubes: optString,
+			otcCam: optString,
+			medicationAdherence: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
 
-export const PatientDemographicsSchema = z.object({
-	name: optString,
-	ageDob: optString,
-	sex: optString,
-	height: optString,
-	weight: optString,
-	bmi: optString,
-	admitVisitDate: optString,
-	insurance: optString,
-	vitalSigns: optString,
-	allergies: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+export const MedicalHistorySchema = nullishToObject(
+	z
+		.object({
+			problemList: optString,
+			pastMedicalHistory: optString,
+			familyHistory: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
 
-export const MrpToolDataSchema = z.object({
-	patientScenario: optString,
-	encounterSetting: optString,
-	reflectionAnswers: optReflectionAnswers,
-});
+export const SocialHistorySchema = nullishToObject(
+	z
+		.object({
+			occupation: optString,
+			supportSystem: optString,
+			tobaccoUse: optString,
+			thcUse: optString,
+			alcoholUse: optString,
+			cocaineUse: optString,
+			otherSubstanceUse: optString,
+		})
+		.passthrough(),
+);
 
-export const PatientInfoSchema = z.object({
-	mrpToolData: MrpToolDataSchema,
-	patientDemographics: PatientDemographicsSchema,
-	socialHistory: SocialHistorySchema,
-	medicalHistory: MedicalHistorySchema,
-	medicationList: MedicationListSchema,
-	labResult: LabResultSchema,
-	progressNotes: ProgressNotesSchema,
-});
+export const PatientDemographicsSchema = nullishToObject(
+	z
+		.object({
+			name: optString,
+			ageDob: optString,
+			sex: optString,
+			height: optString,
+			weight: optString,
+			bmi: optString,
+			admitVisitDate: optString,
+			insurance: optString,
+			vitalSigns: optString,
+			allergies: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
+
+export const MrpToolDataSchema = nullishToObject(
+	z
+		.object({
+			patientScenario: optString,
+			encounterSetting: optString,
+			reflectionAnswers: optReflectionAnswers,
+		})
+		.passthrough(),
+);
+
+export const PatientInfoSchema = nullishToObject(
+	z
+		.object({
+			/**
+			 * Backend model marks this Optional, but the UI flow always uses it.
+			 * We keep it present in the UI model; API serializer will still send keys with nulls.
+			 */
+			mrpToolData: MrpToolDataSchema,
+			patientDemographics: PatientDemographicsSchema,
+			socialHistory: SocialHistorySchema,
+			medicalHistory: MedicalHistorySchema,
+			medicationList: MedicationListSchema,
+			labResult: LabResultSchema,
+			progressNotes: ProgressNotesSchema,
+		})
+		.passthrough(),
+);
+
+export const StudentDrpAnswerSchema = nullishToObject(
+	z
+		.object({
+			name: z
+				.string()
+				.nullable()
+				.optional()
+				.transform((v) => (v == null ? "" : v)),
+			isPriority: z
+				.boolean()
+				.nullable()
+				.optional()
+				.transform((v) => Boolean(v)),
+			identification: optString,
+			explanation: optString,
+			planRecommendation: optString,
+			monitoring: optString,
+		})
+		.passthrough(),
+);
+
+export const StudentSubmissionPayloadSchema = nullishToObject(
+	z
+		.object({
+			patientInfo: PatientInfoSchema,
+			studentDrpAnswers: z
+				.array(StudentDrpAnswerSchema)
+				.nullable()
+				.optional()
+				.transform((v) => v ?? []),
+		})
+		.passthrough(),
+);
+
+export const MrpFormDataSchema = nullishToObject(
+	z
+		.object({
+			guidanceText: z
+				.string()
+				.nullable()
+				.optional()
+				.transform((v) => v ?? ""),
+			reflectionQuestions: z
+				.record(z.string(), z.string())
+				.nullable()
+				.optional()
+				.transform((v) => v ?? {}),
+		})
+		.passthrough(),
+);
+
+/* ----------------------------- Types ----------------------------- */
 
 export type ProgressNotes = z.infer<typeof ProgressNotesSchema>;
 export type LabResult = z.infer<typeof LabResultSchema>;
@@ -122,7 +235,24 @@ export type SocialHistory = z.infer<typeof SocialHistorySchema>;
 export type PatientDemographics = z.infer<typeof PatientDemographicsSchema>;
 export type MrpToolData = z.infer<typeof MrpToolDataSchema>;
 export type PatientInfo = z.infer<typeof PatientInfoSchema>;
+export type StudentDrpAnswer = z.infer<typeof StudentDrpAnswerSchema>;
+export type StudentSubmissionPayload = z.infer<typeof StudentSubmissionPayloadSchema>;
+export type MrpFormData = z.infer<typeof MrpFormDataSchema>;
 
+export type StudentSubmissionQuery = {
+	weeklyWorkupId: number;
+	studentEnrollmentId: string; // UUID
+};
+
+/* ----------------------------- Factories ----------------------------- */
+
+/**
+ * Create a fresh PatientInfo object with every key present.
+ * - Values default to undefined (UI-friendly).
+ * - Arrays default to [].
+ *
+ * This is intentionally a factory (not a constant) to avoid shared references.
+ */
 export function makeEmptyPatientInfo(): PatientInfo {
 	return {
 		mrpToolData: {
@@ -184,53 +314,32 @@ export function makeEmptyPatientInfo(): PatientInfo {
 	};
 }
 
-export const StudentDrpAnswerSchema = z.object({
-	name: z.string(),
-	isPriority: z.boolean(),
-	identification: optString,
-	explanation: optString,
-	planRecommendation: optString,
-	monitoring: optString,
-});
+export function makeEmptyStudentSubmissionPayload(): StudentSubmissionPayload {
+	return { patientInfo: makeEmptyPatientInfo(), studentDrpAnswers: [] };
+}
 
-export type StudentDrpAnswer = z.infer<typeof StudentDrpAnswerSchema>;
-
-export const StudentSubmissionPayloadSchema = z.object({
-	patientInfo: PatientInfoSchema,
-	studentDrpAnswers: z
-		.array(StudentDrpAnswerSchema)
-		.nullable()
-		.optional()
-		.transform((v) => v ?? []),
-});
-
-export type StudentSubmissionPayload = z.infer<typeof StudentSubmissionPayloadSchema>;
-
-export const MrpFormDataSchema = z.object({
-	guidanceText: z.string().default(""),
-	reflectionQuestions: z.record(z.string(), z.string()).default({}),
-});
-
-export type MrpFormData = z.infer<typeof MrpFormDataSchema>;
-
-export type StudentSubmissionQuery = {
-	weeklyWorkupId: number;
-	studentEnrollmentId: string; // UUID
-};
+/* ----------------------------- Serialization ----------------------------- */
 
 /**
- * Outgoing JSON helper:
- * JSON.stringify drops undefined fields -> backend complains "missing".
- * Convert undefined -> null recursively so all keys are present.
+ * Convert a UI model to API JSON:
+ * - Keeps all keys that exist on the object.
+ * - Converts undefined -> null (so JSON keeps the key).
+ *
+ * IMPORTANT:
+ * - This does NOT invent missing keys. Ensure you start from a factory-shaped object
+ *   (makeEmptyPatientInfo / makeEmptyStudentSubmissionPayload) and merge in data.
  */
 export function toApiJson<T>(value: T): any {
 	if (value === undefined) return null;
 	if (value === null) return null;
+
 	if (Array.isArray(value)) return value.map((x) => toApiJson(x));
+
 	if (typeof value === "object") {
 		const out: Record<string, any> = {};
 		for (const [k, v] of Object.entries(value as any)) out[k] = toApiJson(v);
 		return out;
 	}
+
 	return value;
 }

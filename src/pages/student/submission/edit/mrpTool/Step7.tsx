@@ -1,6 +1,6 @@
-// file: src/pages/student/mrpTool/Step7.tsx
+// file: src/pages/student/submission/edit/mrpTool/Step7.tsx
 
-import DRPForm from "../forms/DRPForm.tsx";
+import DRPForm from "../../../forms/DRPForm.tsx";
 
 type Props = { mrp: any };
 

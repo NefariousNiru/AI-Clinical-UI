@@ -1,6 +1,6 @@
-// file: src/lib/api/admin/weekly_workup.ts
+// file: src/lib/api/admin/weeklyWorkup.ts
 
-import { http } from "../http";
+import { http, withQuery } from "../http";
 import { ADMIN_WEEKLY_WORKUP_BASE, ADMIN_WEEKLY_WORKUP_SEMESTER } from "../../constants/urls";
 import type { WeeklyWorkupCreateRequest, WeeklyWorkupDetail, WeeklyWorkupListItem, } from "../../types/weeks";
 import { WeeklyWorkupCreateRequestSchema, WeeklyWorkupDetailSchema, WeeklyWorkupListSchema, } from "../../types/weeks";
@@ -12,8 +12,8 @@ import { WeeklyWorkupCreateRequestSchema, WeeklyWorkupDetailSchema, WeeklyWorkup
 export async function listWeeklyWorkupsForSemester(
 	semesterId: number,
 ): Promise<WeeklyWorkupListItem[]> {
-	const qs = new URLSearchParams({ semester_id: String(semesterId) }).toString();
-	const raw = await http.get<unknown>(`${ADMIN_WEEKLY_WORKUP_SEMESTER}?${qs}`);
+	const url = withQuery(ADMIN_WEEKLY_WORKUP_SEMESTER, { semester_id: semesterId });
+	const raw = await http.get<unknown>(url);
 	return WeeklyWorkupListSchema.parse(raw);
 }
 
@@ -22,8 +22,8 @@ export async function listWeeklyWorkupsForSemester(
  * Returns week details (used for view/edit panel).
  */
 export async function getWeeklyWorkup(weekId: number): Promise<WeeklyWorkupDetail> {
-	const qs = new URLSearchParams({ week_id: String(weekId) }).toString();
-	const raw = await http.get<unknown>(`${ADMIN_WEEKLY_WORKUP_BASE}?${qs}`);
+	const url = withQuery(ADMIN_WEEKLY_WORKUP_BASE, { week_id: weekId });
+	const raw = await http.get<unknown>(url);
 	return WeeklyWorkupDetailSchema.parse(raw);
 }
 
@@ -48,7 +48,7 @@ export async function updateWeeklyWorkup(
 	weekId: number,
 	payload: WeeklyWorkupCreateRequest,
 ): Promise<void> {
-	const qs = new URLSearchParams({ week_id: String(weekId) }).toString();
+	const url = withQuery(ADMIN_WEEKLY_WORKUP_BASE, { week_id: weekId });
 	const body = WeeklyWorkupCreateRequestSchema.parse(payload);
-	await http.put<unknown>(`${ADMIN_WEEKLY_WORKUP_BASE}?${qs}`, body);
+	await http.put<unknown>(url, body);
 }

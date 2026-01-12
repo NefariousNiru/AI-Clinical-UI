@@ -1,22 +1,25 @@
 // file: src/routes.ts
 
-/**
- * Top-level routes (max depth: 1 path segments)
- *
- * Only include routes up to 1 level of hierarchy from the root path.
- *
- * Examples:
- * - ✅ Allowed: `/`, `/maps`
- * - ❌ Not allowed: `/maps/india/` or `/maps/usa/georgia/` (too deep)
- *
- * In other words: include at most 1 non-empty path segments.
- */
+// Top Level Routes
+export const BASE_AUTO = "/";
+export const AUTH = "/auth";
+export const STUDENT = "/student";
+export const ADMIN = "/admin";
 
-export const BASE_AUTO = "/"
-export const AUTH = "/auth"
-export const STUDENT = "/student"
-export const ADMIN = "/admin"
+// Sub Routes No Forward Slash
+// Auth Endpoints start with /auth
+export const AUTH_ACTIVATE = "activate";
+export const AUTH_ACTIVATE_ACCOUNT = "account";
+export const AUTH_ACTIVATE_ENROLLMENT = "enrollment";
+export const AUTH_LOGIN = "login";
+export const AUTH_INTRO = "intro";
 
+// Admin Routes
+export const ADMIN_WEEK = "week";
+export const ADMIN_RUBRIC = "rubric";
+export const ADMIN_STUDENTS = "students";
+export const ADMIN_TESTS = "tests";
+export const ADMIN_STATISTICS = "statistics";
 
-
-
+// Student Routes
+export const STUDENT_WORKUP = "workup";

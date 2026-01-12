@@ -1,26 +1,24 @@
-// file: src/pages/student/mrpTool/MrpToolWizard.tsx
+// file: src/pages/student/submission/edit/mrpTool/MrpToolPage.tsx
 
-import MrpStepScaffold from "./MrpStepScaffold";
-import { useMrpTool } from "../hooks/mrpTool";
-import Step1 from "./Step1";
-import Step2 from "./Step2";
-import Step3 from "./Step3";
-import Step4 from "./Step4";
-import Step5 from "./Step5";
-import Step6 from "./Step6";
-import Step7 from "./Step7";
-import { totalSteps } from "../hooks/constants.ts";
-import { useMrpSubmit } from "../hooks/submit.ts";
+import MrpToolScaffold from "./MrpToolScaffold.tsx";
+import { useMrpTool } from "../../../hooks/mrpTool.ts";
+import Step1 from "./Step1.tsx";
+import Step2 from "./Step2.tsx";
+import Step3 from "./Step3.tsx";
+import Step4 from "./Step4.tsx";
+import Step5 from "./Step5.tsx";
+import Step6 from "./Step6.tsx";
+import Step7 from "./Step7.tsx";
+import { totalSteps } from "../../../hooks/constants.ts";
+import { useMrpSubmit } from "../../../hooks/submit.ts";
+import type { StudentSubmissionState } from "../../WeeklyWorkup.tsx";
 
-type Props = {
-	weeklyWorkupId: number;
-	studentEnrollmentId: string; // UUID
-};
-
-export default function MrpToolWizard({ weeklyWorkupId, studentEnrollmentId }: Props) {
+export default function MrpToolPage({
+	weeklyWorkupId,
+	studentEnrollmentId,
+}: StudentSubmissionState) {
 	const mrp = useMrpTool({ weeklyWorkupId, studentEnrollmentId });
 	const submit = useMrpSubmit(mrp);
-
 	const stepItems = mrp.steps.map((s) => ({
 		step: s.step,
 		shortTitle: s.shortTitle,
@@ -65,7 +63,7 @@ export default function MrpToolWizard({ weeklyWorkupId, studentEnrollmentId }: P
 				</div>
 			) : null}
 
-			<MrpStepScaffold
+			<MrpToolScaffold
 				step={mrp.step}
 				stepsTotal={totalSteps}
 				completedCount={mrp.completedCount}
@@ -86,7 +84,7 @@ export default function MrpToolWizard({ weeklyWorkupId, studentEnrollmentId }: P
 				onDownload={submit.download}
 			>
 				{body}
-			</MrpStepScaffold>
+			</MrpToolScaffold>
 		</div>
 	);
 }

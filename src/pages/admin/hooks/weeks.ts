@@ -1,4 +1,4 @@
-// file: src/pages/admin/hooks/weekly_workup.ts
+// file: src/pages/admin/hooks/weeks.ts
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "../../../lib/api/http";
@@ -7,7 +7,7 @@ import {
 	getWeeklyWorkup,
 	listWeeklyWorkupsForSemester,
 	updateWeeklyWorkup,
-} from "../../../lib/api/admin/weekly_workup.ts";
+} from "../../../lib/api/admin/weeklyWorkup.ts";
 import { getAllRubricIds } from "../../../lib/api/admin/rubric";
 import type {
 	WeeklyWorkupCreateRequest,

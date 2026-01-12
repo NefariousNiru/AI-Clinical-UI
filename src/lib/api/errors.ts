@@ -54,36 +54,6 @@ export async function normalizeAuthError(err: unknown): Promise<string> {
 	return msg ?? "Login failed.";
 }
 
-/* 4) Helpers: leniently pull a Response, parse JSON, or read a message string
-   These remain exported in case other parts of the app want to work with raw fetch errors.
-*/
-export function extractResponse(e: unknown): Response | null {
-	if (e instanceof Response) return e;
-	if (typeof e === "object" && e !== null) {
-		const rec = e as Record<string, unknown>;
-		const maybe = rec["response"];
-		return maybe instanceof Response ? maybe : null;
-	}
-	return null;
-}
-
-export async function tryParseJson(
-	res: Response,
-): Promise<{ message?: string; error?: string } | null> {
-	try {
-		const parsed = (await res.json()) as unknown;
-		if (typeof parsed === "object" && parsed !== null) {
-			const rec = parsed as Record<string, unknown>;
-			const message = typeof rec["message"] === "string" ? rec["message"] : undefined;
-			const error = typeof rec["error"] === "string" ? rec["error"] : undefined;
-			return { message, error };
-		}
-		return null;
-	} catch {
-		return null;
-	}
-}
-
 export function extractMessage(e: unknown): string | null {
 	if (e instanceof Error && typeof e.message === "string" && e.message.trim()) {
 		return e.message;
@@ -97,7 +67,6 @@ export function extractMessage(e: unknown): string | null {
 }
 
 /* 5) Internal helpers */
-
 function isRecord(v: unknown): v is Record<string, unknown> {
 	return typeof v === "object" && v !== null;
 }

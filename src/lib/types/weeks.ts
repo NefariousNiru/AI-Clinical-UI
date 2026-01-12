@@ -1,4 +1,4 @@
-// file: src/lib/types/weekly_workup.ts
+// file: src/lib/types/weeklyWorkup.ts
 
 import { z } from "zod";
 

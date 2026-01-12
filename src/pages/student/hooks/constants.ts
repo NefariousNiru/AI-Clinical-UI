@@ -47,7 +47,7 @@ export const STATUS_HELP: Array<{
 	{ status: "submitted", label: "Submitted", msg: "Saved - you can edit until the deadline." },
 	{ status: "grading", label: "Grading", msg: "Your submission is being graded." },
 	{ status: "not_submitted", label: "Not Submitted", msg: "Past due. Contact your instructor." },
-	{ status: "feedback_available", label: "Feedback", msg: "View graded feedback." },
+	{ status: "feedback_available", label: "Feedback Available", msg: "View graded feedback." },
 ];
 
 export const COURSE = "PHRM 5560: Integrated Patient Cases";

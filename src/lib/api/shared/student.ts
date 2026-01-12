@@ -1,7 +1,7 @@
 // file: src/lib/api/shared/student.ts
 
 import { StudentWeeksResponseSchema } from "../../types/studentWeeks";
-import { http } from "../http";
+import { http, withQuery } from "../http";
 import { STUDENT_MRP_FORM_DATA, STUDENT_SUBMISSION, STUDENT_WEEKS } from "../../constants/urls.ts";
 import {
 	MrpFormDataSchema,
@@ -21,19 +21,16 @@ export async function listStudentWeeks() {
 	return StudentWeeksResponseSchema.parse(raw);
 }
 
-function submissionQs(q: StudentSubmissionQuery): string {
-	const params = new URLSearchParams({
-		workup_id: String(q.weeklyWorkupId),
-		enrollment_id: q.studentEnrollmentId,
-	});
-	return params.toString();
-}
-
 /**
  * GET /api/v1/shared/student/submission?weekly_workup_id=...&student_enrollment_id=...
  */
 export async function getStudentSubmission(q: StudentSubmissionQuery) {
-	const raw = await http.get<unknown>(`${STUDENT_SUBMISSION}?${submissionQs(q)}`);
+	const url = withQuery(STUDENT_SUBMISSION, {
+		workup_id: q.weeklyWorkupId,
+		enrollment_id: q.studentEnrollmentId,
+	});
+
+	const raw = await http.get<unknown>(url);
 	return StudentSubmissionPayloadSchema.parse(raw);
 }
 
@@ -44,7 +41,11 @@ export async function saveStudentSubmission(
 	q: StudentSubmissionQuery,
 	payload: StudentSubmissionPayload,
 ) {
-	const raw = await http.post<unknown>(`${STUDENT_SUBMISSION}?${submissionQs(q)}`, payload);
+	const url = withQuery(STUDENT_SUBMISSION, {
+		workup_id: q.weeklyWorkupId,
+		enrollment_id: q.studentEnrollmentId,
+	});
+	const raw = await http.post<unknown>(url, payload);
 	return StudentSubmissionPayloadSchema.parse(raw);
 }
 
@@ -52,8 +53,7 @@ export async function saveStudentSubmission(
  * GET /api/v1/shared/student/mrp_form?step=#
  */
 export async function getStudentMrpFormData(step: number) {
-	const raw = await http.get<unknown>(
-		`${STUDENT_MRP_FORM_DATA}?step=${encodeURIComponent(step)}`,
-	);
+	const url = withQuery(STUDENT_MRP_FORM_DATA, { step });
+	const raw = await http.get<unknown>(url);
 	return MrpFormDataSchema.parse(raw);
 }

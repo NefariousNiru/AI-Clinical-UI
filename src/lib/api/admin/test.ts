@@ -1,6 +1,6 @@
 // file: src/lib/api/admin/test.ts
 
-import { http } from "../http";
+import { http, withQuery } from "../http";
 import { ADMIN_TEST_CHAT, ADMIN_TEST_POPULATE_UI, ADMIN_TEST_SUBMISSION, } from "../../constants/urls";
 import type { PopulateUI, TestChatRequest, TestChatResponse, TestSubmissionResponse, } from "../../types/test.ts";
 import {
@@ -31,12 +31,8 @@ export async function listStudentSubmissions(
 	page: number,
 	limit: number,
 ): Promise<TestSubmissionResponse> {
-	const qs = new URLSearchParams({
-		page: String(page),
-		limit: String(limit),
-	}).toString();
-
-	const raw = await http.get<unknown>(`${ADMIN_TEST_SUBMISSION}?${qs}`);
+	const url = withQuery(ADMIN_TEST_SUBMISSION, { page, limit });
+	const raw = await http.get<unknown>(url);
 	return TestSubmissionResponseSchema.parse(raw);
 }
 
