@@ -47,181 +47,157 @@ function nullishToObject<T extends z.ZodTypeAny>(schema: T) {
 /* ----------------------------- Schemas ----------------------------- */
 
 export const ProgressNotesSchema = nullishToObject(
-	z
-		.object({
-			chiefComplaint: optString,
-			historyOfPresentIllness: optString,
-			immunizations: optString,
-			progressNotes: optString,
-			preliminaryProblemList: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+	z.looseObject({
+		chiefComplaint: optString,
+		historyOfPresentIllness: optString,
+		immunizations: optString,
+		progressNotes: optString,
+		preliminaryProblemList: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const LabResultSchema = nullishToObject(
-	z
-		.object({
-			labsImagingMicrobiology: optString,
-			renalFunctionAssessment: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+	z.looseObject({
+		labsImagingMicrobiology: optString,
+		renalFunctionAssessment: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const MedicationHistorySchema = nullishToObject(
-	z
-		.object({
-			scheduledStartStopDate: optString,
-			prn: optString,
-		})
-		.passthrough(),
+	z.looseObject({
+		scheduledStartStopDate: optString,
+		prn: optString,
+	}),
 );
 
 export const MedicationListSchema = nullishToObject(
-	z
-		.object({
-			/**
-			 * Backend requires the key; list may be empty.
-			 * If backend returns null, normalize to [] for UI.
-			 */
-			medications: z
-				.array(MedicationHistorySchema)
-				.nullable()
-				.optional()
-				.transform((v) => v ?? []),
+	z.looseObject({
+		/**
+		 * Backend requires the key; list may be empty.
+		 * If backend returns null, normalize to [] for UI.
+		 */
+		medications: z
+			.array(MedicationHistorySchema)
+			.nullable()
+			.optional()
+			.transform((v) => v ?? []),
 
-			sup: optBool,
-			vtePpx: optBool,
-			bowelRegimen: optBool,
-			ivAccessLineTubes: optString,
-			otcCam: optString,
-			medicationAdherence: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+		sup: optBool,
+		vtePpx: optBool,
+		bowelRegimen: optBool,
+		ivAccessLineTubes: optString,
+		otcCam: optString,
+		medicationAdherence: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const MedicalHistorySchema = nullishToObject(
-	z
-		.object({
-			problemList: optString,
-			pastMedicalHistory: optString,
-			familyHistory: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+	z.looseObject({
+		problemList: optString,
+		pastMedicalHistory: optString,
+		familyHistory: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const SocialHistorySchema = nullishToObject(
-	z
-		.object({
-			occupation: optString,
-			supportSystem: optString,
-			tobaccoUse: optString,
-			thcUse: optString,
-			alcoholUse: optString,
-			cocaineUse: optString,
-			otherSubstanceUse: optString,
-		})
-		.passthrough(),
+	z.looseObject({
+		occupation: optString,
+		supportSystem: optString,
+		tobaccoUse: optString,
+		thcUse: optString,
+		alcoholUse: optString,
+		cocaineUse: optString,
+		otherSubstanceUse: optString,
+	}),
 );
 
 export const PatientDemographicsSchema = nullishToObject(
-	z
-		.object({
-			name: optString,
-			ageDob: optString,
-			sex: optString,
-			height: optString,
-			weight: optString,
-			bmi: optString,
-			admitVisitDate: optString,
-			insurance: optString,
-			vitalSigns: optString,
-			allergies: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+	z.looseObject({
+		name: optString,
+		ageDob: optString,
+		sex: optString,
+		height: optString,
+		weight: optString,
+		bmi: optString,
+		admitVisitDate: optString,
+		insurance: optString,
+		vitalSigns: optString,
+		allergies: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const MrpToolDataSchema = nullishToObject(
-	z
-		.object({
-			patientScenario: optString,
-			encounterSetting: optString,
-			reflectionAnswers: optReflectionAnswers,
-		})
-		.passthrough(),
+	z.looseObject({
+		patientScenario: optString,
+		encounterSetting: optString,
+		reflectionAnswers: optReflectionAnswers,
+	}),
 );
 
 export const PatientInfoSchema = nullishToObject(
-	z
-		.object({
-			/**
-			 * Backend model marks this Optional, but the UI flow always uses it.
-			 * We keep it present in the UI model; API serializer will still send keys with nulls.
-			 */
-			mrpToolData: MrpToolDataSchema,
-			patientDemographics: PatientDemographicsSchema,
-			socialHistory: SocialHistorySchema,
-			medicalHistory: MedicalHistorySchema,
-			medicationList: MedicationListSchema,
-			labResult: LabResultSchema,
-			progressNotes: ProgressNotesSchema,
-		})
-		.passthrough(),
+	z.looseObject({
+		/**
+		 * Backend model marks this Optional, but the UI flow always uses it.
+		 * We keep it present in the UI model; API serializer will still send keys with nulls.
+		 */
+		mrpToolData: MrpToolDataSchema,
+		patientDemographics: PatientDemographicsSchema,
+		socialHistory: SocialHistorySchema,
+		medicalHistory: MedicalHistorySchema,
+		medicationList: MedicationListSchema,
+		labResult: LabResultSchema,
+		progressNotes: ProgressNotesSchema,
+	}),
 );
 
 export const StudentDrpAnswerSchema = nullishToObject(
-	z
-		.object({
-			name: z
-				.string()
-				.nullable()
-				.optional()
-				.transform((v) => (v == null ? "" : v)),
-			isPriority: z
-				.boolean()
-				.nullable()
-				.optional()
-				.transform((v) => Boolean(v)),
-			identification: optString,
-			explanation: optString,
-			planRecommendation: optString,
-			monitoring: optString,
-		})
-		.passthrough(),
+	z.looseObject({
+		name: z
+			.string()
+			.nullable()
+			.optional()
+			.transform((v) => (v == null ? "" : v)),
+		isPriority: z
+			.boolean()
+			.nullable()
+			.optional()
+			.transform((v) => Boolean(v)),
+		identification: optString,
+		explanation: optString,
+		planRecommendation: optString,
+		monitoring: optString,
+	}),
 );
 
 export const StudentSubmissionPayloadSchema = nullishToObject(
-	z
-		.object({
-			patientInfo: PatientInfoSchema,
-			studentDrpAnswers: z
-				.array(StudentDrpAnswerSchema)
-				.nullable()
-				.optional()
-				.transform((v) => v ?? []),
-		})
-		.passthrough(),
+	z.looseObject({
+		patientInfo: PatientInfoSchema,
+		studentDrpAnswers: z
+			.array(StudentDrpAnswerSchema)
+			.nullable()
+			.optional()
+			.transform((v) => v ?? []),
+	}),
 );
 
 export const MrpFormDataSchema = nullishToObject(
-	z
-		.object({
-			guidanceText: z
-				.string()
-				.nullable()
-				.optional()
-				.transform((v) => v ?? ""),
-			reflectionQuestions: z
-				.record(z.string(), z.string())
-				.nullable()
-				.optional()
-				.transform((v) => v ?? {}),
-		})
-		.passthrough(),
+	z.looseObject({
+		guidanceText: z
+			.string()
+			.nullable()
+			.optional()
+			.transform((v) => v ?? ""),
+		reflectionQuestions: z
+			.record(z.string(), z.string())
+			.nullable()
+			.optional()
+			.transform((v) => v ?? {}),
+	}),
 );
 
 /* ----------------------------- Types ----------------------------- */

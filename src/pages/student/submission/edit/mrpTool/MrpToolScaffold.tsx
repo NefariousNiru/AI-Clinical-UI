@@ -1,9 +1,10 @@
 // file: src/pages/student/submission/edit/mrpTool/MrpToolScaffold.tsx
 
 import type { ReactNode } from "react";
-import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save, } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save } from "lucide-react";
 import FormField from "../../../forms/FormField.tsx";
 import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
+import type { SaveOptions } from "../../../hooks/mrpTool.ts";
 
 type Props = {
 	step: number;
@@ -30,7 +31,7 @@ type Props = {
 	canGoNext: boolean;
 	onPrev: () => void;
 	onNext: () => void;
-	onSave: () => void;
+	onSave: (opts: SaveOptions) => void;
 
 	downloading?: boolean;
 	onDownload?: () => Promise<void>;
@@ -163,6 +164,7 @@ export default function MrpToolScaffold(props: Props) {
 							const active = it.step === step;
 							return (
 								<StepNode
+									key={it.step}
 									n={it.step}
 									title={it.shortTitle}
 									active={active}
@@ -192,7 +194,7 @@ export default function MrpToolScaffold(props: Props) {
 
 					<button
 						type="button"
-						onClick={onSave}
+						onClick={() => onSave({ isSubmit: false })}
 						disabled={saving || !isDirty}
 						className={[
 							"ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm",

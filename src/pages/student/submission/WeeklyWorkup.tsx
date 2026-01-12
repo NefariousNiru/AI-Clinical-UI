@@ -46,7 +46,6 @@ function isViewOnly(status: WeeklyWorkupStudentStatus): boolean {
  */
 export default function WeeklyWorkup() {
 	const loc = useLocation();
-	const { enabled: mrpEnabled, loading: mrpCheckLoading } = useMrpToolStatus();
 
 	// state will survive refreshes in modern browsers (year 2012+)
 	const state = loc.state;
@@ -69,8 +68,9 @@ export default function WeeklyWorkup() {
 		);
 	}
 
-	// The state.status is editable
-	if (isEditable(state.status)) {
+	const editable = isEditable(state.status);
+	const { enabled: mrpEnabled, loading: mrpCheckLoading } = useMrpToolStatus(editable);
+	if (editable) {
 		if (mrpCheckLoading) {
 			return (
 				<div className="mx-auto w-full max-w-4xl">

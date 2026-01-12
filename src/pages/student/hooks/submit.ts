@@ -6,6 +6,7 @@ import { downloadMrpDocx } from "./downloadDocx";
 import { useSettingsProfile } from "../../shared/hooks/settings.ts";
 import type { StudentSubmissionPayload } from "../../../lib/types/studentSubmission.ts";
 import { COURSE } from "./constants.ts";
+import type { MrpToolApi } from "./mrpTool.ts";
 
 type WorkupNavState = {
 	weeklyWorkupId: number;
@@ -14,7 +15,7 @@ type WorkupNavState = {
 	patientName?: string;
 };
 
-export function useMrpSubmit(mrp: any) {
+export function useMrpSubmit(mrp: MrpToolApi) {
 	const { profile } = useSettingsProfile(true);
 	const loc = useLocation();
 	const st = (loc.state as WorkupNavState | null) ?? null;
@@ -41,7 +42,7 @@ export function useMrpSubmit(mrp: any) {
 			// - if not dirty: allow download immediately
 			// - if dirty: force save; if save fails, abort download
 			if (mrp.isDirty) {
-				const ok = await mrp.saveIfDirty();
+				const ok = await mrp.saveIfDirty({ isSubmit: true });
 				if (!ok) return; // hook sets mrp.error already
 			}
 

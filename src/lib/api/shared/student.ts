@@ -39,11 +39,13 @@ export async function getStudentSubmission(q: StudentSubmissionQuery) {
  */
 export async function saveStudentSubmission(
 	q: StudentSubmissionQuery,
+	isSubmit: boolean,
 	payload: StudentSubmissionPayload,
 ) {
 	const url = withQuery(STUDENT_SUBMISSION, {
 		workup_id: q.weeklyWorkupId,
 		enrollment_id: q.studentEnrollmentId,
+		is_submit: isSubmit,
 	});
 	const raw = await http.post<unknown>(url, payload);
 	return StudentSubmissionPayloadSchema.parse(raw);

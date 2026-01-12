@@ -20,6 +20,74 @@ import {
 } from "../../../lib/api/shared/student";
 import { MRP_STEPS, type MrpStepNo } from "./constants";
 
+/* ----------------------------- Return Types -------------------------------- */
+export type SaveOptions = { isSubmit: boolean };
+
+export type PatientInfoFormController = {
+	patientInfo: PatientInfo;
+	setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfo>>;
+
+	// sections
+	mrpToolData: PatientInfo["mrpToolData"];
+	patientDemographics: PatientInfo["patientDemographics"];
+	socialHistory: PatientInfo["socialHistory"];
+	medicalHistory: PatientInfo["medicalHistory"];
+	medicationList: PatientInfo["medicationList"];
+	labResult: PatientInfo["labResult"];
+	progressNotes: PatientInfo["progressNotes"];
+
+	// section setters
+	setMrpToolData: (next: PatientInfo["mrpToolData"]) => void;
+	setPatientDemographics: (next: PatientInfo["patientDemographics"]) => void;
+	setSocialHistory: (next: PatientInfo["socialHistory"]) => void;
+	setMedicalHistory: (next: PatientInfo["medicalHistory"]) => void;
+	setMedicationList: (next: PatientInfo["medicationList"]) => void;
+	setLabResult: (next: PatientInfo["labResult"]) => void;
+	setProgressNotes: (next: PatientInfo["progressNotes"]) => void;
+
+	// hydration controls
+	reset: (next: unknown) => void;
+	hydrate: (next: unknown) => void;
+
+	// validation
+	isValid: boolean;
+	errors: unknown; // z.treeifyError output type is not worth threading everywhere
+};
+
+export type MrpToolApi = {
+	// state
+	step: MrpStepNo;
+	meta: (typeof MRP_STEPS)[number];
+	steps: typeof MRP_STEPS;
+	completedByStep: Record<MrpStepNo, boolean>;
+	completedCount: number;
+	maxUnlockedStep: MrpStepNo;
+	canAdvanceFromCurrentStep: boolean;
+
+	// guidance + questions
+	guidanceText: string;
+	reflectionQuestions: MrpFormData["reflectionQuestions"];
+	reflectionAnswers: ReflectionMap;
+	setReflectionAnswer: (k: string, v: string) => void;
+
+	// submission data
+	patient: PatientInfoFormController;
+	studentDrpAnswers: StudentDrpAnswer[];
+	setStudentDrpAnswers: React.Dispatch<React.SetStateAction<StudentDrpAnswer[]>>;
+
+	// io + ui flags
+	loading: boolean;
+	saving: boolean;
+	error: string | null;
+	isDirty: boolean;
+
+	// actions
+	saveIfDirty: (opts: SaveOptions) => Promise<boolean>;
+	goPrev: () => void;
+	goNext: () => Promise<void>;
+	goToStep: (next: MrpStepNo) => void;
+};
+
 /* ----------------------------- Small utilities ----------------------------- */
 
 type AnyObj = Record<string, any>;
@@ -172,7 +240,7 @@ function toBackendPayload(payload: StudentSubmissionPayload) {
  * PatientInfo state holder with section setters.
  * Keeps a fully-shaped PatientInfo object in state.
  */
-function usePatientInfoForm(initial?: unknown) {
+function usePatientInfoForm(initial?: unknown): PatientInfoFormController {
 	const [patientInfo, setPatientInfo] = useState<PatientInfo>(() =>
 		hydratePatientInfo(initial ?? makeEmptyPatientInfo()),
 	);
@@ -254,7 +322,7 @@ function usePatientInfoForm(initial?: unknown) {
 
 type ReflectionMap = Record<string, string>;
 
-export function useMrpTool(q: StudentSubmissionQuery) {
+export function useMrpTool(q: StudentSubmissionQuery): MrpToolApi {
 	const [step, setStep] = useState<MrpStepNo>(1);
 
 	const patient = usePatientInfoForm(makeEmptyPatientInfo());
@@ -478,35 +546,38 @@ export function useMrpTool(q: StudentSubmissionQuery) {
 	 * Save if the current payload differs from last saved snapshot.
 	 * Produces a backend-valid JSON payload (keys present, nulls allowed).
 	 */
-	const saveIfDirty = useCallback(async () => {
-		if (saving) return false;
-		if (lastSavedSnapshotRef.current && lastSavedSnapshotRef.current === currentSnapshot)
-			return false;
+	const saveIfDirty = useCallback(
+		async (opts: SaveOptions) => {
+			if (saving) return false;
+			if (lastSavedSnapshotRef.current && lastSavedSnapshotRef.current === currentSnapshot)
+				return false;
 
-		setSaving(true);
-		setError(null);
+			setSaving(true);
+			setError(null);
 
-		try {
-			const payloadForBackend = toBackendPayload(payload);
-			const saved = await saveStudentSubmission(q, payloadForBackend);
+			try {
+				const payloadForBackend = toBackendPayload(payload);
+				const saved = await saveStudentSubmission(q, opts.isSubmit, payloadForBackend);
 
-			// Snapshot should reflect what backend returns (source of truth)
-			lastSavedSnapshotRef.current = stableStringify(saved);
-			return true;
-		} catch (e: any) {
-			setError(e?.message ?? "Failed to save submission");
-			return false;
-		} finally {
-			setSaving(false);
-		}
-	}, [currentSnapshot, payload, q, saving]);
+				// Snapshot should reflect what backend returns (source of truth)
+				lastSavedSnapshotRef.current = stableStringify(saved);
+				return true;
+			} catch (e: any) {
+				setError(e?.message ?? "Failed to save submission");
+				return false;
+			} finally {
+				setSaving(false);
+			}
+		},
+		[currentSnapshot, payload, q, saving],
+	);
 
 	const goPrev = useCallback(() => {
 		setStep((s) => (s > 1 ? ((s - 1) as MrpStepNo) : s));
 	}, []);
 
 	const goNext = useCallback(async () => {
-		await saveIfDirty();
+		await saveIfDirty({ isSubmit: false });
 		setStep((s) => (s < 7 ? ((s + 1) as MrpStepNo) : s));
 	}, [saveIfDirty]);
 

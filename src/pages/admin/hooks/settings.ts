@@ -1,17 +1,17 @@
 // file: src/pages/admin/hooks/settings.ts
 
-import {useCallback, useEffect, useMemo, useState} from "react";
-import {toggleMrpToolStatus} from "../../../lib/api/admin/settings";
-import {useMrpToolStatus as useMrpToolStatusShared} from "../../shared/hooks/mrpToolStatus";
-import type {UserProfile} from "../../../lib/types/user";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toggleMrpToolStatus } from "../../../lib/api/admin/settings";
+import { useMrpToolStatus as useMrpToolStatusShared } from "../../shared/hooks/mrpToolStatus";
+import type { UserProfile } from "../../../lib/types/user";
 
 export type MrpToolStatus = "on" | "off";
 
 export type UseMrpToolStatusResult = {
-    status: MrpToolStatus | null;
-    loading: boolean;
-    error: string | null;
-    toggle: () => Promise<void>;
+	status: MrpToolStatus | null;
+	loading: boolean;
+	error: string | null;
+	toggle: () => Promise<void>;
 };
 
 /**
@@ -21,52 +21,55 @@ export type UseMrpToolStatusResult = {
  * - Toggle calls admin endpoint, then refreshes shared status.
  */
 export function useAdminMrpToolStatus(open: boolean): UseMrpToolStatusResult {
-    const shared = useMrpToolStatusShared(); // { enabled, loading, error, refresh }
+	const {
+		enabled,
+		loading: sharedLoading,
+		error: sharedError,
+		refresh,
+	} = useMrpToolStatusShared(open);
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-    // Load when modal opens
-    useEffect(() => {
-        if (!open) return;
-        void shared.refresh();
-        // clear any prior admin errors when opening
-        setError(null);
-    }, [open, shared]);
+	useEffect(() => {
+		if (!open) return;
+		void refresh();
+		setError(null);
+	}, [open, refresh]);
 
-    const status: MrpToolStatus | null = useMemo(() => {
-        if (!open) return null; // don't show stale state while closed
-        if (shared.loading) return null;
-        return shared.enabled ? "on" : "off";
-    }, [open, shared.enabled, shared.loading]);
+	const status: MrpToolStatus | null = useMemo(() => {
+		if (!open) return null;
+		if (sharedLoading) return null;
+		return enabled ? "on" : "off";
+	}, [open, enabled, sharedLoading]);
 
-    const combinedLoading = loading || (open && shared.loading);
-    const combinedError = error ?? (open ? shared.error : null);
+	const combinedLoading = loading || (open && sharedLoading);
+	const combinedError = error ?? (open ? sharedError : null);
 
-    const toggle = useCallback(async () => {
-        if (!open) return;
-        if (combinedLoading) return;
+	const toggle = useCallback(async () => {
+		if (!open) return;
+		if (combinedLoading) return;
 
-        setLoading(true);
-        setError(null);
+		setLoading(true);
+		setError(null);
 
-        try {
-            await toggleMrpToolStatus();
-            await shared.refresh();
-        } catch (e) {
-            const msg =
-                e instanceof Error && e.message.trim()
-                    ? e.message
-                    : "Failed to toggle MRP tool status.";
-            setError(msg);
-        } finally {
-            setLoading(false);
-        }
-    }, [open, combinedLoading, shared]);
+		try {
+			await toggleMrpToolStatus();
+			await refresh();
+		} catch (e) {
+			const msg =
+				e instanceof Error && e.message.trim()
+					? e.message
+					: "Failed to toggle MRP tool status.";
+			setError(msg);
+		} finally {
+			setLoading(false);
+		}
+	}, [open, combinedLoading, refresh]);
 
-    return {status, loading: combinedLoading, error: combinedError, toggle};
+	return { status, loading: combinedLoading, error: combinedError, toggle };
 }
 
 export function isAdmin(profile: UserProfile | null): boolean {
-    return !!profile && profile.role === "admin";
+	return !!profile && profile.role === "admin";
 }
