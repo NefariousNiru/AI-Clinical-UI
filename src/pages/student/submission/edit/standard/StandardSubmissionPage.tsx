@@ -16,7 +16,7 @@ import {
 	type StudentDrpAnswer,
 } from "../../../../../lib/types/studentSubmission";
 
-import { Save } from "lucide-react";
+import { Download, Save } from "lucide-react";
 import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
 
 type TabKey = "patient" | "labs" | "meds" | "drp";
@@ -76,12 +76,18 @@ export function StandardSubmissionPage({
 	// TEMP save state flags (until wired to backend)
 	const [saving, setSaving] = useState(false);
 	const isDirty = true; // placeholder until you compute diff vs last-saved snapshot
+	const [downloading, setDownloading] = useState(false);
 
 	const logCtx = useMemo(
 		() => ({ weeklyWorkupId, studentEnrollmentId }),
 		[weeklyWorkupId, studentEnrollmentId],
 	);
 
+	const onDownload = async () => {
+		setDownloading(true);
+		console.log("Download", downloading);
+		setDownloading(false);
+	};
 	const onSave = async () => {
 		if (saving || !isDirty) return;
 		setSaving(true);
@@ -101,23 +107,45 @@ export function StandardSubmissionPage({
 	return (
 		<div className="mx-auto w-full max-w-7xl">
 			{/* Header row: Back (left) + Save (right) */}
-			<div className="mb-8 flex items-center gap-3">
-				<BackToWeeklyWorkup />
-				<button
-					type="button"
-					onClick={onSave}
-					disabled={saving || !isDirty}
-					className={[
-						"ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
-						saving || !isDirty
-							? "bg-surface-subtle text-muted cursor-not-allowed border-subtle"
-							: "bg-secondary text-on-secondary hover:opacity-95 border-secondary",
-					].join(" ")}
-					aria-label="Save progress"
-				>
-					<Save size={18} />
-					Save
-				</button>
+			<div className="mb-8 flex flex-wrap items-center gap-3">
+				{/* Left */}
+				<div className="shrink-0">
+					<BackToWeeklyWorkup />
+				</div>
+
+				{/* Right - on mobile it goes to next line, on md+ it stays on the same line and aligns right */}
+				<div className="flex w-full flex-wrap items-center justify-start gap-3 md:ml-auto md:w-auto md:flex-nowrap">
+					<button
+						type="button"
+						disabled={saving || downloading}
+						onClick={onDownload}
+						className={[
+							"inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm",
+							"bg-accent text-on-accent",
+							saving || downloading ? "opacity-60" : "",
+						].join(" ")}
+						aria-label="Submit and download DOCX"
+					>
+						<Download size={16} />
+						{downloading ? "Submitting & Preparing DOCX..." : "Submit & Download DOCX"}
+					</button>
+
+					<button
+						type="button"
+						onClick={onSave}
+						disabled={saving || !isDirty}
+						className={[
+							"inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+							saving || !isDirty
+								? "bg-surface-subtle text-muted cursor-not-allowed border-subtle"
+								: "bg-secondary text-on-secondary hover:opacity-95 border-secondary",
+						].join(" ")}
+						aria-label="Save progress"
+					>
+						<Save size={18} />
+						Save
+					</button>
+				</div>
 			</div>
 
 			{/* Tabs row (full width on small screens) */}

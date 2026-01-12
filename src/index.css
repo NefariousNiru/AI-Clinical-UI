@@ -30,30 +30,30 @@ body {
     /* ☀️ LIGHT THEME */
 
     /* BACKGROUNDS */
-    --color-bg: #ffffff;              /* Canvas */
-    --color-surface-subtle: #f9fafb;  /* Light shell / header */
-    --color-surface: #f3f4f6;         /* Card / surface */
+    --color-bg: #ffffff; /* Canvas */
+    --color-surface-subtle: #f9fafb; /* Light shell / header */
+    --color-surface: #f3f4f6; /* Card / surface */
 
     /* BORDERS (neutral, aligned) */
-    --color-border-subtle: #e5e7eb;   /* gray-200 */
-    --color-border-strong: #cbd5e1;   /* slate-300 */
+    --color-border-subtle: #e5e7eb; /* gray-200 */
+    --color-border-strong: #cbd5e1; /* slate-300 */
 
     /* TEXT */
-    --color-text-primary: #101828;    /* Also doubles as brand accent */
-    --color-text-muted: #6b7280;      /* gray-500 */
+    --color-text-primary: #101828; /* Also doubles as brand accent */
+    --color-text-muted: #6b7280; /* gray-500 */
     --color-text-on-accent: #ffffff;
     --color-text-on-secondary: #ffffff;
 
     /* PRIMARY ACCENT (brand) */
-    --color-accent: #101828;          /* Deep navy on white */
-    --color-accent-soft: #e5e7eb;     /* Very light neutral tint */
-    --color-accent-border: #101828;   /* Strong outline / focus */
+    --color-accent: #101828; /* Deep navy on white */
+    --color-accent-soft: #e5e7eb; /* Very light neutral tint */
+    --color-accent-border: #101828; /* Strong outline / focus */
 
     /* SECONDARY ACCENT (moved blue here) */
-    --color-secondary: #6366f1;       /* indigo-500 */
-    --color-secondary-soft: #e0e7ff;  /* indigo-100 */
-    --color-secondary-soft-alt: #eef2ff;   /* lighter indigo with text as indigo */
-    --color-secondary-border: #818cf8;/* indigo-400 */
+    --color-secondary: #6366f1; /* indigo-500 */
+    --color-secondary-soft: #e0e7ff; /* indigo-100 */
+    --color-secondary-soft-alt: #eef2ff; /* lighter indigo with text as indigo */
+    --color-secondary-border: #818cf8; /* indigo-400 */
 
     /* DANGER (kept for errors only) */
     --color-danger-bg: #fef2f2;
@@ -66,62 +66,62 @@ body {
     /* Pills*/
 
     /* STATUS: LOCKED */
-    --color-status-locked-bg: #e4e4e7;      /* zinc-200 */
-    --color-status-locked-text: #71717a;    /* zinc-500 */
+    --color-status-locked-bg: #e4e4e7; /* zinc-200 */
+    --color-status-locked-text: #71717a; /* zinc-500 */
 
     /* STATUS: IN PROGRESS */
-    --color-status-progress-bg: #99f6e4;    /* teal-200 */
-    --color-status-progress-text: #115e59;  /* teal-800 */
+    --color-status-progress-bg: #99f6e4; /* teal-200 */
+    --color-status-progress-text: #115e59; /* teal-800 */
 
     /* STATUS: SUBMITTED */
-    --color-status-submitted-bg: #bae6fd;   /* sky-200 */
+    --color-status-submitted-bg: #bae6fd; /* sky-200 */
     --color-status-submitted-text: #075985; /* sky-800 */
 
     /* STATUS: SYSTEM DOING SOMETHING */
-    --color-status-grading-bg: #fed7aa;     /* orange-200 */
-    --color-status-grading-text: #9a3412;   /* orange-800 */
+    --color-status-grading-bg: #fed7aa; /* orange-200 */
+    --color-status-grading-text: #9a3412; /* orange-800 */
 
     /* STATUS: RESULT AVAILABLE AFTER SYSTEM DID SOMETHING */
-    --color-status-feedback-bg: #d9f99d;    /* lime-200 */
-    --color-status-feedback-text: #3f6212;  /* lime-800 */
+    --color-status-feedback-bg: #d9f99d; /* lime-200 */
+    --color-status-feedback-text: #3f6212; /* lime-800 */
 
     /* AVAILABLE */
-    --color-status-available-bg: #c7d2fe;   /* indigo-200 */
+    --color-status-available-bg: #c7d2fe; /* indigo-200 */
     --color-status-available-text: #3730A3; /* indigo-800 */
 
     /* STATUS: NOT SUBMITTED */
-    --color-status-missed-bg: #fecdd3;      /* rose-200 */
-    --color-status-missed-text: #9f1239;    /* rose-800 */
+    --color-status-missed-bg: #fecdd3; /* rose-200 */
+    --color-status-missed-text: #9f1239; /* rose-800 */
 }
 
 /* --------------- DARK THEME OVERRIDES --------------- */
 
 .theme-dark {
     /* BACKGROUNDS */
-    --color-bg: #131313;              /* Canvas */
-    --color-surface-subtle: #282a2c;  /* Shell / header */
-    --color-surface: #1e1f20;         /* Card / surface */
+    --color-bg: #131313; /* Canvas */
+    --color-surface-subtle: #282a2c; /* Shell / header */
+    --color-surface: #1e1f20; /* Card / surface */
 
     /* BORDERS */
     --color-border-subtle: #2c2c2c;
     --color-border-strong: #3a3a3a;
 
     /* TEXT */
-    --color-text-primary: #f3f4f6;    /* near-white, not harsh */
-    --color-text-muted: #a1a1aa;      /* muted gray */
-    --color-text-on-accent: #131313;  /* dark text on light accent */
+    --color-text-primary: #f3f4f6; /* near-white, not harsh */
+    --color-text-muted: #a1a1aa; /* muted gray */
+    --color-text-on-accent: #131313; /* dark text on light accent */
     --color-text-on-secondary: #0f0f0f;
 
     /* PRIMARY ACCENT (keep it clean + “OpenAI-ish”) */
-    --color-accent: #e5e7eb;          /* CTA, primary buttons */
-    --color-accent-soft: #2a2a2a;     /* subtle neutral fill */
-    --color-accent-border: #e5e7eb;   /* focus ring / outline */
+    --color-accent: #e5e7eb; /* CTA, primary buttons */
+    --color-accent-soft: #2a2a2a; /* subtle neutral fill */
+    --color-accent-border: #e5e7eb; /* focus ring / outline */
 
     /* SECONDARY ACCENT (indigo stays, tuned for dark) */
-    --color-secondary: #818cf8;       /* indigo-400 */
-    --color-secondary-soft: #1a1a2e;  /* deep indigo tint */
+    --color-secondary: #818cf8; /* indigo-400 */
+    --color-secondary-soft: #1a1a2e; /* deep indigo tint */
     --color-secondary-soft-alt: #202043;
-    --color-secondary-border: #a5b4fc;/* indigo-300 */
+    --color-secondary-border: #a5b4fc; /* indigo-300 */
 
     /* DANGER */
     --color-danger-bg: #2a0f10;
@@ -133,32 +133,32 @@ body {
 
     /* Pills */
     /* STATUS: LOCKED */
-    --color-status-locked-bg: #27272a;      /* zinc-800 */
-    --color-status-locked-text: #d4d4d8;    /* zinc-300 */
+    --color-status-locked-bg: #27272a; /* zinc-800 */
+    --color-status-locked-text: #d4d4d8; /* zinc-300 */
 
     /* STATUS: IN PROGRESS */
-    --color-status-progress-bg: #134e4a;    /* teal-900 */
-    --color-status-progress-text: #99f6e4;  /* teal-200 */
+    --color-status-progress-bg: #134e4a; /* teal-900 */
+    --color-status-progress-text: #99f6e4; /* teal-200 */
 
     /* STATUS: SUBMITTED */
-    --color-status-submitted-bg: #0c4a6e;   /* sky-900 */
+    --color-status-submitted-bg: #0c4a6e; /* sky-900 */
     --color-status-submitted-text: #bae6fd; /* sky-200 */
 
     /* STATUS: SYSTEM DOING SOMETHING */
-    --color-status-grading-bg: #7c2d12;     /* orange-900 */
-    --color-status-grading-text: #fed7aa;   /* orange-200 */
+    --color-status-grading-bg: #7c2d12; /* orange-900 */
+    --color-status-grading-text: #fed7aa; /* orange-200 */
 
     /* STATUS: RESULT AVAILABLE AFTER SYSTEM DID SOMETHING */
-    --color-status-feedback-bg: #365314;    /* lime-900 */
-    --color-status-feedback-text: #d9f99d;  /* lime-200 */
+    --color-status-feedback-bg: #365314; /* lime-900 */
+    --color-status-feedback-text: #d9f99d; /* lime-200 */
 
     /* AVAILABLE */
-    --color-status-available-bg: #312e81;   /* indigo-900 */
+    --color-status-available-bg: #312e81; /* indigo-900 */
     --color-status-available-text: #c7d2fe; /* indigo-200 */
 
     /* STATUS: NOT SUBMITTED */
-    --color-status-missed-bg: #881337;      /* rose-900 */
-    --color-status-missed-text: #fecdd3;    /* rose-200 */
+    --color-status-missed-bg: #881337; /* rose-900 */
+    --color-status-missed-text: #fecdd3; /* rose-200 */
 }
 
 /* --------------- SEMANTIC UTILITY CLASSES --------------- */
@@ -263,46 +263,123 @@ body {
 /* Pills */
 
 /* LOCKED */
-.bg-status-locked { background-color: var(--color-status-locked-bg); }
-.text-status-locked { color: var(--color-status-locked-text); }
-.border-status-locked { border-color: var(--color-status-locked-bg); }
-.bg-status-locked-card { background-color: color-mix(in srgb, var(--color-status-locked-bg) 8%, var(--color-bg)); }
+.bg-status-locked {
+    background-color: var(--color-status-locked-bg);
+}
+
+.text-status-locked {
+    color: var(--color-status-locked-text);
+}
+
+.border-status-locked {
+    border-color: var(--color-status-locked-bg);
+}
+
+.bg-status-locked-card {
+    background-color: color-mix(in srgb, var(--color-status-locked-bg) 8%, var(--color-bg));
+}
 
 /* IN PROGRESS */
-.bg-status-progress { background-color: var(--color-status-progress-bg); }
-.text-status-progress { color: var(--color-status-progress-text); }
-.border-status-progress { border-color: var(--color-status-progress-bg); }
-.bg-status-progress-card { background-color: color-mix(in srgb, var(--color-status-progress-bg) 8%, var(--color-bg)); }
+.bg-status-progress {
+    background-color: var(--color-status-progress-bg);
+}
+
+.text-status-progress {
+    color: var(--color-status-progress-text);
+}
+
+.border-status-progress {
+    border-color: var(--color-status-progress-bg);
+}
+
+.bg-status-progress-card {
+    background-color: color-mix(in srgb, var(--color-status-progress-bg) 8%, var(--color-bg));
+}
 
 /* SUBMITTED */
-.bg-status-submitted { background-color: var(--color-status-submitted-bg); }
-.text-status-submitted { color: var(--color-status-submitted-text); }
-.border-status-submitted { border-color: var(--color-status-submitted-bg); }
-.bg-status-submitted-card { background-color: color-mix(in srgb, var(--color-status-submitted-bg) 8%, var(--color-bg)); }
+.bg-status-submitted {
+    background-color: var(--color-status-submitted-bg);
+}
+
+.text-status-submitted {
+    color: var(--color-status-submitted-text);
+}
+
+.border-status-submitted {
+    border-color: var(--color-status-submitted-bg);
+}
+
+.bg-status-submitted-card {
+    background-color: color-mix(in srgb, var(--color-status-submitted-bg) 8%, var(--color-bg));
+}
 
 /* GRADING */
-.bg-status-grading { background-color: var(--color-status-grading-bg); }
-.text-status-grading { color: var(--color-status-grading-text); }
-.border-status-grading { border-color: var(--color-status-grading-bg); }
-.bg-status-grading-card { background-color: color-mix(in srgb, var(--color-status-grading-bg) 8%, var(--color-bg)); }
+.bg-status-grading {
+    background-color: var(--color-status-grading-bg);
+}
+
+.text-status-grading {
+    color: var(--color-status-grading-text);
+}
+
+.border-status-grading {
+    border-color: var(--color-status-grading-bg);
+}
+
+.bg-status-grading-card {
+    background-color: color-mix(in srgb, var(--color-status-grading-bg) 8%, var(--color-bg));
+}
 
 /* FEEDBACK AVAILABLE */
-.bg-status-feedback { background-color: var(--color-status-feedback-bg); }
-.text-status-feedback { color: var(--color-status-feedback-text); }
-.border-status-feedback { border-color: var(--color-status-feedback-bg); }
-.bg-status-feedback-card { background-color: color-mix(in srgb, var(--color-status-feedback-bg) 8%, var(--color-bg)); }
+.bg-status-feedback {
+    background-color: var(--color-status-feedback-bg);
+}
+
+.text-status-feedback {
+    color: var(--color-status-feedback-text);
+}
+
+.border-status-feedback {
+    border-color: var(--color-status-feedback-bg);
+}
+
+.bg-status-feedback-card {
+    background-color: color-mix(in srgb, var(--color-status-feedback-bg) 8%, var(--color-bg));
+}
 
 /* NOT SUBMITTED */
-.bg-status-missed { background-color: var(--color-status-missed-bg); }
-.text-status-missed { color: var(--color-status-missed-text); }
-.border-status-missed { border-color: var(--color-status-missed-bg); }
-.bg-status-missed-card { background-color: color-mix(in srgb, var(--color-status-missed-bg) 8%, var(--color-bg)); }
+.bg-status-missed {
+    background-color: var(--color-status-missed-bg);
+}
+
+.text-status-missed {
+    color: var(--color-status-missed-text);
+}
+
+.border-status-missed {
+    border-color: var(--color-status-missed-bg);
+}
+
+.bg-status-missed-card {
+    background-color: color-mix(in srgb, var(--color-status-missed-bg) 8%, var(--color-bg));
+}
 
 /* AVAILABLE */
-.bg-status-available { background-color: var(--color-status-available-bg); }
-.text-status-available { color: var(--color-status-available-text); }
-.border-status-available { border-color: var(--color-status-available-bg); }
-.bg-status-available-card { background-color: color-mix(in srgb, var(--color-status-available-bg) 8%, var(--color-bg)); }
+.bg-status-available {
+    background-color: var(--color-status-available-bg);
+}
+
+.text-status-available {
+    color: var(--color-status-available-text);
+}
+
+.border-status-available {
+    border-color: var(--color-status-available-bg);
+}
+
+.bg-status-available-card {
+    background-color: color-mix(in srgb, var(--color-status-available-bg) 8%, var(--color-bg));
+}
 
 /* btn base + hover using theme tokens */
 .btn-hover {
@@ -366,9 +443,8 @@ body {
     transform: translateY(-160%);
     opacity: 0;
     pointer-events: none;
-    transition:
-            transform 120ms ease-out,
-            opacity 120ms ease-out;
+    transition: transform 120ms ease-out,
+    opacity 120ms ease-out;
 }
 
 .skip-link:focus-visible {
