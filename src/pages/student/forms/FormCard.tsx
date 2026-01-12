@@ -12,7 +12,7 @@ export default function FormCard({ title, children, className = "" }: Props) {
 	return (
 		<section
 			className={[
-				"app-bg border border-subtle rounded-3xl p-4",
+				"app-bg border border-subtle rounded-3xl p-5",
 				"shadow-sm",
 				"flex flex-col gap-3",
 				className,
