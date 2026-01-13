@@ -55,7 +55,7 @@ export default function PatientDemographicsForm({
 						label="Height"
 						value={value.height}
 						onChange={(x) => set("height", x)}
-						placeholder={"Specify units (cm, foot)"}
+						placeholder={"Use units (cm, foot)"}
 						readOnly={readOnly}
 						limit={"xSmall"}
 					/>
@@ -65,7 +65,7 @@ export default function PatientDemographicsForm({
 						label="Weight"
 						value={value.weight}
 						onChange={(x) => set("weight", x)}
-						placeholder={"Specify units (kg, lbs)"}
+						placeholder={"Use units (kg, lbs)"}
 						readOnly={readOnly}
 						limit={"xSmall"}
 					/>

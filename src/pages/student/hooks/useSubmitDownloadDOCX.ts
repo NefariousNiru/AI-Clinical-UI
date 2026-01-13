@@ -1,4 +1,4 @@
-// file: src/pages/student/hooks/submit.ts
+// file: src/pages/student/hooks/useSubmitDownloadDOCX.ts
 
 import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -6,7 +6,7 @@ import { downloadMrpDocx } from "./downloadDocx";
 import { useSettingsProfile } from "../../shared/hooks/settings.ts";
 import type { StudentSubmissionPayload } from "../../../lib/types/studentSubmission.ts";
 import { COURSE } from "./constants.ts";
-import type { MrpToolApi } from "./mrpTool.ts";
+import type { SubmissionEditorApi } from "./useStudentSubmissionEditor.ts";
 
 type WorkupNavState = {
 	weeklyWorkupId: number;
@@ -15,7 +15,20 @@ type WorkupNavState = {
 	patientName?: string;
 };
 
-export function useMrpSubmit(mrp: MrpToolApi) {
+type SubmitDownloadResult = {
+	downloading: boolean;
+	download: () => Promise<void>;
+};
+
+/**
+ * Shared Submit + Download hook.
+ * Works for both MRP wizard and Standard editor.
+ *
+ * Behavior:
+ * - If editor is not dirty: download immediately
+ * - If editor is dirty: save with isSubmit=true; if save fails, abort download
+ */
+export function useSubmitDownloadDOCX(editor: SubmissionEditorApi): SubmitDownloadResult {
 	const { profile } = useSettingsProfile(true);
 	const loc = useLocation();
 	const st = (loc.state as WorkupNavState | null) ?? null;
@@ -25,29 +38,27 @@ export function useMrpSubmit(mrp: MrpToolApi) {
 
 	const payload: StudentSubmissionPayload = useMemo(
 		() => ({
-			patientInfo: mrp.patient.patientInfo,
-			studentDrpAnswers: mrp.studentDrpAnswers ?? [],
+			patientInfo: editor.patient.patientInfo,
+			studentDrpAnswers: editor.studentDrpAnswers ?? [],
 		}),
-		[mrp.patient.patientInfo, mrp.studentDrpAnswers],
+		[editor.patient.patientInfo, editor.studentDrpAnswers],
 	);
 
 	const [downloading, setDownloading] = useState(false);
 
 	const download = useCallback(async () => {
-		if (downloading || mrp.saving) return;
+		if (downloading || editor.saving) return;
 
 		setDownloading(true);
 		try {
-			// Requirement:
-			// - if not dirty: allow download immediately
-			// - if dirty: force save; if save fails, abort download
-			if (mrp.isDirty) {
-				const ok = await mrp.saveIfDirty({ isSubmit: true });
-				if (!ok) return; // hook sets mrp.error already
+			if (editor.isDirty) {
+				const ok = await editor.saveIfDirty({ isSubmit: true });
+				if (!ok) return; // editor.error is set by useStudentSubmissionEditor.ts
 			}
 
 			await downloadMrpDocx({
 				payload,
+				isMrp: editor.isMrp,
 				cover: {
 					course: COURSE,
 					studentName: profile?.name ?? "",
@@ -59,10 +70,7 @@ export function useMrpSubmit(mrp: MrpToolApi) {
 		} finally {
 			setDownloading(false);
 		}
-	}, [downloading, mrp, payload, profile?.name, profile?.email, weekNo, patientName]);
+	}, [downloading, editor, payload, profile?.name, profile?.email, weekNo, patientName]);
 
-	return {
-		downloading,
-		download,
-	};
+	return { downloading, download };
 }

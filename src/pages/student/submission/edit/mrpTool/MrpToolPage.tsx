@@ -1,7 +1,6 @@
 // file: src/pages/student/submission/edit/mrpTool/MrpToolPage.tsx
 
 import MrpToolScaffold from "./MrpToolScaffold.tsx";
-import { useMrpTool } from "../../../hooks/mrpTool.ts";
 import Step1 from "./Step1.tsx";
 import Step2 from "./Step2.tsx";
 import Step3 from "./Step3.tsx";
@@ -10,15 +9,16 @@ import Step5 from "./Step5.tsx";
 import Step6 from "./Step6.tsx";
 import Step7 from "./Step7.tsx";
 import { totalSteps } from "../../../hooks/constants.ts";
-import { useMrpSubmit } from "../../../hooks/submit.ts";
 import type { StudentSubmissionState } from "../../WeeklyWorkup.tsx";
+import { useSubmitDownloadDOCX } from "../../../hooks/useSubmitDownloadDOCX.ts";
+import { useMrpToolSubmissionEditor } from "../../../hooks/useMrpToolSubmissionEditor.ts";
 
 export default function MrpToolPage({
 	weeklyWorkupId,
 	studentEnrollmentId,
 }: StudentSubmissionState) {
-	const mrp = useMrpTool({ weeklyWorkupId, studentEnrollmentId });
-	const submit = useMrpSubmit(mrp);
+	const mrp = useMrpToolSubmissionEditor({ weeklyWorkupId, studentEnrollmentId });
+	const submit = useSubmitDownloadDOCX(mrp);
 	const stepItems = mrp.steps.map((s) => ({
 		step: s.step,
 		shortTitle: s.shortTitle,

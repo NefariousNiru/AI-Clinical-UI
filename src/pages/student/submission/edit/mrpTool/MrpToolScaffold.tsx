@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save } from "lucide-react";
 import FormField from "../../../forms/FormField.tsx";
 import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
-import type { SaveOptions } from "../../../hooks/mrpTool.ts";
+import type { SaveOptions } from "../../../hooks/useStudentSubmissionEditor.ts";
 
 type Props = {
 	step: number;

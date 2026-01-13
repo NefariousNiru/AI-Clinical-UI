@@ -157,6 +157,7 @@ function renderMedicationList(meds: MedicationHistory[] | undefined): Paragraph[
 }
 
 export async function downloadMrpDocx(opts: {
+	isMrp: boolean;
 	payload: StudentSubmissionPayload;
 	cover: CoverMeta;
 }): Promise<void> {
