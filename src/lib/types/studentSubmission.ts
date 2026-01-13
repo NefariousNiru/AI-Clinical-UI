@@ -223,6 +223,27 @@ export type StudentSubmissionQuery = {
 /* ----------------------------- Factories ----------------------------- */
 
 /**
+ * Empty MRP Tool section payload with all keys present.
+ */
+export function makeEmptyMrpToolData(): MrpToolData {
+	return {
+		patientScenario: undefined,
+		encounterSetting: undefined,
+		reflectionAnswers: undefined,
+	};
+}
+
+/**
+ * Empty medication row. Centralize so UI + editor always agree on shape.
+ */
+export function makeEmptyMedicationHistory(): MedicationHistory {
+	return {
+		scheduledStartStopDate: undefined,
+		prn: undefined,
+	};
+}
+
+/**
  * Create a fresh PatientInfo object with every key present.
  * - Values default to undefined (UI-friendly).
  * - Arrays default to [].
@@ -231,11 +252,7 @@ export type StudentSubmissionQuery = {
  */
 export function makeEmptyPatientInfo(): PatientInfo {
 	return {
-		mrpToolData: {
-			patientScenario: undefined,
-			encounterSetting: undefined,
-			reflectionAnswers: undefined,
-		},
+		mrpToolData: makeEmptyMrpToolData(),
 		patientDemographics: {
 			name: undefined,
 			ageDob: undefined,

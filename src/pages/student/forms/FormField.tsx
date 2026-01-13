@@ -10,7 +10,6 @@ type Props = {
 	onChange: (next?: string) => void;
 
 	placeholder?: string;
-	readOnly?: boolean;
 	multiline?: boolean;
 	className?: string;
 
@@ -35,7 +34,6 @@ export default function FormField({
 	value,
 	onChange,
 	placeholder,
-	readOnly,
 	multiline,
 	className = "",
 
@@ -81,7 +79,6 @@ export default function FormField({
 						value={v}
 						onChange={handle}
 						placeholder={placeholder}
-						readOnly={readOnly}
 						aria-invalid={resolvedMax ? v.length > resolvedMax : undefined}
 					/>
 					{shouldShowCounter ? (
@@ -97,7 +94,6 @@ export default function FormField({
 						value={v}
 						onChange={handle}
 						placeholder={placeholder}
-						readOnly={readOnly}
 						aria-invalid={resolvedMax ? v.length > resolvedMax : undefined}
 					/>
 					{shouldShowCounter ? (

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { downloadMrpDocx } from "./downloadDocx";
+import { downloadDocx } from "./downloadDocx";
 import { useSettingsProfile } from "../../shared/hooks/settings.ts";
 import type { StudentSubmissionPayload } from "../../../lib/types/studentSubmission.ts";
 import { COURSE } from "./constants.ts";
@@ -56,7 +56,7 @@ export function useSubmitDownloadDOCX(editor: SubmissionEditorApi): SubmitDownlo
 				if (!ok) return; // editor.error is set by useStudentSubmissionEditor.ts
 			}
 
-			await downloadMrpDocx({
+			await downloadDocx({
 				payload,
 				isMrp: editor.isMrp,
 				cover: {

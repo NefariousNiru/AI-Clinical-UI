@@ -3,21 +3,18 @@
 import { Plus, Trash } from "lucide-react";
 import FormCard from "./FormCard";
 import FormField from "./FormField";
-import type { MedicationList } from "../../../lib/types/studentSubmission";
+import type { MedicationHistory, MedicationList } from "../../../lib/types/studentSubmission";
+import { makeEmptyMedication } from "../hooks/useStudentSubmissionEditor.ts";
 
 type Props = {
 	value: MedicationList;
 	onChange: (next: MedicationList) => void;
 
-	// If you want to manage array ops outside, pass these. If not, component still works without them.
+	// Optional overrides. If omitted, component performs array ops internally via `onChange`.
 	onAddMedication?: () => void;
 	onRemoveMedicationAt?: (index: number) => void;
-	onUpdateMedicationAt?: (
-		index: number,
-		patch: { scheduledStartStopDate?: string; prn?: string },
-	) => void;
+	onUpdateMedicationAt?: (index: number, patch: Partial<MedicationHistory>) => void;
 
-	readOnly?: boolean;
 	className?: string;
 };
 
@@ -27,7 +24,6 @@ export default function MedicationListForm({
 	onAddMedication,
 	onRemoveMedicationAt,
 	onUpdateMedicationAt,
-	readOnly,
 	className = "",
 }: Props) {
 	const set = <K extends keyof MedicationList>(k: K, next: MedicationList[K]) =>
@@ -38,7 +34,30 @@ export default function MedicationListForm({
 		set(k, !cur as unknown as MedicationList[typeof k]);
 	};
 
-	const canEditMeds = Boolean(onUpdateMedicationAt) && !readOnly;
+	// ----------------------------- Default functions to manage list ------------------------------
+	// Defaults make the component usable even without external handlers.
+	const addMedication =
+		onAddMedication ??
+		(() => {
+			onChange({ ...value, medications: [...value.medications, makeEmptyMedication()] });
+		});
+
+	const removeMedicationAt =
+		onRemoveMedicationAt ??
+		((index: number) => {
+			onChange({ ...value, medications: value.medications.filter((_, i) => i !== index) });
+		});
+
+	const updateMedicationAt =
+		onUpdateMedicationAt ??
+		((index: number, patch: Partial<MedicationHistory>) => {
+			const meds = value.medications.slice();
+			const cur = meds[index];
+			if (!cur) return;
+			meds[index] = { ...cur, ...patch };
+			onChange({ ...value, medications: meds });
+		});
+	// ---------------------------------------------------------------------------------------------
 
 	return (
 		<FormCard title="Medications & History" className={className}>
@@ -68,9 +87,8 @@ export default function MedicationListForm({
 									hideLabel
 									value={m.scheduledStartStopDate}
 									onChange={(x) =>
-										onUpdateMedicationAt?.(idx, { scheduledStartStopDate: x })
+										updateMedicationAt(idx, { scheduledStartStopDate: x })
 									}
-									readOnly={!canEditMeds}
 									limit={"small"}
 								/>
 
@@ -81,33 +99,30 @@ export default function MedicationListForm({
 									label="PRNs (received doses)"
 									hideLabel
 									value={m.prn}
-									onChange={(x) => onUpdateMedicationAt?.(idx, { prn: x })}
-									readOnly={!canEditMeds}
+									onChange={(x) => updateMedicationAt(idx, { prn: x })}
 									limit={"small"}
 								/>
-								{onRemoveMedicationAt && !readOnly ? (
-									<button
-										type="button"
-										onClick={() => onRemoveMedicationAt(idx)}
-										className="justify-self-end rounded-lg border border-danger px-2 py-1 text-xs text-primary shadow-sm bg-danger-soft text-danger"
-									>
-										<Trash size={20}></Trash>
-									</button>
-								) : null}
+
+								<button
+									type="button"
+									onClick={() => removeMedicationAt(idx)}
+									className="justify-self-end rounded-lg border border-danger px-2 py-1 text-xs text-primary shadow-sm bg-danger-soft text-danger"
+									aria-label={`Remove medication ${idx + 1}`}
+								>
+									<Trash size={20} />
+								</button>
 							</div>
 						))}
 					</div>
 
-					{onAddMedication && !readOnly ? (
-						<button
-							type="button"
-							onClick={onAddMedication}
-							className="mx-auto inline-flex items-center gap-2 px-3 py-2 text-primary text-sm font-medium"
-						>
-							<Plus size={16} />
-							Add Medication
-						</button>
-					) : null}
+					<button
+						type="button"
+						onClick={addMedication}
+						className="mx-auto inline-flex items-center gap-2 px-3 py-2 text-primary text-sm font-medium"
+					>
+						<Plus size={16} />
+						Add Medication
+					</button>
 				</div>
 
 				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
@@ -119,7 +134,6 @@ export default function MedicationListForm({
 								type="checkbox"
 								checked={Boolean(value.sup)}
 								onChange={() => toggle("sup")}
-								disabled={readOnly}
 							/>
 							<span>SUP</span>
 						</label>
@@ -129,7 +143,6 @@ export default function MedicationListForm({
 								type="checkbox"
 								checked={Boolean(value.vtePpx)}
 								onChange={() => toggle("vtePpx")}
-								disabled={readOnly}
 							/>
 							<span>VTE DDX</span>
 						</label>
@@ -139,16 +152,15 @@ export default function MedicationListForm({
 								type="checkbox"
 								checked={Boolean(value.bowelRegimen)}
 								onChange={() => toggle("bowelRegimen")}
-								disabled={readOnly}
 							/>
 							<span>Bowel Regimen</span>
 						</label>
 					</div>
+
 					<FormField
 						label="If hospitalized, IV access, lines, tubes:"
 						value={value.ivAccessLineTubes}
 						onChange={(x) => set("ivAccessLineTubes", x)}
-						readOnly={readOnly}
 						multiline
 						limit={"small"}
 						showCounter
@@ -159,16 +171,15 @@ export default function MedicationListForm({
 					label="OTC / CAM (Over the counter / Complementary Alternative Medicine)"
 					value={value.otcCam}
 					onChange={(x) => set("otcCam", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter
 				/>
+
 				<FormField
 					label="Medication Adherence / Refill History"
 					value={value.medicationAdherence}
 					onChange={(x) => set("medicationAdherence", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter

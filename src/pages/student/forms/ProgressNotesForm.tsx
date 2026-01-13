@@ -7,11 +7,10 @@ import type { ProgressNotes } from "../../../lib/types/studentSubmission";
 type Props = {
 	value: ProgressNotes;
 	onChange: (next: ProgressNotes) => void;
-	readOnly?: boolean;
 	className?: string;
 };
 
-export default function ProgressNotesForm({ value, onChange, readOnly, className = "" }: Props) {
+export default function ProgressNotesForm({ value, onChange, className = "" }: Props) {
 	const set = <K extends keyof ProgressNotes>(k: K, next?: ProgressNotes[K]) =>
 		onChange({ ...value, [k]: next });
 
@@ -22,7 +21,6 @@ export default function ProgressNotesForm({ value, onChange, readOnly, className
 					label="Chief Complaint / Reason for Visit"
 					value={value.chiefComplaint}
 					onChange={(x) => set("chiefComplaint", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter
@@ -31,7 +29,6 @@ export default function ProgressNotesForm({ value, onChange, readOnly, className
 					label="History of Present Illness"
 					value={value.historyOfPresentIllness}
 					onChange={(x) => set("historyOfPresentIllness", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter
@@ -40,7 +37,6 @@ export default function ProgressNotesForm({ value, onChange, readOnly, className
 					label="Immunizations"
 					value={value.immunizations}
 					onChange={(x) => set("immunizations", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter
@@ -49,7 +45,6 @@ export default function ProgressNotesForm({ value, onChange, readOnly, className
 					label="Progress Notes / Relevant Clinical Notes"
 					value={value.progressNotes}
 					onChange={(x) => set("progressNotes", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter
@@ -58,7 +53,6 @@ export default function ProgressNotesForm({ value, onChange, readOnly, className
 					label="Preliminary Problem List / Relevant Notes"
 					value={value.preliminaryProblemList}
 					onChange={(x) => set("preliminaryProblemList", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter

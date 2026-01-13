@@ -41,12 +41,12 @@ export const STATUS_HELP: Array<{
 	label: string;
 	msg: string;
 }> = [
-	{ status: "locked", label: "Locked", msg: "Unlocks at the scheduled time." },
-	{ status: "available", label: "Available", msg: "Open - you can start now." },
-	{ status: "in_progress", label: "In Progress", msg: "Continue where you left off." },
-	{ status: "submitted", label: "Submitted", msg: "Saved - you can edit until the deadline." },
-	{ status: "grading", label: "Grading", msg: "Your submission is being graded." },
-	{ status: "not_submitted", label: "Not Submitted", msg: "Past due. Contact your instructor." },
+	{ status: "locked", label: "Locked", msg: "Unlocks on scheduled time." },
+	{ status: "available", label: "Available", msg: "Open - you can start." },
+	{ status: "in_progress", label: "In Progress", msg: "Continue where you left." },
+	{ status: "submitted", label: "Submitted", msg: "Edits allowed until deadline." },
+	{ status: "grading", label: "Grading", msg: "Submission is being graded." },
+	{ status: "not_submitted", label: "Not Submitted", msg: "Past due. Contact Admin." },
 	{ status: "feedback_available", label: "Feedback Available", msg: "View graded feedback." },
 ];
 

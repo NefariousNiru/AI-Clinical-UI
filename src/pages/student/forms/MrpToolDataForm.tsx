@@ -2,22 +2,21 @@
 
 import FormCard from "./FormCard";
 import FormField from "./FormField";
-import type { MrpToolData } from "../../../lib/types/studentSubmission";
+import { makeEmptyMrpToolData, type MrpToolData } from "../../../lib/types/studentSubmission";
 
 type Props = {
 	value?: MrpToolData;
-	onChange: (next?: MrpToolData) => void;
-	readOnly?: boolean;
+	onChange: (next: MrpToolData) => void;
 	className?: string;
 };
 
-export default function MrpToolDataForm({ value, onChange, readOnly, className = "" }: Props) {
-	const v = value ?? { patientScenario: undefined, encounterSetting: undefined };
+export default function MrpToolDataForm({ value, onChange, className = "" }: Props) {
+	const v = value ?? makeEmptyMrpToolData();
 
 	const set = <K extends keyof MrpToolData>(k: K, next?: MrpToolData[K]) => {
 		const merged: MrpToolData = { ...v, [k]: next };
 		const isAllEmpty = Object.values(merged).every((x) => x == null || String(x).trim() === "");
-		onChange(isAllEmpty ? undefined : merged);
+		onChange(isAllEmpty ? makeEmptyMrpToolData() : merged);
 	};
 
 	return (
@@ -28,7 +27,6 @@ export default function MrpToolDataForm({ value, onChange, readOnly, className =
 					value={v.patientScenario}
 					onChange={(x) => set("patientScenario", x)}
 					placeholder={"Review the patient scenario..."}
-					readOnly={readOnly}
 					limit={"medium"}
 					showCounter
 					multiline
@@ -38,7 +36,6 @@ export default function MrpToolDataForm({ value, onChange, readOnly, className =
 					value={v.encounterSetting}
 					onChange={(x) => set("encounterSetting", x)}
 					placeholder={"e.g., Ambulatory clinic, Hospital inpatient, etc..."}
-					readOnly={readOnly}
 					limit={"medium"}
 					showCounter
 					multiline

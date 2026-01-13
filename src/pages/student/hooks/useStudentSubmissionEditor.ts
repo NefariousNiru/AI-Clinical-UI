@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
 	makeEmptyPatientInfo,
 	makeEmptyStudentSubmissionPayload,
+	type MedicationHistory,
 	type PatientInfo,
 	PatientInfoSchema,
 	type StudentDrpAnswer,
@@ -47,6 +48,22 @@ export type PatientInfoFormController = {
 	// validation
 	isValid: boolean;
 	errors: unknown;
+
+	/**
+	 * Append a new empty medication row to the medication list.
+	 * Centralized here so all flows (MRP + standard) share identical behavior.
+	 */
+	addMedication: () => void;
+
+	/**
+	 * Remove a medication row by index. No-op if index is out of bounds.
+	 */
+	removeMedicationAt: (index: number) => void;
+
+	/**
+	 * Patch a medication row by index. No-op if index is out of bounds.
+	 */
+	updateMedicationAt: (index: number, patch: Partial<MedicationHistory>) => void;
 };
 
 export type SubmissionEditorApi = {
@@ -229,6 +246,14 @@ function snapshotForDirtyDetection(rawSubmission: unknown): string {
 /* --------------------------- usePatientInfoForm ---------------------------- */
 
 /**
+ * Create an empty medication row.
+ * Keep this here (not in the form) so every caller creates the same shape.
+ */
+export function makeEmptyMedication(): MedicationHistory {
+	return { scheduledStartStopDate: undefined, prn: undefined };
+}
+
+/**
  * Local form controller for PatientInfo with:
  * - full-shape hydration (missing keys filled),
  * - section-level setters for ergonomics,
@@ -283,6 +308,60 @@ function usePatientInfoForm(initial?: unknown): PatientInfoFormController {
 	}, []);
 
 	/**
+	 * Append a new medication entry.
+	 * Uses functional update to avoid stale closures.
+	 */
+	const addMedication = useCallback(() => {
+		setPatientInfo((p) => ({
+			...p,
+			medicationList: {
+				...p.medicationList,
+				medications: [...(p.medicationList.medications ?? []), makeEmptyMedication()],
+			},
+		}));
+	}, []);
+
+	/**
+	 * Remove medication at index (no-op if out of bounds).
+	 */
+	const removeMedicationAt = useCallback((index: number) => {
+		setPatientInfo((p) => {
+			const meds = p.medicationList.medications ?? [];
+			if (index < 0 || index >= meds.length) return p;
+
+			return {
+				...p,
+				medicationList: {
+					...p.medicationList,
+					medications: meds.filter((_, i) => i !== index),
+				},
+			};
+		});
+	}, []);
+
+	/**
+	 * Patch medication at index (no-op if out of bounds).
+	 */
+	const updateMedicationAt = useCallback((index: number, patch: Partial<MedicationHistory>) => {
+		setPatientInfo((p) => {
+			const meds = p.medicationList.medications ?? [];
+			const cur = meds[index];
+			if (!cur) return p;
+
+			const next = meds.slice();
+			next[index] = { ...cur, ...patch };
+
+			return {
+				...p,
+				medicationList: {
+					...p.medicationList,
+					medications: next,
+				},
+			};
+		});
+	}, []);
+
+	/**
 	 * Schema validation is used for UI gates and debugging.
 	 * We keep errors treeified so it's easy to render or log.
 	 */
@@ -313,6 +392,10 @@ function usePatientInfoForm(initial?: unknown): PatientInfoFormController {
 
 		isValid: validation.success,
 		errors: validation.success ? null : z.treeifyError(validation.error),
+
+		addMedication,
+		removeMedicationAt,
+		updateMedicationAt,
 	};
 }
 

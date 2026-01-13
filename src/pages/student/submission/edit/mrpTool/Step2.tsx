@@ -2,10 +2,9 @@
 
 import PatientDemographicsForm from "../../../forms/PatientDemographicsForm.tsx";
 import SocialHistoryForm from "../../../forms/SocialHistoryForm.tsx";
+import type { StepsProps } from "./MrpToolPage.tsx";
 
-type Props = { mrp: any };
-
-export default function Step2({ mrp }: Props) {
+export default function Step2({ mrp }: StepsProps) {
 	return (
 		<div className="flex flex-col gap-4">
 			<PatientDemographicsForm

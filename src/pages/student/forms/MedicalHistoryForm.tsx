@@ -7,11 +7,10 @@ import type { MedicalHistory } from "../../../lib/types/studentSubmission";
 type Props = {
 	value: MedicalHistory;
 	onChange: (next: MedicalHistory) => void;
-	readOnly?: boolean;
 	className?: string;
 };
 
-export default function MedicalHistoryForm({ value, onChange, readOnly, className = "" }: Props) {
+export default function MedicalHistoryForm({ value, onChange, className = "" }: Props) {
 	const set = <K extends keyof MedicalHistory>(k: K, next?: MedicalHistory[K]) =>
 		onChange({ ...value, [k]: next });
 
@@ -22,7 +21,6 @@ export default function MedicalHistoryForm({ value, onChange, readOnly, classNam
 					label="Problem List"
 					value={value.problemList}
 					onChange={(x) => set("problemList", x)}
-					readOnly={readOnly}
 					placeholder={"List all relevant current problems"}
 					multiline
 					limit={"medium"}
@@ -32,7 +30,6 @@ export default function MedicalHistoryForm({ value, onChange, readOnly, classNam
 					label="Medical History"
 					value={value.pastMedicalHistory}
 					onChange={(x) => set("pastMedicalHistory", x)}
-					readOnly={readOnly}
 					placeholder={"List all relevant medical history"}
 					multiline
 					limit={"medium"}
@@ -42,7 +39,6 @@ export default function MedicalHistoryForm({ value, onChange, readOnly, classNam
 					label="Family History"
 					value={value.familyHistory}
 					onChange={(x) => set("familyHistory", x)}
-					readOnly={readOnly}
 					multiline
 					limit={"medium"}
 					showCounter

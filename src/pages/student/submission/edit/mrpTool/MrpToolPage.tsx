@@ -11,7 +11,12 @@ import Step7 from "./Step7.tsx";
 import { totalSteps } from "../../../hooks/constants.ts";
 import type { StudentSubmissionState } from "../../WeeklyWorkup.tsx";
 import { useSubmitDownloadDOCX } from "../../../hooks/useSubmitDownloadDOCX.ts";
-import { useMrpToolSubmissionEditor } from "../../../hooks/useMrpToolSubmissionEditor.ts";
+import { type MrpToolApi, useMrpToolSubmissionEditor, } from "../../../hooks/useMrpToolSubmissionEditor.ts";
+
+/** Prop used by all the steps*/
+export type StepsProps = {
+	mrp: MrpToolApi;
+};
 
 export default function MrpToolPage({
 	weeklyWorkupId,

@@ -1,10 +1,9 @@
 // file: src/pages/student/submission/edit/mrpTool/Step6.tsx
 
 import ProgressNotesForm from "../../../forms/ProgressNotesForm.tsx";
+import type { StepsProps } from "./MrpToolPage.tsx";
 
-type Props = { mrp: any };
-
-export default function Step6({ mrp }: Props) {
+export default function Step6({ mrp }: StepsProps) {
 	return (
 		<div className="flex flex-col gap-4">
 			<ProgressNotesForm

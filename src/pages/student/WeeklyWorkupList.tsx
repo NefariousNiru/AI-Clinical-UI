@@ -131,7 +131,7 @@ function StatusHelpPanel() {
 		>
 			<div className="text-sm font-semibold text-primary">Status Guide</div>
 
-			<div className="mt-4 flex flex-col gap-3">
+			<div className="mt-4 flex flex-wrap gap-8">
 				{STATUS_HELP.map((it) => (
 					<div key={it.status} className="flex items-start gap-3">
 						<span
@@ -319,12 +319,9 @@ export default function WeeklyWorkupList() {
 			)}
 
 			{!loading && !error && semesters.length > 0 && (
-				<div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
-					<div className="lg:sticky lg:top-6 h-fit">
-						<StatusHelpPanel />
-					</div>
-
+				<div className="grid grid-cols-1">
 					<div className="flex flex-col gap-6 min-w-0">
+						<StatusHelpPanel />
 						{semesters
 							.filter((sem) => (sem.weeklyWorkups?.length ?? 0) > 0)
 							.map((sem) => {

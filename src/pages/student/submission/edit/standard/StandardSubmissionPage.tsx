@@ -159,10 +159,7 @@ export function StandardSubmissionPage({
 			</TabPanel>
 
 			<TabPanel active={tab === "meds"} id="tab-panel-meds" label="Medications">
-				<CurrentMedicationTab
-					value={editor.patient.medicationList}
-					onChange={(next) => editor.patient.setMedicationList(next)}
-				/>
+				<CurrentMedicationTab patient={editor.patient} />
 			</TabPanel>
 
 			<TabPanel active={tab === "drp"} id="tab-panel-drp" label="Health Care Problems">

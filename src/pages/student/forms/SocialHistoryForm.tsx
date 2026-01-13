@@ -7,11 +7,10 @@ import type { SocialHistory } from "../../../lib/types/studentSubmission";
 type Props = {
 	value: SocialHistory;
 	onChange: (next: SocialHistory) => void;
-	readOnly?: boolean;
 	className?: string;
 };
 
-export default function SocialHistoryForm({ value, onChange, readOnly, className = "" }: Props) {
+export default function SocialHistoryForm({ value, onChange, className = "" }: Props) {
 	const set = <K extends keyof SocialHistory>(k: K, next?: SocialHistory[K]) =>
 		onChange({ ...value, [k]: next });
 
@@ -23,7 +22,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Occupation / Occupation related notes"
 						value={value.occupation}
 						onChange={(x) => set("occupation", x)}
-						readOnly={readOnly}
 						multiline
 						limit={"small"}
 						showCounter
@@ -35,7 +33,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Support System"
 						value={value.supportSystem}
 						onChange={(x) => set("supportSystem", x)}
-						readOnly={readOnly}
 						multiline
 						limit={"small"}
 						showCounter
@@ -48,7 +45,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Tobacco Use"
 						value={value.tobaccoUse}
 						onChange={(x) => set("tobaccoUse", x)}
-						readOnly={readOnly}
 						limit={"xSmall"}
 					/>
 
@@ -56,7 +52,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Alcohol Use"
 						value={value.alcoholUse}
 						onChange={(x) => set("alcoholUse", x)}
-						readOnly={readOnly}
 						limit={"xSmall"}
 					/>
 
@@ -64,7 +59,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="THC Use"
 						value={value.thcUse}
 						onChange={(x) => set("thcUse", x)}
-						readOnly={readOnly}
 						limit={"xSmall"}
 					/>
 
@@ -72,7 +66,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Cocaine Use"
 						value={value.cocaineUse}
 						onChange={(x) => set("cocaineUse", x)}
-						readOnly={readOnly}
 						limit={"xSmall"}
 					/>
 				</div>
@@ -82,7 +75,6 @@ export default function SocialHistoryForm({ value, onChange, readOnly, className
 						label="Other Substance Use"
 						value={value.otherSubstanceUse}
 						onChange={(x) => set("otherSubstanceUse", x)}
-						readOnly={readOnly}
 						multiline
 						limit={"medium"}
 						showCounter
