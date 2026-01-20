@@ -3,6 +3,7 @@
 import FormCard from "./FormCard";
 import FormField from "./FormField";
 import { makeEmptyMrpToolData, type MrpToolData } from "../../../lib/types/studentSubmission";
+import { MRP_TOOL_DATA_FIELDS } from "../hooks/constants.ts";
 
 type Props = {
 	value?: MrpToolData;
@@ -19,26 +20,29 @@ export default function MrpToolDataForm({ value, onChange, className = "" }: Pro
 		onChange(isAllEmpty ? makeEmptyMrpToolData() : merged);
 	};
 
+	const CONSTANTS = MRP_TOOL_DATA_FIELDS;
+	const FIELDS = CONSTANTS.fields;
+
 	return (
-		<FormCard title="Patient Orientation" className={className}>
+		<FormCard title={CONSTANTS.title} className={className}>
 			<div className="flex flex-col gap-3">
 				<FormField
-					label="Patient Scenario"
+					label={FIELDS.patientScenario.label}
 					value={v.patientScenario}
 					onChange={(x) => set("patientScenario", x)}
-					placeholder={"Review the patient scenario..."}
-					limit={"medium"}
-					showCounter
-					multiline
+					placeholder={FIELDS.patientScenario.placeholder}
+					limit={FIELDS.patientScenario.limit}
+					showCounter={FIELDS.patientScenario.showCounter}
+					multiline={FIELDS.patientScenario.multiline}
 				/>
 				<FormField
-					label="Encounter Setting"
+					label={FIELDS.encounterSetting.label}
 					value={v.encounterSetting}
 					onChange={(x) => set("encounterSetting", x)}
-					placeholder={"e.g., Ambulatory clinic, Hospital inpatient, etc..."}
-					limit={"medium"}
-					showCounter
-					multiline
+					placeholder={FIELDS.encounterSetting.placeholder}
+					limit={FIELDS.encounterSetting.limit}
+					showCounter={FIELDS.encounterSetting.showCounter}
+					multiline={FIELDS.encounterSetting.multiline}
 				/>
 			</div>
 		</FormCard>

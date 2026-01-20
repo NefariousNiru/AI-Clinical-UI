@@ -3,6 +3,7 @@
 import FormCard from "./FormCard";
 import FormField from "./FormField";
 import type { SocialHistory } from "../../../lib/types/studentSubmission";
+import { SOCIAL_HISTORY_FIELDS } from "../hooks/constants.ts";
 
 type Props = {
 	value: SocialHistory;
@@ -14,70 +15,73 @@ export default function SocialHistoryForm({ value, onChange, className = "" }: P
 	const set = <K extends keyof SocialHistory>(k: K, next?: SocialHistory[K]) =>
 		onChange({ ...value, [k]: next });
 
+	const CONSTANTS = SOCIAL_HISTORY_FIELDS;
+	const FIELDS = CONSTANTS.fields;
+
 	return (
-		<FormCard title="Social History" className={className}>
+		<FormCard title={CONSTANTS.title} className={className}>
 			<div className="flex flex-wrap gap-3">
 				<div className="min-w-[240px] flex-1">
 					<FormField
-						label="Occupation / Occupation related notes"
+						label={FIELDS.occupation.label}
 						value={value.occupation}
 						onChange={(x) => set("occupation", x)}
-						multiline
-						limit={"small"}
-						showCounter
+						multiline={FIELDS.occupation.multiline}
+						limit={FIELDS.occupation.limit}
+						showCounter={FIELDS.occupation.showCounter}
 					/>
 				</div>
 
 				<div className="min-w-[240px] flex-1">
 					<FormField
-						label="Support System"
+						label={FIELDS.supportSystem.label}
 						value={value.supportSystem}
 						onChange={(x) => set("supportSystem", x)}
-						multiline
-						limit={"small"}
-						showCounter
+						limit={FIELDS.supportSystem.limit}
+						showCounter={FIELDS.supportSystem.showCounter}
+						multiline={FIELDS.supportSystem.multiline}
 					/>
 				</div>
 
 				{/* Drugs - force 2 per row on large screens */}
 				<div className="basis-full grid grid-cols-1 gap-3 lg:grid-cols-2">
 					<FormField
-						label="Tobacco Use"
+						label={FIELDS.tobaccoUse.label}
 						value={value.tobaccoUse}
 						onChange={(x) => set("tobaccoUse", x)}
-						limit={"xSmall"}
+						limit={FIELDS.tobaccoUse.limit}
 					/>
 
 					<FormField
-						label="Alcohol Use"
+						label={FIELDS.alcoholUse.label}
 						value={value.alcoholUse}
 						onChange={(x) => set("alcoholUse", x)}
-						limit={"xSmall"}
+						limit={FIELDS.alcoholUse.limit}
 					/>
 
 					<FormField
-						label="THC Use"
+						label={FIELDS.thcUse.label}
 						value={value.thcUse}
 						onChange={(x) => set("thcUse", x)}
-						limit={"xSmall"}
+						limit={FIELDS.thcUse.limit}
 					/>
 
 					<FormField
-						label="Cocaine Use"
+						label={FIELDS.cocaineUse.label}
 						value={value.cocaineUse}
 						onChange={(x) => set("cocaineUse", x)}
-						limit={"xSmall"}
+						limit={FIELDS.cocaineUse.limit}
 					/>
 				</div>
 
 				<div className="basis-full">
 					<FormField
-						label="Other Substance Use"
+						label={FIELDS.otherSubstanceUse.label}
 						value={value.otherSubstanceUse}
 						onChange={(x) => set("otherSubstanceUse", x)}
-						multiline
-						limit={"medium"}
-						showCounter
+						limit={FIELDS.otherSubstanceUse.limit}
+						showCounter={FIELDS.otherSubstanceUse.showCounter}
+						multiline={FIELDS.otherSubstanceUse.multiline}
 					/>
 				</div>
 			</div>

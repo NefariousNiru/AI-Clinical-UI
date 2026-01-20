@@ -12,6 +12,30 @@ import type {
 } from "../../../lib/types/studentSubmission.ts";
 import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks.ts";
 
+// ----------------- Weekly Workup Constants -----------------
+
+export const STATUS_HELP: Array<{
+	status: WeeklyWorkupStudentStatus;
+	label: string;
+	msg: string;
+}> = [
+	{ status: "locked", label: "Locked", msg: "Unlocks on scheduled start time." },
+	{ status: "available", label: "Available", msg: "Open - you can start working." },
+	{
+		status: "in_progress",
+		label: "In Progress",
+		msg: "Continue where you left; Auto submits on deadline.",
+	},
+	{ status: "submitted", label: "Submitted", msg: "Edits allowed until deadline." },
+	{ status: "grading", label: "Grading", msg: "Submission is being graded." },
+	{ status: "not_submitted", label: "Not Submitted", msg: "Past due. Contact Admin/Instructor." },
+	{ status: "feedback_available", label: "Feedback Available", msg: "View graded feedback." },
+];
+
+export const COURSE = "PHRM 5560: Integrated Patient Cases";
+
+// ----------------- MRP Tool Constants ----------------------
+
 export const totalSteps = 7;
 
 export type MrpStepNo = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -21,36 +45,6 @@ export type MrpStepMeta = {
 	shortTitle: string;
 	longTitle: string;
 };
-
-type FieldSpec = {
-	label?: string;
-	placeholder?: string;
-	multiline?: boolean;
-	limit?: TextLimit;
-	maxChars?: number;
-	showCounter?: boolean;
-};
-
-type FormFields<T> = {
-	title: string;
-	fields: Record<keyof T & string, FieldSpec>;
-};
-
-export const STATUS_HELP: Array<{
-	status: WeeklyWorkupStudentStatus;
-	label: string;
-	msg: string;
-}> = [
-	{ status: "locked", label: "Locked", msg: "Unlocks on scheduled time." },
-	{ status: "available", label: "Available", msg: "Open - you can start." },
-	{ status: "in_progress", label: "In Progress", msg: "Continue where you left." },
-	{ status: "submitted", label: "Submitted", msg: "Edits allowed until deadline." },
-	{ status: "grading", label: "Grading", msg: "Submission is being graded." },
-	{ status: "not_submitted", label: "Not Submitted", msg: "Past due. Contact Admin." },
-	{ status: "feedback_available", label: "Feedback Available", msg: "View graded feedback." },
-];
-
-export const COURSE = "PHRM 5560: Integrated Patient Cases";
 
 export const MRP_STEPS: MrpStepMeta[] = [
 	{ step: 1, shortTitle: "Orient", longTitle: "Orient Yourself to the Patient" },
@@ -70,6 +64,45 @@ export const MRP_STEPS: MrpStepMeta[] = [
 	{ step: 7, shortTitle: "HCP List", longTitle: "Identify & Assess Health Care Problems" },
 ];
 
+//-------------------------- Tabs --------------------------
+
+export type TabKey = "patient" | "labs" | "meds" | "drp";
+
+type TabItem = {
+	value: TabKey;
+	label: string;
+};
+
+export const STANDARD_TABS: TabItem[] = [
+	{ value: "patient", label: "Patient Info" },
+	{ value: "labs", label: "Labs & Progress" },
+	{ value: "meds", label: "Medications" },
+	{ value: "drp", label: "Health Care Problems" },
+] as const;
+
+// -------------------------- Forms -------------------------
+
+type FieldSpec = {
+	label: string;
+	placeholder?: string;
+	multiline?: boolean;
+	limit?: TextLimit;
+	maxChars?: number;
+	showCounter?: boolean;
+};
+
+type FormFields<T> = {
+	title: string;
+	fields: Record<keyof T & string, FieldSpec>;
+};
+
+export const REFLECTION_ANSWER_FIELDS = {
+	multiline: true,
+	limit: "large",
+	showCounter: true,
+	placeholder: "Type your answer...",
+};
+
 export const MRP_TOOL_DATA_FIELDS: FormFields<MrpToolData> = {
 	title: "Patient Orientation",
 	fields: {
@@ -86,12 +119,6 @@ export const MRP_TOOL_DATA_FIELDS: FormFields<MrpToolData> = {
 			limit: "medium",
 			showCounter: true,
 			placeholder: "e.g., Ambulatory clinic, Hospital inpatient, etc...",
-		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
 		},
 	},
 };
@@ -148,12 +175,6 @@ export const PATIENT_DEMOGRAPHICS_FIELDS: FormFields<PatientDemographics> = {
 			limit: "medium",
 			showCounter: true,
 		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
-		},
 	},
 };
 
@@ -180,12 +201,6 @@ export const MEDICAL_HISTORY_FIELDS: FormFields<MedicalHistory> = {
 			limit: "medium",
 			showCounter: true,
 		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
-		},
 	},
 };
 
@@ -205,12 +220,6 @@ export const LAB_RESULT_FIELDS: FormFields<LabResult> = {
 			limit: "medium",
 			showCounter: true,
 			placeholder: "e.g., SCr (Serum Creatinine), eGFR, CrCl, assessment of renal function",
-		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
 		},
 	},
 };
@@ -248,12 +257,6 @@ export const PROGRESS_NOTES_FIELDS: FormFields<ProgressNotes> = {
 			limit: "medium",
 			showCounter: true,
 		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
-		},
 	},
 };
 
@@ -283,12 +286,6 @@ export const MEDICATION_LIST_FIELDS: FormFields<MedicationList> = {
 			multiline: true,
 			limit: "medium",
 			showCounter: true,
-		},
-		reflectionAnswers: {
-			multiline: true,
-			limit: "large",
-			showCounter: true,
-			placeholder: "Type your answer...",
 		},
 	},
 };

@@ -4,11 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MrpFormData, StudentSubmissionQuery } from "../../../lib/types/studentSubmission";
 import { getStudentMrpFormData } from "../../../lib/api/shared/student";
 import { MRP_STEPS, type MrpStepNo } from "./constants";
-import {
-	type SaveOptions,
-	type SubmissionEditorApi,
-	useStudentSubmissionEditor,
-} from "./useStudentSubmissionEditor.ts";
+import { type SubmissionEditorApi, useStudentSubmissionEditor, } from "./useStudentSubmissionEditor.ts";
 
 /* ----------------------------- Types -------------------------------------- */
 
@@ -49,7 +45,6 @@ export type MrpToolApi = SubmissionEditorApi & {
 function hasAnyMeaningfulValue(v: unknown): boolean {
 	if (v == null) return false;
 	if (typeof v === "string") return v.trim().length > 0;
-	if (typeof v === "boolean") return true;
 	if (typeof v === "number") return true;
 	if (Array.isArray(v)) return v.some(hasAnyMeaningfulValue);
 	if (typeof v === "object") return Object.values(v as any).some(hasAnyMeaningfulValue);
@@ -280,7 +275,8 @@ export function useMrpToolSubmissionEditor(q: StudentSubmissionQuery): MrpToolAp
 	 * Note: advancement is not gated here - the UI should enforce `canAdvanceFromCurrentStep`.
 	 */
 	const goNext = useCallback(async () => {
-		await editor.saveIfDirty({ isSubmit: false } satisfies SaveOptions);
+		const res = await editor.saveIfDirty({ isSubmit: false });
+		if (res === "FAILED") return;
 		setStep((s) => (s < 7 ? ((s + 1) as MrpStepNo) : s));
 	}, [editor]);
 

@@ -1,58 +1,22 @@
 // file: src/pages/student/submission/edit/standard/StandardSubmissionPage.tsx
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { StudentSubmissionState } from "../../WeeklyWorkup";
-import Tabs from "../../../../../components/Tabs";
-import PatientInformationTab from "./PatientInformationTab";
-import CurrentMedicationTab from "./CurrentMedicationTab";
-import HealthCareProblemTab from "./HealthCareProblemTab";
-import LabsAndProgressTab from "./LabsAndProgressTab";
 import { Download, Save } from "lucide-react";
 import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
 import { useStandardSubmissionEditor } from "../../../hooks/useStandardSubmissionEditor.ts";
 import { useSubmitDownloadDOCX } from "../../../hooks/useSubmitDownloadDOCX.ts";
-
-type TabKey = "patient" | "labs" | "meds" | "drp";
-
-function TabPanel({
-	active,
-	id,
-	label,
-	children,
-}: {
-	active: boolean;
-	id: string;
-	label: string;
-	children: ReactNode;
-}) {
-	return (
-		<section
-			id={id}
-			role="tabpanel"
-			aria-label={label}
-			aria-hidden={!active}
-			hidden={!active}
-			className={active ? "block" : "hidden"}
-		>
-			{children}
-		</section>
-	);
-}
+import { TabLayout } from "../../TabLayout.tsx";
+import PatientInformationTab from "./PatientInformationTab.tsx";
+import LabsAndProgressTab from "./LabsAndProgressTab.tsx";
+import CurrentMedicationTab from "./CurrentMedicationTab.tsx";
+import HealthCareProblemTab from "./HealthCareProblemTab.tsx";
+import type { TabKey } from "../../../hooks/constants.ts";
 
 export function StandardSubmissionPage({
 	weeklyWorkupId,
 	studentEnrollmentId,
 }: StudentSubmissionState) {
-	const tabItems = useMemo(
-		() => [
-			{ value: "patient", label: "Patient Info" },
-			{ value: "labs", label: "Labs & Progress" },
-			{ value: "meds", label: "Medications" },
-			{ value: "drp", label: "Health Care Problems" },
-		],
-		[],
-	);
-
 	const [tab, setTab] = useState<TabKey>("patient");
 
 	// Shared editor core (load + hydrate + dirty tracking + save)
@@ -69,8 +33,35 @@ export function StandardSubmissionPage({
 	 * save with isSubmit=false as this is a save action not a submit action
 	 */
 	const onSave = useCallback(async () => {
-		await editor.saveIfDirty({ isSubmit: false });
+		const res = await editor.saveIfDirty({ isSubmit: false });
+		if (res === "FAILED") return;
 	}, [editor]);
+
+	// Panels for each Tab
+	const panels = useMemo(
+		() => ({
+			patient: (
+				<PatientInformationTab
+					value={editor.patient.patientInfo}
+					onChange={(next) => editor.patient.setPatientInfo(next)}
+				/>
+			),
+			labs: (
+				<LabsAndProgressTab
+					value={editor.patient.patientInfo}
+					onChange={(next) => editor.patient.setPatientInfo(next)}
+				/>
+			),
+			meds: <CurrentMedicationTab patient={editor.patient} />,
+			drp: (
+				<HealthCareProblemTab
+					items={editor.studentDrpAnswers}
+					onChange={(next) => editor.setStudentDrpAnswers(next)}
+				/>
+			),
+		}),
+		[editor],
+	);
 
 	// Show a loading shell while submission is being fetched/hydrated.
 	if (editor.loading) {
@@ -133,41 +124,7 @@ export function StandardSubmissionPage({
 				</div>
 			)}
 
-			{/* Tabs row */}
-			<div className="mb-8">
-				<Tabs
-					value={tab}
-					onChange={(v) => setTab(v as TabKey)}
-					items={tabItems}
-					fullWidth
-				/>
-			</div>
-
-			{/* Panels - keep mounted so internal state is preserved across tab switches */}
-			<TabPanel active={tab === "patient"} id="tab-panel-patient" label="Patient Info">
-				<PatientInformationTab
-					value={editor.patient.patientInfo}
-					onChange={(next) => editor.patient.setPatientInfo(next)}
-				/>
-			</TabPanel>
-
-			<TabPanel active={tab === "labs"} id="tab-panel-labs" label="Labs & Progress">
-				<LabsAndProgressTab
-					value={editor.patient.patientInfo}
-					onChange={(next) => editor.patient.setPatientInfo(next)}
-				/>
-			</TabPanel>
-
-			<TabPanel active={tab === "meds"} id="tab-panel-meds" label="Medications">
-				<CurrentMedicationTab patient={editor.patient} />
-			</TabPanel>
-
-			<TabPanel active={tab === "drp"} id="tab-panel-drp" label="Health Care Problems">
-				<HealthCareProblemTab
-					items={editor.studentDrpAnswers}
-					onChange={(next) => editor.setStudentDrpAnswers(next)}
-				/>
-			</TabPanel>
+			<TabLayout tab={tab} setTab={setTab} renderPanels={panels} />
 
 			<div className="mb-5" />
 		</div>

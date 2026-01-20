@@ -6,7 +6,7 @@ import { useStudentWeeks } from "./hooks/studentWeeks";
 import type { WeeklyWorkupStudent, WeeklyWorkupStudentStatus } from "../../lib/types/studentWeeks";
 import { titleizeCase, unixToIsoDate } from "../../lib/utils/functions";
 import { useNavigate } from "react-router-dom";
-import { STATUS_HELP } from "./hooks/constants.ts";
+import { COURSE, STATUS_HELP } from "./hooks/constants.ts";
 import { STUDENT_WORKUP } from "../../routes.ts";
 
 type StatusCfg = {
@@ -73,12 +73,6 @@ function cx(...xs: Array<string | false | null | undefined>) {
 	return xs.filter(Boolean).join(" ");
 }
 
-function formatUnixShortDate(unixSeconds: number): string {
-	const iso = unixToIsoDate(unixSeconds);
-	const d = new Date(iso);
-	return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
 function StatusPill({ status }: { status: WeeklyWorkupStudent["status"] }) {
 	return (
 		<span
@@ -113,8 +107,8 @@ function DateItem({
 }
 
 function WorkupDates({ start, end }: { start: number; end: number }) {
-	const startLabel = formatUnixShortDate(start);
-	const endLabel = formatUnixShortDate(end);
+	const startLabel = unixToIsoDate(start);
+	const endLabel = unixToIsoDate(end);
 	return (
 		<div className="flex items-center gap-4 text-xs text-muted">
 			<DateItem icon="start" label={startLabel} ariaLabel={`Start: ${startLabel}`} />
@@ -223,15 +217,12 @@ function WorkupActions({
 }
 
 function WorkupRow({ w, enrollmentId }: { w: WeeklyWorkupStudent; enrollmentId: string }) {
-	const disabled = isWorkupDisabled(w.status);
-
 	return (
 		<div
 			className={cx(
 				"w-full rounded-xl border px-4 py-3",
 				uiConfig(w.status).border,
 				uiConfig(w.status).cardBg,
-				disabled && "opacity-60",
 				"grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,420px)_240px_auto] sm:items-center sm:gap-4",
 			)}
 		>
@@ -292,7 +283,7 @@ export default function WeeklyWorkupList() {
 	return (
 		<div className="mx-auto w-full max-w-7xl">
 			<div className="mb-5">
-				<h1 className="text-xl font-semibold text-primary">My Workups</h1>
+				<h1 className="text-xl font-semibold text-primary">{COURSE}</h1>
 				<p className="mt-1 text-sm text-muted">
 					Complete patient case workups and receive AI-powered feedback
 				</p>

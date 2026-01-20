@@ -18,7 +18,7 @@ import { getStudentSubmission, saveStudentSubmission } from "../../../lib/api/sh
 /* ----------------------------- Public Types -------------------------------- */
 
 export type SaveOptions = { isSubmit: boolean };
-
+export type SaveResult = "SKIPPED_NOT_DIRTY" | "SAVED" | "FAILED";
 export type PatientInfoFormController = {
 	patientInfo: PatientInfo;
 	setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfo>>;
@@ -83,7 +83,7 @@ export type SubmissionEditorApi = {
 
 	// actions
 	refresh: () => Promise<void>;
-	saveIfDirty: (opts: SaveOptions) => Promise<boolean>;
+	saveIfDirty: (opts: SaveOptions) => Promise<SaveResult>;
 };
 
 /* ----------------------------- Small utilities ----------------------------- */
@@ -502,28 +502,28 @@ export function useStudentSubmissionEditor(
 	 * - Uses backend response to refresh the dirty snapshot (backend is source of truth).
 	 */
 	const saveIfDirty = useCallback(
-		async (saveOpts: SaveOptions) => {
-			if (saving) return false;
+		async (saveOpts: SaveOptions): Promise<SaveResult> => {
+			if (saving) return "FAILED";
 
 			// Fast path: avoid write if nothing changed since last backend snapshot.
 			if (lastSavedSnapshotRef.current && lastSavedSnapshotRef.current === currentSnapshot)
-				return false;
+				return "SKIPPED_NOT_DIRTY";
 
 			setSaving(true);
 			setError(null);
 
 			try {
 				const payloadForBackend = toBackendPayload(payload);
-
+				console.log(saveOpts.isSubmit);
 				// Same endpoint for both flows. `isMrp` is a UI concern, not a save concern.
 				const saved = await saveStudentSubmission(q, saveOpts.isSubmit, payloadForBackend);
 
 				// Snapshot reflects backend source-of-truth.
 				lastSavedSnapshotRef.current = snapshotForDirtyDetection(saved);
-				return true;
+				return "SAVED";
 			} catch (e: any) {
 				setError(e?.message ?? "Failed to save submission");
-				return false;
+				return "FAILED";
 			} finally {
 				setSaving(false);
 			}

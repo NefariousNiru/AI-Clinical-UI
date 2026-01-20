@@ -52,8 +52,8 @@ export function useSubmitDownloadDOCX(editor: SubmissionEditorApi): SubmitDownlo
 		setDownloading(true);
 		try {
 			if (editor.isDirty) {
-				const ok = await editor.saveIfDirty({ isSubmit: true });
-				if (!ok) return; // editor.error is set by useStudentSubmissionEditor.ts
+				const res = await editor.saveIfDirty({ isSubmit: true });
+				if (res === "FAILED") return; // editor.error is set by useStudentSubmissionEditor.ts
 			}
 
 			await downloadDocx({
