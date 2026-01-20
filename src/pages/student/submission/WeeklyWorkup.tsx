@@ -2,10 +2,11 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useMrpToolStatus } from "../../shared/hooks/mrpToolStatus.ts";
-import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks";
+import type { ViewStatus, WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks";
 import MrpToolPage from "./edit/mrpTool/MrpToolPage.tsx";
 import { STUDENT } from "../../../routes.ts";
 import { StandardSubmissionPage } from "./edit/standard/StandardSubmissionPage.tsx";
+import { ViewSubmissionPage } from "./view/ViewSubmissionPage.tsx";
 
 type WeeklyWorkupRouteState = {
 	weeklyWorkupId: number;
@@ -35,7 +36,7 @@ function isEditable(status: WeeklyWorkupStudentStatus): boolean {
 	return status === "available" || status === "in_progress" || status === "submitted";
 }
 
-function isViewOnly(status: WeeklyWorkupStudentStatus): boolean {
+function isViewOnly(status: WeeklyWorkupStudentStatus): status is ViewStatus {
 	return status === "grading" || status === "feedback_available";
 }
 
@@ -54,17 +55,12 @@ export default function WeeklyWorkup() {
 
 	// The state.status is view only
 	if (isViewOnly(state.status)) {
-		// TODO: build viewer (grading / feedback available)
-		console.log("TODO: WeeklyWorkup viewer", { state });
 		return (
-			<div className="mx-auto w-full max-w-4xl">
-				<div className="rounded-xl border border-subtle app-bg p-5">
-					<div className="text-sm font-semibold text-primary">Viewer not implemented</div>
-					<div className="mt-1 text-sm text-muted">
-						This workup is in a view-only state ({state.status}).
-					</div>
-				</div>
-			</div>
+			<ViewSubmissionPage
+				weeklyWorkupId={state.weeklyWorkupId}
+				studentEnrollmentId={state.studentEnrollmentId}
+				status={state.status} // "grading" | "feedback_available"
+			/>
 		);
 	}
 

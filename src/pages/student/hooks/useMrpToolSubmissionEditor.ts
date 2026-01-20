@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MrpFormData, StudentSubmissionQuery } from "../../../lib/types/studentSubmission";
 import { getStudentMrpFormData } from "../../../lib/api/shared/student";
 import { MRP_STEPS, type MrpStepNo } from "./constants";
-import { type SubmissionEditorApi, useStudentSubmissionEditor, } from "./useStudentSubmissionEditor.ts";
+import {
+	type SubmissionEditorApi,
+	useStudentSubmissionEditor,
+} from "./useStudentSubmissionEditor.ts";
 
 /* ----------------------------- Types -------------------------------------- */
 
@@ -42,7 +45,7 @@ export type MrpToolApi = SubmissionEditorApi & {
  * - Numbers/booleans count as meaningful if present (including 0 / false).
  * - Arrays/objects are meaningful if any nested value is meaningful.
  */
-function hasAnyMeaningfulValue(v: unknown): boolean {
+export function hasAnyMeaningfulValue(v: unknown): boolean {
 	if (v == null) return false;
 	if (typeof v === "string") return v.trim().length > 0;
 	if (typeof v === "number") return true;

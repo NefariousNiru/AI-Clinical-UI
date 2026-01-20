@@ -17,6 +17,12 @@ export const WeeklyWorkupStudentStatusSchema = z.enum([
 ]);
 export type WeeklyWorkupStudentStatus = z.infer<typeof WeeklyWorkupStudentStatusSchema>;
 
+export const ViewStatusSchema = WeeklyWorkupStudentStatusSchema.extract([
+	"grading",
+	"feedback_available",
+]);
+export type ViewStatus = z.infer<typeof ViewStatusSchema>; // same union
+
 export const WeeklyWorkupStudentSchema = z.object({
 	id: z.number().int().nonnegative(),
 	weekNo: z.number().int().positive(),
