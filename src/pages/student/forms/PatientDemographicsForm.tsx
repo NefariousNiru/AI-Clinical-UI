@@ -3,6 +3,7 @@
 import FormCard from "./FormCard";
 import FormField from "./FormField";
 import type { PatientDemographics } from "../../../lib/types/studentSubmission";
+import { PATIENT_DEMOGRAPHICS_FIELDS } from "../hooks/constants.ts";
 
 type Props = {
 	value: PatientDemographics;
@@ -14,95 +15,98 @@ export default function PatientDemographicsForm({ value, onChange, className = "
 	const set = <K extends keyof PatientDemographics>(k: K, next?: PatientDemographics[K]) =>
 		onChange({ ...value, [k]: next });
 
+	const CONSTANTS = PATIENT_DEMOGRAPHICS_FIELDS;
+	const FIELDS = CONSTANTS.fields;
+
 	return (
-		<FormCard title="Patient Demographics" className={className}>
+		<FormCard title={CONSTANTS.title} className={className}>
 			<div className="flex flex-wrap gap-3">
 				<div className="min-w-[260px] flex-1">
 					<FormField
-						label="Name"
+						label={FIELDS.name.label}
 						value={value.name}
 						onChange={(x) => set("name", x)}
-						limit={"small"}
+						limit={FIELDS.name.limit}
 					/>
 				</div>
 				<div className="min-w-[200px] flex-1">
 					<FormField
-						label="Age/Dob"
+						label={FIELDS.ageDob.label}
 						value={value.ageDob}
 						onChange={(x) => set("ageDob", x)}
-						limit={"xSmall"}
+						limit={FIELDS.ageDob.limit}
 					/>
 				</div>
 				<div className="min-w-[160px] flex-1">
 					<FormField
-						label="Sex"
+						label={FIELDS.sex.label}
 						value={value.sex}
 						onChange={(x) => set("sex", x)}
-						limit={"xSmall"}
+						limit={FIELDS.sex.limit}
 					/>
 				</div>
 				<div className="min-w-[160px] flex-1">
 					<FormField
-						label="Height"
+						label={FIELDS.height.label}
 						value={value.height}
 						onChange={(x) => set("height", x)}
-						placeholder={"Use units (cm, foot)"}
-						limit={"xSmall"}
+						placeholder={FIELDS.height.placeholder}
+						limit={FIELDS.height.limit}
 					/>
 				</div>
 				<div className="min-w-[160px] flex-1">
 					<FormField
-						label="Weight"
+						label={FIELDS.weight.label}
 						value={value.weight}
 						onChange={(x) => set("weight", x)}
-						placeholder={"Use units (kg, lbs)"}
-						limit={"xSmall"}
+						placeholder={FIELDS.weight.placeholder}
+						limit={FIELDS.weight.limit}
 					/>
 				</div>
 				<div className="min-w-[160px] flex-1">
 					<FormField
-						label="BMI"
+						label={FIELDS.bmi.label}
 						value={value.bmi}
 						onChange={(x) => set("bmi", x)}
-						limit={"xSmall"}
+						limit={FIELDS.bmi.limit}
 					/>
 				</div>
 				<div className="min-w-[220px] flex-1">
 					<FormField
-						label="Admit / Visit Date"
+						label={FIELDS.admitVisitDate.label}
 						value={value.admitVisitDate}
 						onChange={(x) => set("admitVisitDate", x)}
-						limit={"xSmall"}
+						limit={FIELDS.admitVisitDate.limit}
 					/>
 				</div>
 				<div className="min-w-[220px] flex-1">
 					<FormField
-						label="Insurance"
+						label={FIELDS.insurance.label}
 						value={value.insurance}
 						onChange={(x) => set("insurance", x)}
-						limit={"small"}
+						limit={FIELDS.insurance.limit}
 					/>
 				</div>
 
 				<div className="basis-full">
 					<FormField
-						label="Vital Signs"
+						label={FIELDS.vitalSigns.label}
 						value={value.vitalSigns}
 						onChange={(x) => set("vitalSigns", x)}
-						placeholder={"e.g., BP, HR, RR, Temp, O2 Sat (SpO2)..."}
-						multiline
-						limit={"small"}
-						showCounter
+						placeholder={FIELDS.vitalSigns.placeholder}
+						limit={FIELDS.vitalSigns.limit}
+						showCounter={FIELDS.vitalSigns.showCounter}
+						multiline={FIELDS.vitalSigns.multiline}
 					/>
 				</div>
 				<div className="basis-full">
 					<FormField
-						label="Allergies"
+						label={FIELDS.allergies.label}
 						value={value.allergies}
 						onChange={(x) => set("allergies", x)}
-						multiline
-						limit={"medium"}
-						showCounter
+						limit={FIELDS.allergies.limit}
+						showCounter={FIELDS.allergies.showCounter}
+						multiline={FIELDS.allergies.multiline}
 					/>
 				</div>
 			</div>

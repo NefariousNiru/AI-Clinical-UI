@@ -4,6 +4,7 @@ import type { TextLimit } from "../forms/FormField.tsx";
 import type {
 	LabResult,
 	MedicalHistory,
+	MedicationHistory,
 	MedicationList,
 	MrpToolData,
 	PatientDemographics,
@@ -11,6 +12,7 @@ import type {
 	SocialHistory,
 } from "../../../lib/types/studentSubmission.ts";
 import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks.ts";
+import type { DrugRelatedProblem } from "../../../lib/types/feedback.ts";
 
 // ----------------- Weekly Workup Constants -----------------
 
@@ -200,6 +202,7 @@ export const MEDICAL_HISTORY_FIELDS: FormFields<MedicalHistory> = {
 			multiline: true,
 			limit: "medium",
 			showCounter: true,
+			placeholder: "List all relevant family illness history",
 		},
 	},
 };
@@ -264,7 +267,7 @@ export const MEDICATION_LIST_FIELDS: FormFields<MedicationList> = {
 	title: "Medications & History",
 	fields: {
 		medications: {
-			label: "Current Medications",
+			label: "", // SEE DRUG_SCHEDULE_FIELDS
 		},
 		sup: { label: "SUP" },
 		vtePpx: { label: "VTE DDX" },
@@ -287,5 +290,51 @@ export const MEDICATION_LIST_FIELDS: FormFields<MedicationList> = {
 			limit: "medium",
 			showCounter: true,
 		},
+	},
+};
+
+export const MEDICATION_HISTORY_FIELDS: FormFields<MedicationHistory> = {
+	title: "",
+	fields: {
+		scheduledStartStopDate: {
+			label: "Drug & Schedule (Start / Stop) Date",
+			limit: "small",
+		},
+		prn: {
+			label: "PRNs (received doses)",
+			limit: "small",
+		},
+	},
+};
+
+export const DRP_INFO_TEXT =
+	"A DRP (Drug-Related Problem) is anything involving drug therapy that interferes with (or has the potential to interfere with) the desired outcome for a patient. Some types of DRPs include: untreated conditions, unnecessary drug therapy, requires different drug therapy, dosage too low/high, adverse drug reaction, drug interaction, nonadherence.";
+
+export const HEALTH_CARE_PROBLEM_FIELDS: FormFields<DrugRelatedProblem> = {
+	title: "",
+	fields: {
+		isPriority: {
+			label: "Mark as priority problem",
+		},
+		name: { label: "Problem Name", placeholder: "Type at least 3 characters..." },
+		identification: {
+			label: "Identification",
+			multiline: true,
+			limit: "large",
+			showCounter: true,
+		},
+		explanation: {
+			label: "Explanation",
+			multiline: true,
+			limit: "large",
+			showCounter: true,
+		},
+		planRecommendation: {
+			label: "Plan / Recommendation",
+			multiline: true,
+			limit: "large",
+			showCounter: true,
+		},
+		monitoring: { label: "Monitoring", multiline: true, limit: "large", showCounter: true },
 	},
 };

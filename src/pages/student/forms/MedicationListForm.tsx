@@ -5,6 +5,7 @@ import FormCard from "./FormCard";
 import FormField from "./FormField";
 import type { MedicationHistory, MedicationList } from "../../../lib/types/studentSubmission";
 import { makeEmptyMedication } from "../hooks/useStudentSubmissionEditor.ts";
+import { MEDICATION_HISTORY_FIELDS, MEDICATION_LIST_FIELDS } from "../hooks/constants.ts";
 
 type Props = {
 	value: MedicationList;
@@ -59,16 +60,19 @@ export default function MedicationListForm({
 		});
 	// ---------------------------------------------------------------------------------------------
 
+	const CONSTANTS = MEDICATION_LIST_FIELDS;
+	const FIELDS = CONSTANTS.fields;
+
 	return (
-		<FormCard title="Medications & History" className={className}>
+		<FormCard title={CONSTANTS.title} className={className}>
 			<div className="flex flex-col gap-6">
 				<div className="grid grid-cols-1 gap-3">
 					<div className="hidden md:grid md:grid-cols-2 md:gap-6">
 						<div className="text-primary text-xs font-medium">
-							Drug & Schedule (Start / Stop) Date
+							{MEDICATION_HISTORY_FIELDS.fields.scheduledStartStopDate.label}
 						</div>
 						<div className="text-primary text-xs font-medium">
-							PRNs (received doses)
+							{MEDICATION_HISTORY_FIELDS.fields.prn.label}
 						</div>
 					</div>
 
@@ -80,27 +84,33 @@ export default function MedicationListForm({
 							>
 								{/* Mobile labels (since headers are hidden on mobile) */}
 								<div className="md:hidden text-primary text-xs font-medium">
-									Drug & Schedule (Start / Stop) Date
+									{MEDICATION_HISTORY_FIELDS.fields.scheduledStartStopDate.label}
 								</div>
 								<FormField
-									label="Drug & Schedule (Start / Stop) Date"
+									label={
+										MEDICATION_HISTORY_FIELDS.fields.scheduledStartStopDate
+											.label
+									}
 									hideLabel
 									value={m.scheduledStartStopDate}
 									onChange={(x) =>
 										updateMedicationAt(idx, { scheduledStartStopDate: x })
 									}
-									limit={"small"}
+									limit={
+										MEDICATION_HISTORY_FIELDS.fields.scheduledStartStopDate
+											.limit
+									}
 								/>
 
 								<div className="md:hidden text-primary text-xs font-medium">
-									PRNs (received doses)
+									{MEDICATION_HISTORY_FIELDS.fields.prn.label}
 								</div>
 								<FormField
-									label="PRNs (received doses)"
+									label={MEDICATION_HISTORY_FIELDS.fields.prn.label}
 									hideLabel
 									value={m.prn}
 									onChange={(x) => updateMedicationAt(idx, { prn: x })}
-									limit={"small"}
+									limit={MEDICATION_HISTORY_FIELDS.fields.prn.limit}
 								/>
 
 								<button
@@ -135,7 +145,7 @@ export default function MedicationListForm({
 								checked={Boolean(value.sup)}
 								onChange={() => toggle("sup")}
 							/>
-							<span>SUP</span>
+							<span>{FIELDS.sup.label}</span>
 						</label>
 
 						<label className="flex items-center gap-2 text-primary text-sm">
@@ -144,7 +154,7 @@ export default function MedicationListForm({
 								checked={Boolean(value.vtePpx)}
 								onChange={() => toggle("vtePpx")}
 							/>
-							<span>VTE DDX</span>
+							<span>{FIELDS.vtePpx.label}</span>
 						</label>
 
 						<label className="flex items-center gap-2 text-primary text-sm">
@@ -153,36 +163,36 @@ export default function MedicationListForm({
 								checked={Boolean(value.bowelRegimen)}
 								onChange={() => toggle("bowelRegimen")}
 							/>
-							<span>Bowel Regimen</span>
+							<span>{FIELDS.bowelRegimen.label}</span>
 						</label>
 					</div>
 
 					<FormField
-						label="If hospitalized, IV access, lines, tubes:"
+						label={FIELDS.ivAccessLineTubes.label}
 						value={value.ivAccessLineTubes}
 						onChange={(x) => set("ivAccessLineTubes", x)}
-						multiline
-						limit={"small"}
-						showCounter
+						limit={FIELDS.ivAccessLineTubes.limit}
+						showCounter={FIELDS.ivAccessLineTubes.showCounter}
+						multiline={FIELDS.ivAccessLineTubes.multiline}
 					/>
 				</div>
 
 				<FormField
-					label="OTC / CAM (Over the counter / Complementary Alternative Medicine)"
+					label={FIELDS.otcCam.label}
 					value={value.otcCam}
 					onChange={(x) => set("otcCam", x)}
-					multiline
-					limit={"medium"}
-					showCounter
+					limit={FIELDS.otcCam.limit}
+					showCounter={FIELDS.otcCam.showCounter}
+					multiline={FIELDS.otcCam.multiline}
 				/>
 
 				<FormField
-					label="Medication Adherence / Refill History"
+					label={FIELDS.medicationAdherence.label}
 					value={value.medicationAdherence}
 					onChange={(x) => set("medicationAdherence", x)}
-					multiline
-					limit={"medium"}
-					showCounter
+					limit={FIELDS.medicationAdherence.limit}
+					showCounter={FIELDS.medicationAdherence.showCounter}
+					multiline={FIELDS.medicationAdherence.multiline}
 				/>
 			</div>
 		</FormCard>

@@ -3,6 +3,7 @@
 import FormCard from "./FormCard";
 import FormField from "./FormField";
 import type { MedicalHistory } from "../../../lib/types/studentSubmission";
+import { MEDICAL_HISTORY_FIELDS } from "../hooks/constants.ts";
 
 type Props = {
 	value: MedicalHistory;
@@ -14,34 +15,38 @@ export default function MedicalHistoryForm({ value, onChange, className = "" }: 
 	const set = <K extends keyof MedicalHistory>(k: K, next?: MedicalHistory[K]) =>
 		onChange({ ...value, [k]: next });
 
+	const CONSTANTS = MEDICAL_HISTORY_FIELDS;
+	const FIELDS = CONSTANTS.fields;
+
 	return (
-		<FormCard title="Problem List & Medical History" className={className}>
+		<FormCard title={CONSTANTS.title} className={className}>
 			<div className="flex flex-col gap-3">
 				<FormField
-					label="Problem List"
+					label={FIELDS.problemList.label}
 					value={value.problemList}
 					onChange={(x) => set("problemList", x)}
-					placeholder={"List all relevant current problems"}
-					multiline
-					limit={"medium"}
-					showCounter
+					placeholder={FIELDS.problemList.placeholder}
+					limit={FIELDS.problemList.limit}
+					showCounter={FIELDS.problemList.showCounter}
+					multiline={FIELDS.problemList.multiline}
 				/>
 				<FormField
-					label="Medical History"
+					label={FIELDS.pastMedicalHistory.label}
 					value={value.pastMedicalHistory}
 					onChange={(x) => set("pastMedicalHistory", x)}
-					placeholder={"List all relevant medical history"}
-					multiline
-					limit={"medium"}
-					showCounter
+					placeholder={FIELDS.pastMedicalHistory.placeholder}
+					limit={FIELDS.pastMedicalHistory.limit}
+					showCounter={FIELDS.pastMedicalHistory.showCounter}
+					multiline={FIELDS.pastMedicalHistory.multiline}
 				/>
 				<FormField
-					label="Family History"
+					label={FIELDS.familyHistory.label}
 					value={value.familyHistory}
 					onChange={(x) => set("familyHistory", x)}
-					multiline
-					limit={"medium"}
-					showCounter
+					limit={FIELDS.familyHistory.limit}
+					showCounter={FIELDS.familyHistory.showCounter}
+					multiline={FIELDS.familyHistory.multiline}
+					placeholder={FIELDS.familyHistory.placeholder}
 				/>
 			</div>
 		</FormCard>

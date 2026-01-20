@@ -6,6 +6,9 @@ import FormField from "./FormField";
 import type { StudentDrpAnswer } from "../../../lib/types/studentSubmission.ts";
 import { useDiseaseSearch } from "../hooks/diseaseSearch.ts";
 import { titleizeDiseaseName } from "../../../lib/utils/functions.ts";
+import { DRP_INFO_TEXT, HEALTH_CARE_PROBLEM_FIELDS } from "../hooks/constants.ts";
+
+const FIELDS = HEALTH_CARE_PROBLEM_FIELDS.fields;
 
 type Props = {
 	title?: string;
@@ -53,7 +56,7 @@ function PriorityToggle({
 					className={cx("h-4 w-4", disabled && "cursor-not-allowed")}
 				/>
 				<span className={cx("text-primary", disabled && "cursor-not-allowed")}>
-					Mark as priority problem
+					{FIELDS.isPriority.label}
 				</span>
 			</label>
 
@@ -232,9 +235,7 @@ export default function DRPForm({
 		});
 	}
 
-	const info =
-		helpText ??
-		"A DRP (Drug-Related Problem) is anything involving drug therapy that interferes with (or has the potential to interfere with) the desired outcome for a patient. Some types of DRPs include: untreated conditions, unnecessary drug therapy, requires different drug therapy, dosage too low/high, adverse drug reaction, drug interaction, nonadherence.";
+	const info = helpText ?? DRP_INFO_TEXT;
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -287,14 +288,14 @@ export default function DRPForm({
 									</div>
 
 									<div className="mt-5">
-										<label className="block text-xs font-semibold text-primary mb-1">
-											Problem Name
+										<label className="block text-xs font-medium text-primary mb-1">
+											{FIELDS.name.label}
 										</label>
 
 										<DiseaseAutocomplete
 											value={it.name}
 											onChange={(next) => setItem(idx, { name: next })}
-											placeholder="Type at least 3 characters..."
+											placeholder={FIELDS.name.placeholder}
 										/>
 									</div>
 
@@ -317,55 +318,55 @@ export default function DRPForm({
 							{isCollapsed ? null : (
 								<div className="p-4 flex flex-col gap-4">
 									<FormField
-										label="Identification"
+										label={FIELDS.identification.label}
 										value={it.identification ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
 												identification: (v ?? "").trim() || undefined,
 											})
 										}
-										multiline
-										limit="large"
-										showCounter
+										limit={FIELDS.identification.limit}
+										showCounter={FIELDS.identification.showCounter}
+										multiline={FIELDS.identification.multiline}
 									/>
 
 									<FormField
-										label="Explanation"
+										label={FIELDS.explanation.label}
 										value={it.explanation ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
 												explanation: (v ?? "").trim() || undefined,
 											})
 										}
-										multiline
-										limit="large"
-										showCounter
+										limit={FIELDS.explanation.limit}
+										showCounter={FIELDS.explanation.showCounter}
+										multiline={FIELDS.explanation.multiline}
 									/>
 
 									<FormField
-										label="Plan"
+										label={FIELDS.planRecommendation.label}
 										value={it.planRecommendation ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
 												planRecommendation: (v ?? "").trim() || undefined,
 											})
 										}
-										multiline
-										limit="large"
-										showCounter
+										limit={FIELDS.planRecommendation.limit}
+										showCounter={FIELDS.planRecommendation.showCounter}
+										multiline={FIELDS.planRecommendation.multiline}
 									/>
 
 									<FormField
-										label="Monitoring"
+										label={FIELDS.monitoring.label}
 										value={it.monitoring ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
 												monitoring: (v ?? "").trim() || undefined,
 											})
 										}
-										multiline
-										limit="large"
-										showCounter
+										limit={FIELDS.monitoring.limit}
+										showCounter={FIELDS.monitoring.showCounter}
+										multiline={FIELDS.monitoring.multiline}
 									/>
 
 									<div className="mt-3 flex items-center justify-end">
