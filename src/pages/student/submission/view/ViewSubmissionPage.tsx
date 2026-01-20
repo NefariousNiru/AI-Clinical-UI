@@ -8,12 +8,13 @@ import {
 } from "../../../../lib/types/studentSubmission.ts";
 import type { TabKey } from "../../hooks/constants.ts";
 import { getStudentSubmission } from "../../../../lib/api/shared/student.ts";
-import PatientInfoViewTab from "./PatientInfoViewTab.tsx";
+import PatientInformationViewTab from "./PatientInformationViewTab.tsx";
 import { BackToWeeklyWorkup } from "../BackToWeeklyWorkup.tsx";
 import { TabLayout } from "../TabLayout.tsx";
 import LabsAndProgressViewTab from "./LabsAndProgressViewTab.tsx";
-import MedicationsViewTab from "./MedicationsViewTab.tsx";
-import HealthCareProblemsViewTab from "./HealthCareProblemsViewTab.tsx";
+import CurrentMedicationsViewTab from "./CurrentMedicationsViewTab.tsx";
+import HealthCareProblemViewTab from "./HealthCareProblemViewTab.tsx";
+import type { ProblemFeedbackList } from "../../../../lib/types/feedback.ts";
 
 export function ViewSubmissionPage({
 	weeklyWorkupId,
@@ -32,11 +33,14 @@ export function ViewSubmissionPage({
 		makeEmptyStudentSubmissionPayload(),
 	);
 
+	// TODO Placeholder for FEEDBACK API
+	const [drpFeedback, setDrpFeedback] = useState<ProblemFeedbackList | null>(null);
+
 	useEffect(() => {
 		let cancelled = false;
 
 		async function run() {
-			if (status !== "grading") return;
+			if (status !== "grading" && status !== "feedback_available") return;
 
 			setLoading(true);
 			setError(null);
@@ -44,6 +48,13 @@ export function ViewSubmissionPage({
 			try {
 				const res = await getStudentSubmission({ weeklyWorkupId, studentEnrollmentId });
 				if (!cancelled) setPayload(res);
+
+				if (status === "feedback_available") {
+					// TODO: call feedback API and setDrpFeedback(...)
+					// const fb = await getProblemFeedback({ weeklyWorkupId, studentEnrollmentId });
+					// if (!cancelled) setDrpFeedback(fb);
+					if (!cancelled) setDrpFeedback(null);
+				}
 			} catch (e: any) {
 				if (!cancelled) setError(e?.message ?? "Failed to load submission.");
 			} finally {
@@ -59,32 +70,31 @@ export function ViewSubmissionPage({
 
 	const panels = useMemo(
 		() => ({
-			patient: <PatientInfoViewTab patientInfo={payload.patientInfo} />,
-			labs: <LabsAndProgressViewTab patientInfo={payload.patientInfo} />,
-			meds: <MedicationsViewTab patientInfo={payload.patientInfo} />,
-			drp: <HealthCareProblemsViewTab items={payload.studentDrpAnswers} />,
+			patient: (
+				<PatientInformationViewTab
+					mrpToolData={payload.patientInfo.mrpToolData}
+					patientDemographics={payload.patientInfo.patientDemographics}
+					socialHistory={payload.patientInfo.socialHistory}
+					medicalHistory={payload.patientInfo.medicalHistory}
+				/>
+			),
+			labs: (
+				<LabsAndProgressViewTab
+					labResult={payload.patientInfo.labResult}
+					progressNotes={payload.patientInfo.progressNotes}
+				/>
+			),
+			meds: <CurrentMedicationsViewTab medicationList={payload.patientInfo.medicationList} />,
+			drp: (
+				<HealthCareProblemViewTab
+					mode={status}
+					items={payload.studentDrpAnswers}
+					feedback={status === "feedback_available" ? drpFeedback : null}
+				/>
+			),
 		}),
 		[payload],
 	);
-
-	if (status === "feedback_available") {
-		// Placeholder until feedback API exists
-		return (
-			<div className="mx-auto w-full max-w-4xl">
-				<div className="mb-6">
-					<BackToWeeklyWorkup />
-				</div>
-				<div className="rounded-xl border border-subtle app-bg p-5">
-					<div className="text-sm font-semibold text-primary">
-						Feedback viewer not implemented
-					</div>
-					<div className="mt-1 text-sm text-muted">
-						This workup is in feedback_available state. Hook up the feedback API here.
-					</div>
-				</div>
-			</div>
-		);
-	}
 
 	if (loading) {
 		return (

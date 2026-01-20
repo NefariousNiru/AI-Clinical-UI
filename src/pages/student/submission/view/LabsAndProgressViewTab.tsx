@@ -1,45 +1,45 @@
-// file: src/pages/student/submission/view/standard/tabs/LabsAndProgressViewTab.tsx
+// file: src/pages/student/submission/view/LabsAndProgressViewTab.tsx
 
-import type { PatientInfo } from "../../../../lib/types/studentSubmission";
-import { hasAnyMeaningfulValue } from "../../hooks/useMrpToolSubmissionEditor.ts";
+import type { LabResult, ProgressNotes } from "../../../../lib/types/studentSubmission.ts";
+import { LAB_RESULT_FIELDS, PROGRESS_NOTES_FIELDS } from "../../hooks/constants";
+import { isAnySectionMeaningful, LongFieldSection, ReflectionSection } from "./ViewComponents.tsx";
 
-// TODO: import label maps from your constants file
-const LABS_LABELS: Record<string, string> = {
-	labsImagingMicrobiology: "Labs / Imaging / Microbiology",
-	renalFunctionAssessment: "Renal Function Assessment",
-};
+export default function LabsAndProgressViewTab({
+	labResult,
+	progressNotes,
+}: {
+	labResult: LabResult;
+	progressNotes: ProgressNotes;
+}) {
+	const hasAnything = isAnySectionMeaningful([labResult, progressNotes]);
 
-const PROGRESS_LABELS: Record<string, string> = {
-	immunizations: "Immunizations",
-	progressNotes: "Progress Notes",
-	preliminaryProblemList: "Preliminary Problem List",
-};
-
-function TextBlock({ label, value }: { label: string; value: unknown }) {
-	if (!hasAnyMeaningfulValue(value)) return null;
-	return (
-		<div>
-			<div className="text-sm font-semibold text-primary">{label}</div>
-			<div className="mt-2 rounded-lg bg-surface-subtle px-4 py-3 text-sm text-primary">
-				{String(value)}
+	if (!hasAnything) {
+		return (
+			<div className="rounded-xl border border-subtle app-bg p-5">
+				<div className="text-sm text-muted">No labs or progress notes were submitted.</div>
 			</div>
-		</div>
-	);
-}
-
-export default function LabsAndProgressViewTab({ patientInfo }: { patientInfo: PatientInfo }) {
-	const lab = patientInfo.labResult;
-	const prog = patientInfo.progressNotes;
+		);
+	}
 
 	return (
 		<div className="space-y-6">
-			{Object.keys(LABS_LABELS).map((k) => (
-				<TextBlock key={k} label={LABS_LABELS[k] ?? k} value={(lab as any)[k]} />
-			))}
+			<div>
+				<LongFieldSection<LabResult>
+					title={LAB_RESULT_FIELDS.title}
+					fieldsSpec={LAB_RESULT_FIELDS as any}
+					data={labResult}
+				/>
+				<ReflectionSection reflectionAnswers={labResult.reflectionAnswers} />
+			</div>
 
-			{Object.keys(PROGRESS_LABELS).map((k) => (
-				<TextBlock key={k} label={PROGRESS_LABELS[k] ?? k} value={(prog as any)[k]} />
-			))}
+			<div>
+				<LongFieldSection<ProgressNotes>
+					title={PROGRESS_NOTES_FIELDS.title}
+					fieldsSpec={PROGRESS_NOTES_FIELDS as any}
+					data={progressNotes}
+				/>
+				<ReflectionSection reflectionAnswers={progressNotes.reflectionAnswers} />
+			</div>
 		</div>
 	);
 }

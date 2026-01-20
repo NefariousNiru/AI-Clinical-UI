@@ -172,6 +172,10 @@ export default function DRPForm({
 }: Props) {
 	// Collapsed state is UI-only. Index-based is fine for now.
 	const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
+
+	// Unique problems in the list
+	const [nameErrors, setNameErrors] = useState<Record<number, string | undefined>>({});
+
 	const MAX_PROBLEMS = 15;
 	const safeItems = useMemo(() => items ?? [], [items]);
 	const atLimit = safeItems.length >= MAX_PROBLEMS;
@@ -181,10 +185,37 @@ export default function DRPForm({
 		onChange(next);
 	}
 
+	// Enforce unique disease name on selection
+	function setProblemName(idx: number, nextName: string) {
+		// clearing is always allowed
+		if (!nextName) {
+			setNameErrors((m) => ({ ...m, [idx]: undefined }));
+			setItem(idx, { name: "" });
+			return;
+		}
+
+		const normalized = nextName.trim().toLowerCase();
+		const dupIdx = safeItems.findIndex(
+			(it, i) => i !== idx && (it.name ?? "").trim().toLowerCase() === normalized,
+		);
+
+		if (dupIdx !== -1) {
+			setNameErrors((m) => ({
+				...m,
+				[idx]: "Problem name can be used only once.",
+			}));
+			return; // do NOT commit duplicate selection
+		}
+
+		setNameErrors((m) => ({ ...m, [idx]: undefined }));
+		setItem(idx, { name: nextName });
+	}
+
 	const priorityIdx = useMemo(
 		() => safeItems.findIndex((x) => Boolean(x.isPriority)),
 		[safeItems],
 	);
+
 	function setPriority(idx: number, nextChecked: boolean) {
 		if (!nextChecked) {
 			const next = safeItems.map((it, i) => (i === idx ? { ...it, isPriority: false } : it));
@@ -216,6 +247,9 @@ export default function DRPForm({
 		// Expand the new card by default
 		const idx = next.length - 1;
 		setCollapsed((m) => ({ ...m, [idx]: false }));
+
+		// Check duplicate problems
+		setNameErrors((m) => ({ ...m, [idx]: undefined }));
 	}
 
 	function removeProblem(idx: number) {
@@ -225,6 +259,18 @@ export default function DRPForm({
 		// reindex collapsed map
 		setCollapsed((prev) => {
 			const out: Record<number, boolean> = {};
+			for (const [kStr, v] of Object.entries(prev)) {
+				const k = Number(kStr);
+				if (Number.isNaN(k)) continue;
+				if (k < idx) out[k] = v;
+				else if (k > idx) out[k - 1] = v;
+			}
+			return out;
+		});
+
+		// Reindex nameErrors map
+		setNameErrors((prev) => {
+			const out: Record<number, string | undefined> = {};
 			for (const [kStr, v] of Object.entries(prev)) {
 				const k = Number(kStr);
 				if (Number.isNaN(k)) continue;
@@ -259,6 +305,7 @@ export default function DRPForm({
 						: `Problem ${idx + 1}`;
 					const isThisPriority = Boolean(it.isPriority);
 					const priorityLocked = priorityIdx !== -1 && !isThisPriority;
+					const nameError = nameErrors[idx];
 					return (
 						<div
 							key={idx}
@@ -294,9 +341,16 @@ export default function DRPForm({
 
 										<DiseaseAutocomplete
 											value={it.name}
-											onChange={(next) => setItem(idx, { name: next })}
+											onChange={(next) => setProblemName(idx, next)}
 											placeholder={FIELDS.name.placeholder}
 										/>
+
+										{/* Duplicate error */}
+										{nameError ? (
+											<div className="mt-1 text-xs text-danger">
+												{nameError}
+											</div>
+										) : null}
 									</div>
 
 									<div className="mt-3">

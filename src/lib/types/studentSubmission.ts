@@ -24,6 +24,12 @@ const optString = z
 	.optional()
 	.transform((v) => (v == null ? undefined : v));
 
+const optStringDefaultEmpty = z
+	.string()
+	.nullable()
+	.optional()
+	.transform((v) => (v == null ? "" : v));
+
 const optBool = z
 	.boolean()
 	.nullable()
@@ -157,20 +163,16 @@ export const PatientInfoSchema = nullishToObject(
 
 export const StudentDrpAnswerSchema = nullishToObject(
 	z.looseObject({
-		name: z
-			.string()
-			.nullable()
-			.optional()
-			.transform((v) => (v == null ? "" : v)),
+		name: optStringDefaultEmpty,
 		isPriority: z
 			.boolean()
 			.nullable()
 			.optional()
 			.transform((v) => Boolean(v)),
-		identification: optString,
-		explanation: optString,
-		planRecommendation: optString,
-		monitoring: optString,
+		identification: optStringDefaultEmpty,
+		explanation: optStringDefaultEmpty,
+		planRecommendation: optStringDefaultEmpty,
+		monitoring: optStringDefaultEmpty,
 	}),
 );
 
