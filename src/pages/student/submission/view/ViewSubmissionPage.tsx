@@ -7,7 +7,7 @@ import {
 	type StudentSubmissionPayload,
 } from "../../../../lib/types/studentSubmission.ts";
 import type { TabKey } from "../../hooks/constants.ts";
-import { getStudentSubmission } from "../../../../lib/api/shared/student.ts";
+import { getStudentFeedback, getStudentSubmission } from "../../../../lib/api/shared/student.ts";
 import PatientInformationViewTab from "./PatientInformationViewTab.tsx";
 import { BackToWeeklyWorkup } from "../BackToWeeklyWorkup.tsx";
 import { TabLayout } from "../TabLayout.tsx";
@@ -27,14 +27,17 @@ export function ViewSubmissionPage({
 }) {
 	const [tab, setTab] = useState<TabKey>("patient");
 
-	const [loading, setLoading] = useState<boolean>(status === "grading");
+	const [loading, setLoading] = useState<boolean>(
+		status === "grading" || status === "feedback_available",
+	);
 	const [error, setError] = useState<string | null>(null);
+
 	const [payload, setPayload] = useState<StudentSubmissionPayload>(
 		makeEmptyStudentSubmissionPayload(),
 	);
 
-	// TODO Placeholder for FEEDBACK API
 	const [drpFeedback, setDrpFeedback] = useState<ProblemFeedbackList | null>(null);
+	const [drpFeedbackError, setDrpFeedbackError] = useState<string | null>(null);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -45,15 +48,42 @@ export function ViewSubmissionPage({
 			setLoading(true);
 			setError(null);
 
-			try {
-				const res = await getStudentSubmission({ weeklyWorkupId, studentEnrollmentId });
-				if (!cancelled) setPayload(res);
+			// clear feedback state when not in feedback mode
+			if (status !== "feedback_available") {
+				setDrpFeedback(null);
+				setDrpFeedbackError(null);
+			}
 
+			try {
 				if (status === "feedback_available") {
-					// TODO: call feedback API and setDrpFeedback(...)
-					// const fb = await getProblemFeedback({ weeklyWorkupId, studentEnrollmentId });
-					// if (!cancelled) setDrpFeedback(fb);
-					if (!cancelled) setDrpFeedback(null);
+					// Run concurrently. If feedback fails, we still want submission.
+					const submissionPromise = getStudentSubmission({
+						weeklyWorkupId,
+						studentEnrollmentId,
+					});
+					const feedbackPromise = getStudentFeedback({
+						weeklyWorkupId,
+						studentEnrollmentId,
+					});
+
+					const res = await submissionPromise;
+					if (!cancelled) setPayload(res);
+
+					try {
+						const fb = await feedbackPromise;
+						if (!cancelled) {
+							setDrpFeedback(fb);
+							setDrpFeedbackError(null);
+						}
+					} catch (e: any) {
+						if (!cancelled) {
+							setDrpFeedback(null);
+							setDrpFeedbackError(e?.message ?? "Failed to load feedback.");
+						}
+					}
+				} else {
+					const res = await getStudentSubmission({ weeklyWorkupId, studentEnrollmentId });
+					if (!cancelled) setPayload(res);
 				}
 			} catch (e: any) {
 				if (!cancelled) setError(e?.message ?? "Failed to load submission.");
@@ -90,10 +120,11 @@ export function ViewSubmissionPage({
 					mode={status}
 					items={payload.studentDrpAnswers}
 					feedback={status === "feedback_available" ? drpFeedback : null}
+					feedbackError={status === "feedback_available" ? drpFeedbackError : null}
 				/>
 			),
 		}),
-		[payload],
+		[payload, status, drpFeedback, drpFeedbackError],
 	);
 
 	if (loading) {

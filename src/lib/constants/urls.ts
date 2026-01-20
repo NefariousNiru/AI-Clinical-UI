@@ -27,6 +27,7 @@ const SHARED_STUDENT_BASE = API_BASE_V1 + "/shared/student";
 export const STUDENT_WEEKS = SHARED_STUDENT_BASE + "/weeks";
 export const STUDENT_MRP_FORM_DATA = SHARED_STUDENT_BASE + "/mrp_form";
 export const STUDENT_SUBMISSION = SHARED_STUDENT_BASE + "/submission";
+export const STUDENT_FEEDBACK = SHARED_STUDENT_BASE + "/feedback";
 
 // Disease
 export const DISEASE_SEARCH = API_BASE_V1 + "/shared/disease";

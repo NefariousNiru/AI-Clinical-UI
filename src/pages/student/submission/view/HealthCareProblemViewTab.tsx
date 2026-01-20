@@ -22,11 +22,15 @@ function isDrpMeaningful(i: StudentDrpAnswer) {
 function displayProblemName(name: string) {
 	const raw = (name ?? "").trim();
 	if (!raw) return "Health Care Problem";
-	return titleizeDiseaseName(raw);
+	return titleizeDiseaseName(raw); // display only
+}
+
+function toKey(name: string) {
+	return (name ?? "").trim().toLowerCase(); // match key only (no titleize)
 }
 
 function DrpTile({ idx, item }: { idx: number; item: StudentDrpAnswer }) {
-	const [open, setOpen] = useState(false); // start collapsed
+	const [open, setOpen] = useState(false);
 
 	const sections = [
 		{ label: "Identification", value: item.identification },
@@ -89,29 +93,53 @@ function SubmittedNoFeedback({ items }: { items: StudentDrpAnswer[] }) {
 			<div className="text-sm font-semibold text-primary">Submitted (no feedback yet)</div>
 			<div className="space-y-4">
 				{visible.map((it, idx) => (
-					<DrpTile key={`${it.name}-${idx}`} idx={idx} item={it} />
+					<DrpTile key={`${toKey(it.name)}-${idx}`} idx={idx} item={it} />
 				))}
 			</div>
 		</div>
 	);
 }
 
-function toKey(name: string) {
-	return (name ?? "").trim().toLowerCase();
-}
-
 export default function HealthCareProblemViewTab({
 	mode,
 	items,
 	feedback,
+	feedbackError,
 }: {
 	mode: ViewStatus;
 	items: StudentDrpAnswer[];
 	feedback?: ProblemFeedbackList | null;
+	feedbackError?: string | null;
 }) {
 	const visibleItems = items.filter(isDrpMeaningful);
 
 	if (mode === "feedback_available") {
+		// If feedback fetch failed, show banner but still allow viewing submission
+		if (feedbackError) {
+			return (
+				<div className="space-y-6">
+					<div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+						{feedbackError}
+					</div>
+
+					{visibleItems.length === 0 ? (
+						<div className="rounded-xl border border-subtle app-bg p-5">
+							<div className="text-sm text-muted">
+								No health care problems were submitted.
+							</div>
+						</div>
+					) : (
+						<div className="space-y-4">
+							{visibleItems.map((it, idx) => (
+								<DrpTile key={`${toKey(it.name)}-${idx}`} idx={idx} item={it} />
+							))}
+						</div>
+					)}
+				</div>
+			);
+		}
+
+		// Feedback missing/empty, still show submission
 		if (!feedback || feedback.length === 0) {
 			if (visibleItems.length === 0) {
 				return (
@@ -136,13 +164,14 @@ export default function HealthCareProblemViewTab({
 
 					<div className="space-y-4">
 						{visibleItems.map((it, idx) => (
-							<DrpTile key={`${it.name}-${idx}`} idx={idx} item={it} />
+							<DrpTile key={`${toKey(it.name)}-${idx}`} idx={idx} item={it} />
 						))}
 					</div>
 				</div>
 			);
 		}
 
+		// Show feedback + any submitted items that didn't receive feedback
 		const feedbackKeys = new Set(feedback.map((f) => toKey(f.name)));
 		const unmatched = visibleItems.filter((s) => !feedbackKeys.has(toKey(s.name)));
 
@@ -154,6 +183,7 @@ export default function HealthCareProblemViewTab({
 		);
 	}
 
+	// grading mode
 	if (visibleItems.length === 0) {
 		return (
 			<div className="rounded-xl border border-subtle app-bg p-5">
@@ -165,7 +195,7 @@ export default function HealthCareProblemViewTab({
 	return (
 		<div className="space-y-4">
 			{visibleItems.map((it, idx) => (
-				<DrpTile key={`${it.name}-${idx}`} idx={idx} item={it} />
+				<DrpTile key={`${toKey(it.name)}-${idx}`} idx={idx} item={it} />
 			))}
 		</div>
 	);

@@ -18,9 +18,9 @@ export const NonEmptyStringSchema = z.string().trim().min(1);
  *       feedback: NonEmptyStr
  */
 export const FeedbackSectionSchema = z.object({
-    score: NonEmptyStringSchema,
-    evaluation: NonEmptyStringSchema,
-    feedback: NonEmptyStringSchema,
+	score: NonEmptyStringSchema,
+	evaluation: NonEmptyStringSchema,
+	feedback: NonEmptyStringSchema,
 });
 
 export type FeedbackSection = z.infer<typeof FeedbackSectionSchema>;
@@ -42,16 +42,18 @@ export type FeedbackSection = z.infer<typeof FeedbackSectionSchema>;
  *   plan_recommendation  -> planRecommendation
  */
 export const ProblemFeedbackSchema = z.object({
-    name: z.string(),
-    isPriority: z.boolean().default(false),
-    identification: FeedbackSectionSchema,
-    explanation: FeedbackSectionSchema,
-    planRecommendation: FeedbackSectionSchema,
-    monitoring: FeedbackSectionSchema,
+	name: z.string(),
+	isPriority: z.boolean().default(false),
+	identification: FeedbackSectionSchema,
+	explanation: FeedbackSectionSchema,
+	planRecommendation: FeedbackSectionSchema,
+	monitoring: FeedbackSectionSchema,
 });
 
 export type ProblemFeedback = z.infer<typeof ProblemFeedbackSchema>;
-export type ProblemFeedbackList = ProblemFeedback[];
+
+export const ProblemFeedbackListSchema = z.array(ProblemFeedbackSchema);
+export type ProblemFeedbackList = z.infer<typeof ProblemFeedbackListSchema>;
 
 /**
  * Problem as submitted by the student (DrugRelatedProblem).
@@ -70,13 +72,12 @@ export type ProblemFeedbackList = ProblemFeedback[];
  *   plan_recommendation  -> planRecommendation
  */
 export const DrugRelatedProblemSchema = z.object({
-    name: z.string(),
-    isPriority: z.boolean().default(false),
-    identification: z.string().default(""),
-    explanation: z.string().default(""),
-    planRecommendation: z.string().default(""),
-    monitoring: z.string().default(""),
+	name: z.string(),
+	isPriority: z.boolean().default(false),
+	identification: z.string().default(""),
+	explanation: z.string().default(""),
+	planRecommendation: z.string().default(""),
+	monitoring: z.string().default(""),
 });
 
 export type DrugRelatedProblem = z.infer<typeof DrugRelatedProblemSchema>;
-

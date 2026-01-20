@@ -2,13 +2,14 @@
 
 import { StudentWeeksResponseSchema } from "../../types/studentWeeks";
 import { http, withQuery } from "../http";
-import { STUDENT_MRP_FORM_DATA, STUDENT_SUBMISSION, STUDENT_WEEKS } from "../../constants/urls.ts";
+import { STUDENT_FEEDBACK, STUDENT_MRP_FORM_DATA, STUDENT_SUBMISSION, STUDENT_WEEKS, } from "../../constants/urls.ts";
 import {
 	MrpFormDataSchema,
 	type StudentSubmissionPayload,
 	StudentSubmissionPayloadSchema,
 	type StudentSubmissionQuery,
 } from "../../types/studentSubmission.ts";
+import { ProblemFeedbackListSchema } from "../../types/feedback.ts";
 
 /**
  * GET /api/v1/shared/student/weeks (via STUDENT_WEEKS)
@@ -32,6 +33,19 @@ export async function getStudentSubmission(q: StudentSubmissionQuery) {
 
 	const raw = await http.get<unknown>(url);
 	return StudentSubmissionPayloadSchema.parse(raw);
+}
+
+/**
+ * GET /api/v1/shared/student/feedback?workup_id=...&enrollment_id=...
+ */
+export async function getStudentFeedback(q: StudentSubmissionQuery) {
+	const url = withQuery(STUDENT_FEEDBACK, {
+		workup_id: q.weeklyWorkupId,
+		enrollment_id: q.studentEnrollmentId,
+	});
+
+	const raw = await http.get<unknown>(url);
+	return ProblemFeedbackListSchema.parse(raw);
 }
 
 /**

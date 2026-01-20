@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { titleizeDiseaseName } from "../../../lib/utils/functions.ts";
+import { splitInlineBullets, titleizeDiseaseName } from "../../../lib/utils/functions.ts";
 import type {
 	DrugRelatedProblem,
 	FeedbackSection,
@@ -39,7 +39,7 @@ function Section({ label, studentAnswer, sec }: SectionProps) {
 	const feedback = typeof sec?.feedback === "string" ? sec.feedback.trim() : "";
 
 	return (
-		<section className="app-bg p-3 rounded-xl border border-subtle">
+		<section className="app-bg p-3">
 			<header className="mb-2 flex items-center justify-between gap-2">
 				<h3 className="text-sm font-medium text-primary">{label}</h3>
 				{score && (
@@ -55,7 +55,7 @@ function Section({ label, studentAnswer, sec }: SectionProps) {
 				<p className="mb-2 text-sm text-primary whitespace-pre-wrap">
 					<span className="font-semibold">Evaluation:</span>
 					<br />
-					{evaluation}
+					{splitInlineBullets(evaluation)}
 				</p>
 			)}
 
@@ -63,7 +63,7 @@ function Section({ label, studentAnswer, sec }: SectionProps) {
 				<p className="text-sm text-primary whitespace-pre-wrap">
 					<span className="font-semibold">Feedback:</span>
 					<br />
-					{feedback}
+					{splitInlineBullets(feedback)}
 				</p>
 			)}
 		</section>
@@ -179,7 +179,7 @@ function ProblemTile({ idx, feedback, studentProblem }: ProblemTileProps) {
 
 				<div className="ml-3 flex items-center gap-2">
 					{feedback.isPriority && (
-						<span className="inline-flex items-center rounded-md bg-secondary px-3 m-2 py-0.5 text-xs font-medium text-on-secondary">
+						<span className="inline-flex items-center rounded-md bg-accent px-3 m-2 py-0.5 text-xs font-medium text-on-accent">
 							Priority
 						</span>
 					)}

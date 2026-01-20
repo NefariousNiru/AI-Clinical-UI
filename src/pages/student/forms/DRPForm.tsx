@@ -25,10 +25,10 @@ function makeEmptyDrp(): StudentDrpAnswer {
 	return {
 		name: "",
 		isPriority: false,
-		identification: undefined,
-		explanation: undefined,
-		planRecommendation: undefined,
-		monitoring: undefined,
+		identification: "",
+		explanation: "",
+		planRecommendation: "",
+		monitoring: "",
 	};
 }
 
@@ -200,9 +200,11 @@ export default function DRPForm({
 		);
 
 		if (dupIdx !== -1) {
+			const existingRaw = safeItems[dupIdx]?.name ?? nextName;
+			const existingLabel = titleizeDiseaseName(existingRaw);
 			setNameErrors((m) => ({
 				...m,
-				[idx]: "Problem name can be used only once.",
+				[idx]: `"${existingLabel}" is already added. Each problem can be used only once.`,
 			}));
 			return; // do NOT commit duplicate selection
 		}
