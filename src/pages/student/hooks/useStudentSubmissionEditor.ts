@@ -505,8 +505,12 @@ export function useStudentSubmissionEditor(
 		async (saveOpts: SaveOptions): Promise<SaveResult> => {
 			if (saving) return "FAILED";
 
-			// Fast path: avoid write if nothing changed since last backend snapshot.
-			if (lastSavedSnapshotRef.current && lastSavedSnapshotRef.current === currentSnapshot)
+			// Fast path: avoid write if nothing changed since last backend snapshot except when user does is_submit mode.
+			if (
+				!saveOpts.isSubmit &&
+				lastSavedSnapshotRef.current &&
+				lastSavedSnapshotRef.current === currentSnapshot
+			)
 				return "SKIPPED_NOT_DIRTY";
 
 			setSaving(true);
@@ -514,7 +518,7 @@ export function useStudentSubmissionEditor(
 
 			try {
 				const payloadForBackend = toBackendPayload(payload);
-				console.log(saveOpts.isSubmit);
+
 				// Same endpoint for both flows. `isMrp` is a UI concern, not a save concern.
 				const saved = await saveStudentSubmission(q, saveOpts.isSubmit, payloadForBackend);
 
