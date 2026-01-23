@@ -54,6 +54,11 @@ export const ADMIN_DISABLE_USER = ADMIN_ROSTER_BASE + "/disable/user";
 export const ADMIN_NOTIFY_ACCOUNT = ADMIN_ROSTER_BASE + "/notify/account";
 export const ADMIN_NOTIFY_ENROLLMENT = ADMIN_ROSTER_BASE + "/notify/enrollment";
 
+// Admin Student Submission
+export const ADMIN_STUDENT_SUBMISSION = API_BASE_V1 + "/admin/student_submission";
+export const ADMIN_SUBMISSION_COMMENT = ADMIN_STUDENT_SUBMISSION + "/comment";
+export const ADMIN_SUBMISSION_EXTEND_DEADLINE = ADMIN_STUDENT_SUBMISSION + "/extend";
+
 // Admin Disease
 export const ADMIN_DISEASE = API_BASE_V1 + "/admin/disease";
 

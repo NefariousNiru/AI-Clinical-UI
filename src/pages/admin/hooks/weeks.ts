@@ -1,7 +1,6 @@
 // file: src/pages/admin/hooks/weeks.ts
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "../../../lib/api/http";
 import {
 	createWeeklyWorkup,
 	getWeeklyWorkup,
@@ -9,17 +8,8 @@ import {
 	updateWeeklyWorkup,
 } from "../../../lib/api/admin/weeklyWorkup.ts";
 import { getAllRubricIds } from "../../../lib/api/admin/rubric";
-import type {
-	WeeklyWorkupCreateRequest,
-	WeeklyWorkupDetail,
-	WeeklyWorkupListItem,
-} from "../../../lib/types/weeks";
-
-function errMsg(e: unknown): string {
-	if (e instanceof ApiError) return e.message;
-	if (e instanceof Error) return e.message;
-	return "Something went wrong.";
-}
+import type { WeeklyWorkupCreateRequest, WeeklyWorkupDetail, WeeklyWorkupListItem, } from "../../../lib/types/weeks";
+import { errMsg } from "./rubric.ts";
 
 export function useWeeklyWorkups(semesterId: number | null) {
 	const [weeks, setWeeks] = useState<WeeklyWorkupListItem[]>([]);

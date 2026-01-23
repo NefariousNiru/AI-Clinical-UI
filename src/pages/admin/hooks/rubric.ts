@@ -615,7 +615,7 @@ export function useRubricEditor(): UseRubricEditorResult {
 	);
 }
 
-function errMsg(e: unknown): string {
+export function errMsg(e: unknown): string {
 	if (e instanceof ApiError) return e.message;
 	if (e instanceof Error) return e.message;
 	return "Something went wrong.";
