@@ -74,7 +74,7 @@ export function WeeklyWorkupDropdown({
 			</div>
 
 			<select
-				className="h-9 w-full max-w-sm rounded-md border border-border bg-background px-3 text-sm text-primary outline-none disabled:opacity-60"
+				className="h-8 w-full max-w-sm rounded-md border border-border bg-input px-3 text-sm text-primary outline-none disabled:opacity-60"
 				value={value ?? ""}
 				disabled={isDisabled}
 				onChange={(e) => {

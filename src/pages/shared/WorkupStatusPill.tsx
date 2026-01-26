@@ -9,9 +9,9 @@ export function WorkupStatusPill({ status }: { status: WeeklyWorkupStudentStatus
 	return (
 		<span
 			className={[
-				"inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold border leading-none",
+				"inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold border leading-none",
 				cfg.pill,
-				"border border-subtle",
+				cfg.border,
 			].join(" ")}
 			title={titleizeCase(status)}
 		>

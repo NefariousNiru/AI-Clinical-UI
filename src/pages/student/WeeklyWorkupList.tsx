@@ -60,15 +60,7 @@ function StatusHelpPanel() {
 			<div className="mt-4 flex flex-wrap gap-8">
 				{STATUS_HELP.map((it) => (
 					<div key={it.status} className="flex items-start gap-3">
-						<span
-							className={cx(
-								"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0",
-								uiConfig(it.status).pill,
-							)}
-						>
-							{it.label}
-						</span>
-
+						<WorkupStatusPill status={it.status} />
 						<div className="text-xs text-muted leading-relaxed">{it.msg}</div>
 					</div>
 				))}

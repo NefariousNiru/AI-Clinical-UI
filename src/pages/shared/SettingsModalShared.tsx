@@ -57,7 +57,7 @@ export default function SettingsModalShared({
 						<div className="rounded-lg border border-subtle bg-surface-subtle px-3 py-2">
 							<div className="font-medium text-primary">{profile.name}</div>
 							<div className="text-xs text-muted">{profile.email}</div>
-							<div className="mt-2 inline-flex items-center rounded-full border border-subtle bg-secondary text-on-secondary px-2 py-0.5 text-[11px]">
+							<div className="mt-2 inline-flex items-center rounded-full border border-subtle bg-accent text-on-accent px-2 py-0.5 text-[11px]">
 								{capitalizeFirst(profile.role)}
 							</div>
 						</div>
