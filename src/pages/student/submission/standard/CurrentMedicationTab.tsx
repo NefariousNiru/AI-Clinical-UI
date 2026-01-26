@@ -1,7 +1,7 @@
-// file: src/pages/student/submission/edit/standard/CurrentMedicationTab.tsx
+// file: src/pages/student/submission/standard/CurrentMedicationTab.tsx
 
-import MedicationListForm from "../../../forms/MedicationListForm";
-import type { PatientInfoFormController } from "../../../hooks/useStudentSubmissionEditor.ts";
+import MedicationListForm from "../../forms/MedicationListForm.tsx";
+import type { PatientInfoFormController } from "../../hooks/useStudentSubmissionEditor.ts";
 
 type Props = {
 	patient: PatientInfoFormController;

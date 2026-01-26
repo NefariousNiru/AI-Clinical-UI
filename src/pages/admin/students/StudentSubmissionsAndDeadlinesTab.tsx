@@ -1,33 +1,21 @@
 // file: src/pages/admin/students/StudentSubmissionsAndDeadlinesTab.tsx
 
 import type { Semester } from "../../../lib/types/semester.ts";
-import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks.ts";
-import { STATUS_UI } from "../../../lib/constants/ui.ts";
 import { WeeklyWorkupDropdown } from "./WeeklyWorkupDropdown.tsx";
 import type { SubmissionView } from "../../../lib/types/studentDeadlines.ts";
-import { titleizeCase } from "../../../lib/utils/functions.ts";
-import { useSubmissionDeadlines } from "../hooks/submissionAndDeadlines.ts";
-import { ActionChip, btnSecondary, InlineNotice, SemesterModeBadge } from "./SharedUI.tsx";
+import { useSubmissionDeadlines, useViewSubmissionModal } from "../hooks/submissionAndDeadlines.ts";
+import {
+	ActionChip,
+	btnSecondary,
+	InlineNotice,
+	SemesterModeBadge,
+} from "../../shared/SharedUI.tsx";
+import { ViewSubmissionModal } from "./ViewSubmissionModal.tsx";
+import { WorkupStatusPill } from "../../shared/WorkupStatusPill.tsx";
 
 type Props = {
 	semester: Semester | null;
 };
-
-function StatusPill({ status }: { status: WeeklyWorkupStudentStatus }) {
-	const cfg = STATUS_UI[status];
-	return (
-		<span
-			className={[
-				"inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold border leading-none",
-				cfg.pill,
-				"border border-subtle",
-			].join(" ")}
-			title={titleizeCase(status)}
-		>
-			{titleizeCase(status)}
-		</span>
-	);
-}
 
 const tableGrid = "grid grid-cols-[1.6fr_200px_140px_260px] gap-3";
 
@@ -51,12 +39,15 @@ function TableHeader() {
 function Row({
 	item,
 	actionsDisabled,
-	onActions,
+	onView,
 }: {
 	item: SubmissionView;
 	actionsDisabled: boolean;
-	onActions: () => void;
+	onView: () => void;
 }) {
+	const canView = item.status === "grading" || item.status === "feedback_available";
+	const canExtend = item.status === "not_submitted"; // extend later with week end < now
+
 	return (
 		<div className={[tableGrid, "px-4 py-3 items-center row-item"].join(" ")} role="row">
 			<div className="min-w-0">
@@ -64,7 +55,7 @@ function Row({
 			</div>
 
 			<div className="flex items-center gap-2">
-				<StatusPill status={item.status as WeeklyWorkupStudentStatus} />
+				<WorkupStatusPill status={item.status} />
 			</div>
 
 			<div className="text-xs text-muted">
@@ -73,13 +64,36 @@ function Row({
 
 			<div className="flex justify-end">
 				<div className="flex flex-wrap gap-2 justify-end">
-					<ActionChip
-						label="Actions"
-						mobileLabel="Actions"
-						onClick={onActions}
-						disabled={actionsDisabled}
-						ariaLabel={`Open actions for ${item.name}`}
-					/>
+					{canView ? (
+						<ActionChip
+							label="View"
+							mobileLabel="View"
+							onClick={onView}
+							disabled={actionsDisabled}
+							ariaLabel={`View submission for ${item.name}`}
+							title="Available only after deadline (Grading / Feedback available)."
+						/>
+					) : canExtend ? (
+						<ActionChip
+							label="Extend"
+							mobileLabel="Extend"
+							onClick={() => {}}
+							disabled
+							ariaLabel={`Extend deadline for ${item.name}`}
+							title="Extend will be enabled after the deadline passes."
+						/>
+					) : (
+						<span
+							className="rounded-full px-3 py-2 text-[11px] font-semibold border bg-surface-subtle text-muted border-subtle"
+							title={
+								item.status === "submitted" || item.status === "in_progress"
+									? "Student is actively working; viewing disabled."
+									: "No actions available for this status."
+							}
+						>
+							No actions
+						</span>
+					)}
 				</div>
 			</div>
 		</div>
@@ -88,6 +102,7 @@ function Row({
 
 export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 	const s = useSubmissionDeadlines(semester);
+	const view = useViewSubmissionModal();
 
 	return (
 		<div className="space-y-4 app-bg">
@@ -205,13 +220,7 @@ export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 										key={`${it.enrollmentId}-${it.workupId}`}
 										item={it}
 										actionsDisabled={s.actionsDisabled}
-										onActions={() => {
-											console.log(
-												"TODO actions for",
-												it.enrollmentId,
-												it.workupId,
-											);
-										}}
+										onView={() => view.openFor(it)}
 									/>
 								))}
 							</div>
@@ -219,6 +228,17 @@ export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 					) : null}
 				</div>
 			</section>
+
+			{view.target ? (
+				<ViewSubmissionModal
+					open={view.open}
+					onClose={view.close}
+					weeklyWorkupId={view.target.weeklyWorkupId}
+					studentEnrollmentId={view.target.enrollmentId}
+					status={view.target.status}
+					studentName={view.target.name}
+				/>
+			) : null}
 		</div>
 	);
 }

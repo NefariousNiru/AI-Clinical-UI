@@ -3,7 +3,6 @@
 import type { Semester } from "../../../lib/types/semester";
 import type { NewRosterStudent, RosterStudent } from "../../../lib/types/roster";
 import { useRosterUi } from "../hooks/roster";
-
 import {
 	ActionChip,
 	btnPrimary,
@@ -11,7 +10,7 @@ import {
 	btnSecondaryAccent,
 	InlineNotice,
 	SemesterModeBadge,
-} from "./SharedUI.tsx";
+} from "../../shared/SharedUI.tsx";
 
 type Props = {
 	semester: Semester | null;
@@ -513,8 +512,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Pill({ label, state }: { label: string; state: "on" | "off" | "pending" }) {
 	const cls =
 		state === "on"
-			? "bg-status-grading text-status-grading border border-status-grading"
-			: "bg-surface-subtle text-muted border border-subtle";
+			? "bg-status-feedback text-status-feedback border border-status-feedback"
+			: "bg-status-missed text-status-missed border border-status-missed";
 
 	const value = state === "on" ? "ON" : state === "off" ? "OFF" : "NEW";
 

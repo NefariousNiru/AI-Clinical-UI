@@ -1,11 +1,11 @@
-// file: src/pages/student/submission/view/PatientInformationViewTab.tsx
+// file: src/pages/shared/submission/view/PatientInformationViewTab.tsx
 
 import {
 	MEDICAL_HISTORY_FIELDS,
 	MRP_TOOL_DATA_FIELDS,
 	PATIENT_DEMOGRAPHICS_FIELDS,
 	SOCIAL_HISTORY_FIELDS,
-} from "../../hooks/constants";
+} from "../../../student/hooks/constants.ts";
 import type {
 	MedicalHistory,
 	MrpToolData,

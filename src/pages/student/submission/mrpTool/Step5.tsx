@@ -1,6 +1,6 @@
-// file: src/pages/student/submission/edit/mrpTool/Step5.tsx
+// file: src/pages/student/submission/mrpTool/Step5.tsx
 
-import LabResultForm from "../../../forms/LabResultForm.tsx";
+import LabResultForm from "../../forms/LabResultForm.tsx";
 import type { StepsProps } from "./MrpToolPage.tsx";
 
 export default function Step5({ mrp }: StepsProps) {

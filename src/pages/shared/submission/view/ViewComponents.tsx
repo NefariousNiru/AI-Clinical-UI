@@ -1,7 +1,7 @@
-// file: src/pages/student/submission/view/ViewComponents.tsx
+// file: src/pages/shared/submission/view/ViewComponents.tsx
 
-import { hasAnyMeaningfulValue } from "../../hooks/useMrpToolSubmissionEditor";
-import { REFLECTION_ANSWER_FIELDS } from "../../hooks/constants";
+import { hasAnyMeaningfulValue } from "../../../student/hooks/useMrpToolSubmissionEditor.ts";
+import { REFLECTION_ANSWER_FIELDS } from "../../../student/hooks/constants.ts";
 
 export type Limit = "xSmall" | "small" | "medium" | "large";
 

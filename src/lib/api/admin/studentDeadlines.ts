@@ -51,7 +51,5 @@ export async function extendSubmissionDeadline(payload: ExtendDeadlineRequest): 
 export async function addSubmissionComment(payload: InstructorCommentRequest): Promise<void> {
 	const parsed = InstructorCommentRequestSchema.parse(payload);
 	await http.post<unknown>(ADMIN_SUBMISSION_COMMENT, parsed);
-
-	// Backend returns None. Accept any response body.
 	return;
 }

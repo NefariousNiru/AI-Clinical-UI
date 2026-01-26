@@ -2,11 +2,12 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useMrpToolStatus } from "../../shared/hooks/mrpToolStatus.ts";
-import type { ViewStatus, WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks";
-import MrpToolPage from "./edit/mrpTool/MrpToolPage.tsx";
+import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks";
+import MrpToolPage from "./mrpTool/MrpToolPage.tsx";
 import { STUDENT } from "../../../routes.ts";
-import { StandardSubmissionPage } from "./edit/standard/StandardSubmissionPage.tsx";
-import { ViewSubmissionPage } from "./view/ViewSubmissionPage.tsx";
+import { StandardSubmissionPage } from "./standard/StandardSubmissionPage.tsx";
+import { ViewSubmissionPage } from "../../shared/submission/view/ViewSubmissionPage.tsx";
+import { isEditable, isViewOnly } from "../hooks/routeToWorkup.ts";
 
 type WeeklyWorkupRouteState = {
 	weeklyWorkupId: number;
@@ -32,14 +33,6 @@ function isWeeklyWorkupRouteState(x: any): x is WeeklyWorkupRouteState {
 	);
 }
 
-function isEditable(status: WeeklyWorkupStudentStatus): boolean {
-	return status === "available" || status === "in_progress" || status === "submitted";
-}
-
-function isViewOnly(status: WeeklyWorkupStudentStatus): status is ViewStatus {
-	return status === "grading" || status === "feedback_available";
-}
-
 /**
  * This function is called by WeeklyWorkupList using a `nav` navigator <br>
  * **The navigator must pass a state of type `WeeklyWorkupRouteState`** <br>
@@ -60,6 +53,9 @@ export default function WeeklyWorkup() {
 				weeklyWorkupId={state.weeklyWorkupId}
 				studentEnrollmentId={state.studentEnrollmentId}
 				status={state.status} // "grading" | "feedback_available"
+				embedded={false}
+				showInstructorComment={true}
+				instructorCommentEditable={false}
 			/>
 		);
 	}

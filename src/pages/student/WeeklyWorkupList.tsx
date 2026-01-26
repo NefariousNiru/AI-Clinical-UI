@@ -4,36 +4,19 @@ import { useMemo } from "react";
 import { Calendar, Clock } from "lucide-react";
 import { useStudentWeeks } from "./hooks/studentWeeks";
 import type { WeeklyWorkupStudent, WeeklyWorkupStudentStatus } from "../../lib/types/studentWeeks";
-import { titleizeCase, unixToIsoDate } from "../../lib/utils/functions";
+import { unixToIsoDate } from "../../lib/utils/functions";
 import { useNavigate } from "react-router-dom";
 import { COURSE, STATUS_HELP } from "./hooks/constants.ts";
-import { STUDENT_WORKUP } from "../../routes.ts";
 import { STATUS_UI, type StatusCfg } from "../../lib/constants/ui.ts";
+import { isWorkupDisabled, routeToWorkup } from "./hooks/routeToWorkup.ts";
+import { WorkupStatusPill } from "../shared/WorkupStatusPill.tsx";
 
 function uiConfig(status: WeeklyWorkupStudentStatus): StatusCfg {
 	return STATUS_UI[status];
 }
 
-function isWorkupDisabled(status: WeeklyWorkupStudentStatus): boolean {
-	return status === "locked" || status === "not_submitted";
-}
-
 function cx(...xs: Array<string | false | null | undefined>) {
 	return xs.filter(Boolean).join(" ");
-}
-
-function StatusPill({ status }: { status: WeeklyWorkupStudent["status"] }) {
-	return (
-		<span
-			className={cx(
-				"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-				uiConfig(status).pill,
-			)}
-			aria-label={`Status: ${titleizeCase(status)}`}
-		>
-			{titleizeCase(status)}
-		</span>
-	);
 }
 
 function DateItem({
@@ -94,31 +77,6 @@ function StatusHelpPanel() {
 	);
 }
 
-function routeToWorkup(
-	nav: ReturnType<typeof useNavigate>,
-	args: {
-		status: WeeklyWorkupStudentStatus;
-		id: number;
-		enrollmentId: string;
-		weekNo: number;
-		patientName: string;
-	},
-) {
-	const { status, id, enrollmentId, weekNo, patientName } = args;
-
-	if (isWorkupDisabled(status)) return;
-
-	nav(STUDENT_WORKUP, {
-		state: {
-			weeklyWorkupId: id,
-			studentEnrollmentId: enrollmentId,
-			weekNo: weekNo,
-			patientName: patientName,
-			status: status,
-		},
-	});
-}
-
 function WorkupActions({
 	weekNo,
 	id,
@@ -138,7 +96,7 @@ function WorkupActions({
 
 	return (
 		<div className="flex items-center justify-between gap-3 sm:justify-end">
-			<StatusPill status={status} />
+			<WorkupStatusPill status={status} />
 
 			<button
 				type="button"

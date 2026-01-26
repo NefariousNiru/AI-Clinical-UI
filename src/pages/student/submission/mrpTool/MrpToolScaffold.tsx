@@ -1,10 +1,10 @@
-// file: src/pages/student/submission/edit/mrpTool/MrpToolScaffold.tsx
+// file: src/pages/student/submission/mrpTool/MrpToolScaffold.tsx
 
 import type { ReactNode } from "react";
 import { Check, ChevronLeft, ChevronRight, Download, Ellipsis, Save } from "lucide-react";
-import FormField from "../../../forms/FormField.tsx";
-import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
-import type { SaveOptions } from "../../../hooks/useStudentSubmissionEditor.ts";
+import FormField from "../../forms/FormField.tsx";
+import { BackToWeeklyWorkup } from "../../../shared/submission/BackToWeeklyWorkup.tsx";
+import type { SaveOptions } from "../../hooks/useStudentSubmissionEditor.ts";
 
 type Props = {
 	step: number;

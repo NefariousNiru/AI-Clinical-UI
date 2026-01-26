@@ -2,7 +2,13 @@
 
 import { StudentWeeksResponseSchema } from "../../types/studentWeeks";
 import { http, withQuery } from "../http";
-import { STUDENT_FEEDBACK, STUDENT_MRP_FORM_DATA, STUDENT_SUBMISSION, STUDENT_WEEKS, } from "../../constants/urls.ts";
+import {
+	INSTRUCTOR_COMMENTS,
+	STUDENT_FEEDBACK,
+	STUDENT_MRP_FORM_DATA,
+	STUDENT_SUBMISSION,
+	STUDENT_WEEKS,
+} from "../../constants/urls.ts";
 import {
 	MrpFormDataSchema,
 	type StudentSubmissionPayload,
@@ -72,4 +78,24 @@ export async function getStudentMrpFormData(step: number) {
 	const url = withQuery(STUDENT_MRP_FORM_DATA, { step });
 	const raw = await http.get<unknown>(url);
 	return MrpFormDataSchema.parse(raw);
+}
+
+/**
+ * Get comment/remarks for a student submission.
+ * Backend:
+ *   GET /api/v1/admin/student_submission/comment?week_id=...&enrollment_id=...
+ *
+ * Returns:
+ *   string when present, otherwise null
+ */
+export async function getSubmissionComment(params: {
+	week_id: number;
+	enrollment_id: string;
+}): Promise<string | null> {
+	const path = withQuery(INSTRUCTOR_COMMENTS, {
+		week_id: params.week_id,
+		enrollment_id: params.enrollment_id,
+	});
+	const res = await http.get<string | null>(path);
+	return res ?? null;
 }

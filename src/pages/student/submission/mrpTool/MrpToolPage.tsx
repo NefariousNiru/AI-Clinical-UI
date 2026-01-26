@@ -1,4 +1,4 @@
-// file: src/pages/student/submission/edit/mrpTool/MrpToolPage.tsx
+// file: src/pages/student/submission/mrpTool/MrpToolPage.tsx
 
 import MrpToolScaffold from "./MrpToolScaffold.tsx";
 import Step1 from "./Step1.tsx";
@@ -8,10 +8,13 @@ import Step4 from "./Step4.tsx";
 import Step5 from "./Step5.tsx";
 import Step6 from "./Step6.tsx";
 import Step7 from "./Step7.tsx";
-import { totalSteps } from "../../../hooks/constants.ts";
-import type { StudentSubmissionState } from "../../WeeklyWorkup.tsx";
-import { useSubmitDownloadDOCX } from "../../../hooks/useSubmitDownloadDOCX.ts";
-import { type MrpToolApi, useMrpToolSubmissionEditor, } from "../../../hooks/useMrpToolSubmissionEditor.ts";
+import { totalSteps } from "../../hooks/constants.ts";
+import type { StudentSubmissionState } from "../WeeklyWorkup.tsx";
+import { useSubmitDownloadDOCX } from "../../hooks/useSubmitDownloadDOCX.ts";
+import {
+	type MrpToolApi,
+	useMrpToolSubmissionEditor,
+} from "../../hooks/useMrpToolSubmissionEditor.ts";
 
 /** Prop used by all the steps*/
 export type StepsProps = {

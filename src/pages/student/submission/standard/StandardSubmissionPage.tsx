@@ -1,17 +1,17 @@
-// file: src/pages/student/submission/edit/standard/StandardSubmissionPage.tsx
+// file: src/pages/student/submission/standard/StandardSubmissionPage.tsx
 
 import { useCallback, useMemo, useState } from "react";
-import type { StudentSubmissionState } from "../../WeeklyWorkup";
+import type { StudentSubmissionState } from "../WeeklyWorkup.tsx";
 import { Download, Save } from "lucide-react";
-import { BackToWeeklyWorkup } from "../../BackToWeeklyWorkup.tsx";
-import { useStandardSubmissionEditor } from "../../../hooks/useStandardSubmissionEditor.ts";
-import { useSubmitDownloadDOCX } from "../../../hooks/useSubmitDownloadDOCX.ts";
-import { TabLayout } from "../../TabLayout.tsx";
+import { BackToWeeklyWorkup } from "../../../shared/submission/BackToWeeklyWorkup.tsx";
+import { useStandardSubmissionEditor } from "../../hooks/useStandardSubmissionEditor.ts";
+import { useSubmitDownloadDOCX } from "../../hooks/useSubmitDownloadDOCX.ts";
+import { TabLayout } from "../../../shared/submission/TabLayout.tsx";
 import PatientInformationTab from "./PatientInformationTab.tsx";
 import LabsAndProgressTab from "./LabsAndProgressTab.tsx";
 import CurrentMedicationTab from "./CurrentMedicationTab.tsx";
 import HealthCareProblemTab from "./HealthCareProblemTab.tsx";
-import type { TabKey } from "../../../hooks/constants.ts";
+import type { TabKey } from "../../hooks/constants.ts";
 
 export function StandardSubmissionPage({
 	weeklyWorkupId,

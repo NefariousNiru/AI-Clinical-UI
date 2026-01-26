@@ -1,6 +1,6 @@
-// file: src/pages/admin/students/SharedUI.tsx
+// file: src/pages/shared/SharedUI.tsx
 
-import type { Semester } from "../../../lib/types/semester.ts";
+import type { Semester } from "../../lib/types/semester.ts";
 
 /* ----------------- shared styles ----------------- */
 

@@ -1,9 +1,9 @@
-// file: src/pages/student/submission/edit/standard/PatientInformationTab.tsx
+// file: src/pages/student/submission/standard/PatientInformationTab.tsx
 
-import type { PatientInfo } from "../../../../../lib/types/studentSubmission";
-import PatientDemographicsForm from "../../../forms/PatientDemographicsForm";
-import SocialHistoryForm from "../../../forms/SocialHistoryForm";
-import MedicalHistoryForm from "../../../forms/MedicalHistoryForm";
+import type { PatientInfo } from "../../../../lib/types/studentSubmission.ts";
+import PatientDemographicsForm from "../../forms/PatientDemographicsForm.tsx";
+import SocialHistoryForm from "../../forms/SocialHistoryForm.tsx";
+import MedicalHistoryForm from "../../forms/MedicalHistoryForm.tsx";
 
 type Props = {
 	value: PatientInfo;

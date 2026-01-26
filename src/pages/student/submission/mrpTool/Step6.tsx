@@ -1,6 +1,6 @@
-// file: src/pages/student/submission/edit/mrpTool/Step6.tsx
+// file: src/pages/student/submission/mrpTool/Step6.tsx
 
-import ProgressNotesForm from "../../../forms/ProgressNotesForm.tsx";
+import ProgressNotesForm from "../../forms/ProgressNotesForm.tsx";
 import type { StepsProps } from "./MrpToolPage.tsx";
 
 export default function Step6({ mrp }: StepsProps) {

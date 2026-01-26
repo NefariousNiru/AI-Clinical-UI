@@ -1,6 +1,6 @@
-// file: src/pages/student/submission/edit/mrpTool/Step3.tsx
+// file: src/pages/student/submission/mrpTool/Step3.tsx
 
-import MedicalHistoryForm from "../../../forms/MedicalHistoryForm.tsx";
+import MedicalHistoryForm from "../../forms/MedicalHistoryForm.tsx";
 import type { StepsProps } from "./MrpToolPage.tsx";
 
 export default function Step3({ mrp }: StepsProps) {

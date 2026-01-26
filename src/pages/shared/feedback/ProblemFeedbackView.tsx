@@ -42,6 +42,7 @@ function Section({ label, studentAnswer, sec }: SectionProps) {
 		<section className="app-bg p-3">
 			<header className="mb-2 flex items-center justify-between gap-2">
 				<h3 className="text-sm font-medium text-primary">{label}</h3>
+				{/* Score PILL */}
 				{score && (
 					<span className="inline-flex items-center rounded-4xl border border-subtle bg-secondary px-2 py-0.5 text-xs font-medium text-on-secondary">
 						Score: <span className="ml-1 text-on-secondary">{score}</span>

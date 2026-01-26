@@ -1,10 +1,10 @@
-// file: src/pages/student/submission/view/HealthCareProblemViewTab.tsx
+// file: src/pages/shared/submission/view/HealthCareProblemViewTab.tsx
 
 import { useState } from "react";
-import type { StudentDrpAnswer } from "../../../../lib/types/studentSubmission";
-import type { ProblemFeedbackList } from "../../../../lib/types/feedback";
+import type { StudentDrpAnswer } from "../../../../lib/types/studentSubmission.ts";
+import type { ProblemFeedbackList } from "../../../../lib/types/feedback.ts";
 import { isAnySectionMeaningful, ValueBox } from "./ViewComponents.tsx";
-import ProblemFeedbackView from "../../../shared/feedback/ProblemFeedbackView.tsx";
+import ProblemFeedbackView from "../../feedback/ProblemFeedbackView.tsx";
 import type { ViewStatus } from "../../../../lib/types/studentWeeks.ts";
 import { titleizeDiseaseName } from "../../../../lib/utils/functions.ts";
 import { ChevronDown } from "lucide-react";

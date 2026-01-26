@@ -1,7 +1,10 @@
-// file: src/pages/student/submission/view/CurrentMedicationsViewTab.tsx
+// file: src/pages/shared/submission/view/CurrentMedicationsViewTab.tsx
 
 import type { MedicationHistory, MedicationList } from "../../../../lib/types/studentSubmission.ts";
-import { MEDICATION_HISTORY_FIELDS, MEDICATION_LIST_FIELDS } from "../../hooks/constants";
+import {
+	MEDICATION_HISTORY_FIELDS,
+	MEDICATION_LIST_FIELDS,
+} from "../../../student/hooks/constants.ts";
 import {
 	isAnySectionMeaningful,
 	type Limit,

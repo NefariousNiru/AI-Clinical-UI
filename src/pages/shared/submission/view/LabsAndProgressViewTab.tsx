@@ -1,7 +1,7 @@
-// file: src/pages/student/submission/view/LabsAndProgressViewTab.tsx
+// file: src/pages/shared/submission/view/LabsAndProgressViewTab.tsx
 
 import type { LabResult, ProgressNotes } from "../../../../lib/types/studentSubmission.ts";
-import { LAB_RESULT_FIELDS, PROGRESS_NOTES_FIELDS } from "../../hooks/constants";
+import { LAB_RESULT_FIELDS, PROGRESS_NOTES_FIELDS } from "../../../student/hooks/constants.ts";
 import { isAnySectionMeaningful, LongFieldSection, ReflectionSection } from "./ViewComponents.tsx";
 
 export default function LabsAndProgressViewTab({

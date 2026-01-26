@@ -1,8 +1,8 @@
-// file: src/pages/student/submission/edit/standard/LabsAndProgressnTab.tsx
+// file: src/pages/student/submission/standard/LabsAndProgressnTab.tsx
 
-import type { PatientInfo } from "../../../../../lib/types/studentSubmission";
-import LabResultForm from "../../../forms/LabResultForm";
-import ProgressNotesForm from "../../../forms/ProgressNotesForm";
+import type { PatientInfo } from "../../../../lib/types/studentSubmission.ts";
+import LabResultForm from "../../forms/LabResultForm.tsx";
+import ProgressNotesForm from "../../forms/ProgressNotesForm.tsx";
 
 type Props = {
 	value: PatientInfo;

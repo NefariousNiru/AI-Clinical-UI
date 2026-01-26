@@ -1,4 +1,4 @@
-// file: src/pages/student/submission/BackToWeeklyWorkup.tsx
+// file: src/pages/shared/submission/BackToWeeklyWorkup.tsx
 
 import { STUDENT } from "../../../routes.ts";
 import { ArrowLeft } from "lucide-react";

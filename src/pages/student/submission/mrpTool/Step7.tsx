@@ -1,6 +1,6 @@
-// file: src/pages/student/submission/edit/mrpTool/Step7.tsx
+// file: src/pages/student/submission/mrpTool/Step7.tsx
 
-import DRPForm from "../../../forms/DRPForm.tsx";
+import DRPForm from "../../forms/DRPForm.tsx";
 import type { StepsProps } from "./MrpToolPage.tsx";
 
 export default function Step7({ mrp }: StepsProps) {

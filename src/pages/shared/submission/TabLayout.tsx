@@ -1,7 +1,7 @@
-// file: src/pages/student/submission/TabLayout.tsx
+// file: src/pages/shared/submission/TabLayout.tsx
 
 import { type ReactNode } from "react";
-import { STANDARD_TABS, type TabKey } from "../hooks/constants.ts";
+import { STANDARD_TABS, type TabKey } from "../../student/hooks/constants.ts";
 import Tabs from "../../../components/Tabs.tsx";
 
 export const tabPanelId = (k: TabKey) => `tab-panel-${k}` as const;

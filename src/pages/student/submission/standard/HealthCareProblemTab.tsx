@@ -1,7 +1,7 @@
-// file: src/pages/student/submission/edit/standard/HelathCareProblemTab.tsx
+// file: src/pages/student/submission/standard/HelathCareProblemTab.tsx
 
-import type { StudentDrpAnswer } from "../../../../../lib/types/studentSubmission";
-import DRPForm from "../../../forms/DRPForm";
+import type { StudentDrpAnswer } from "../../../../lib/types/studentSubmission.ts";
+import DRPForm from "../../forms/DRPForm.tsx";
 
 type Props = {
 	items: StudentDrpAnswer[];

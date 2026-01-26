@@ -3,10 +3,12 @@
 import type { WeeklyWorkupDropdownItem } from "../students/WeeklyWorkupDropdown.tsx";
 import type { SubmissionView } from "../../../lib/types/studentDeadlines.ts";
 import type { Semester } from "../../../lib/types/semester.ts";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { unixToIsoDate } from "../../../lib/utils/functions.ts";
 import { getSubmissionsForWeek } from "../../../lib/api/admin/studentDeadlines.ts";
 import { errMsg } from "./rubric.ts";
+import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks.ts";
+import { isViewOnly } from "../../student/hooks/routeToWorkup.ts";
 
 const DEFAULT_LIMIT = 50;
 
@@ -166,5 +168,41 @@ export function useSubmissionDeadlines(semester: Semester | null): UseSubmission
 		weekMeta,
 
 		actionsDisabled,
+	};
+}
+
+export type ViewTarget = {
+	weeklyWorkupId: number;
+	enrollmentId: string;
+	status: WeeklyWorkupStudentStatus;
+	name: string;
+};
+
+export function useViewSubmissionModal() {
+	const [open, setOpen] = useState(false);
+	const [target, setTarget] = useState<ViewTarget | null>(null);
+
+	const openFor = useCallback((it: SubmissionView): void => {
+		if (!isViewOnly(it.status)) return;
+
+		setTarget({
+			weeklyWorkupId: it.workupId,
+			enrollmentId: it.enrollmentId,
+			status: it.status as WeeklyWorkupStudentStatus,
+			name: it.name,
+		});
+		setOpen(true);
+	}, []);
+
+	const close = useCallback((): void => {
+		setOpen(false);
+		setTarget(null);
+	}, []);
+
+	return {
+		open,
+		target,
+		openFor,
+		close,
 	};
 }
