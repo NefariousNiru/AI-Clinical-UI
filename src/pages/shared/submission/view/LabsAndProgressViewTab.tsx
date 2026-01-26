@@ -29,7 +29,7 @@ export default function LabsAndProgressViewTab({
 					fieldsSpec={LAB_RESULT_FIELDS as any}
 					data={labResult}
 				/>
-				<ReflectionSection reflectionAnswers={labResult.reflectionAnswers} />
+				<ReflectionSection reflectionAnswers={labResult.reflectionAnswers} step={5} />
 			</div>
 
 			<div>
@@ -38,7 +38,7 @@ export default function LabsAndProgressViewTab({
 					fieldsSpec={PROGRESS_NOTES_FIELDS as any}
 					data={progressNotes}
 				/>
-				<ReflectionSection reflectionAnswers={progressNotes.reflectionAnswers} />
+				<ReflectionSection reflectionAnswers={progressNotes.reflectionAnswers} step={6} />
 			</div>
 		</div>
 	);

@@ -53,7 +53,7 @@ export default function PatientInformationViewTab({
 					fieldsSpec={MRP_TOOL_DATA_FIELDS as any}
 					data={mrpToolData}
 				/>
-				<ReflectionSection reflectionAnswers={mrpToolData.reflectionAnswers} />
+				<ReflectionSection reflectionAnswers={mrpToolData.reflectionAnswers} step={1} />
 			</div>
 
 			<div>
@@ -62,7 +62,10 @@ export default function PatientInformationViewTab({
 					fieldsSpec={PATIENT_DEMOGRAPHICS_FIELDS as any}
 					data={patientDemographics}
 				/>
-				<ReflectionSection reflectionAnswers={patientDemographics.reflectionAnswers} />
+				<ReflectionSection
+					reflectionAnswers={patientDemographics.reflectionAnswers}
+					step={2}
+				/>
 			</div>
 
 			<div>
@@ -80,7 +83,7 @@ export default function PatientInformationViewTab({
 					fieldsSpec={MEDICAL_HISTORY_FIELDS as any}
 					data={medicalHistory}
 				/>
-				<ReflectionSection reflectionAnswers={medicalHistory.reflectionAnswers} />
+				<ReflectionSection reflectionAnswers={medicalHistory.reflectionAnswers} step={3} />
 			</div>
 		</div>
 	);

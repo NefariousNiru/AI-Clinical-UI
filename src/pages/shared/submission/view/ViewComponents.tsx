@@ -2,6 +2,8 @@
 
 import { hasAnyMeaningfulValue } from "../../../student/hooks/useMrpToolSubmissionEditor.ts";
 import { REFLECTION_ANSWER_FIELDS } from "../../../student/hooks/constants.ts";
+import { useMemo } from "react";
+import { useReflectionQuestions } from "../../hooks/useReflectionQuestions.ts";
 
 export type Limit = "xSmall" | "small" | "medium" | "large";
 
@@ -130,18 +132,45 @@ export function LongFieldSection<T extends Record<string, any>>({
 
 export function ReflectionSection({
 	reflectionAnswers,
+	step,
 }: {
 	reflectionAnswers: Record<string, string> | undefined;
+	step: number;
 }) {
+	const { questions, orderedQuestionKeys } = useReflectionQuestions(step);
+
+	const answerEntries = useMemo(() => {
+		if (!reflectionAnswers) return [];
+
+		// We want ordering based on questions first.
+		// If backend questions missing some keys, still render answer-only keys after.
+		const qKeys = orderedQuestionKeys;
+		const aKeys = Object.keys(reflectionAnswers);
+
+		const orderedKeys = [...qKeys, ...aKeys.filter((k) => !qKeys.includes(k))];
+
+		// de-dupe + keep meaningful answers only
+		const seen = new Set<string>();
+		return orderedKeys
+			.filter((k) => {
+				if (seen.has(k)) return false;
+				seen.add(k);
+				return hasAnyMeaningfulValue(reflectionAnswers[k]);
+			})
+			.map((k) => ({
+				key: k,
+				question: questions[k],
+				answer: reflectionAnswers[k],
+			}));
+	}, [reflectionAnswers, orderedQuestionKeys, questions]);
+
 	if (!reflectionAnswers) return null;
+	if (answerEntries.length === 0) return null;
 
-	const entries = Object.entries(reflectionAnswers).filter(([, v]) => hasAnyMeaningfulValue(v));
-	if (entries.length === 0) return null;
-
-	const formatKey = (k: string) => {
+	const labelFor = (k: string, q?: string) => {
 		const n = Number(k);
-		if (!Number.isNaN(n)) return `Q${n}`;
-		return k;
+		const prefix = !Number.isNaN(n) ? `Q${n}` : k;
+		return q && q.trim().length > 0 ? `${prefix}: ${q}` : prefix;
 	};
 
 	return (
@@ -149,11 +178,11 @@ export function ReflectionSection({
 			<div className="text-sm font-semibold text-primary">Reflection</div>
 
 			<div className="mt-3 space-y-4">
-				{entries.map(([k, v]) => (
+				{answerEntries.map((e) => (
 					<ValueBox
-						key={k}
-						label={formatKey(k)}
-						value={v}
+						key={e.key}
+						label={labelFor(e.key, e.question)}
+						value={e.answer}
 						limit={REFLECTION_ANSWER_FIELDS.limit as Limit}
 					/>
 				))}

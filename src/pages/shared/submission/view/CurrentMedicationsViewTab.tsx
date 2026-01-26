@@ -107,7 +107,7 @@ export default function CurrentMedicationsViewTab({
 				) : null}
 			</div>
 
-			<ReflectionSection reflectionAnswers={medicationList.reflectionAnswers} />
+			<ReflectionSection reflectionAnswers={medicationList.reflectionAnswers} step={4} />
 		</div>
 	);
 }
