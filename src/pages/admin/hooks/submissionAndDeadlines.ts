@@ -4,11 +4,15 @@ import type { WeeklyWorkupDropdownItem } from "../students/WeeklyWorkupDropdown.
 import type { SubmissionView } from "../../../lib/types/studentDeadlines.ts";
 import type { Semester } from "../../../lib/types/semester.ts";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { unixToIsoDate } from "../../../lib/utils/functions.ts";
-import { getSubmissionsForWeek } from "../../../lib/api/admin/studentDeadlines.ts";
+import { isoDateToUnixStart, unixToIsoDate } from "../../../lib/utils/functions.ts";
+import {
+	extendSubmissionDeadline,
+	getSubmissionsForWeek,
+} from "../../../lib/api/admin/studentDeadlines.ts";
 import { errMsg } from "./rubric.ts";
 import type { WeeklyWorkupStudentStatus } from "../../../lib/types/studentWeeks.ts";
 import { isViewOnly } from "../../student/hooks/routeToWorkup.ts";
+import { Temporal } from "@js-temporal/polyfill";
 
 const DEFAULT_LIMIT = 50;
 
@@ -204,5 +208,153 @@ export function useViewSubmissionModal() {
 		target,
 		openFor,
 		close,
+	};
+}
+
+export type ExtendTarget = {
+	weekId: number;
+	enrollmentId: string;
+	name: string;
+};
+
+export function useExtendDeadlineModal() {
+	const [open, setOpen] = useState(false);
+	const [target, setTarget] = useState<ExtendTarget | null>(null);
+
+	const openFor = useCallback((it: SubmissionView): void => {
+		setTarget({
+			weekId: it.workupId,
+			enrollmentId: it.enrollmentId,
+			name: it.name,
+		});
+		setOpen(true);
+	}, []);
+
+	const close = useCallback((): void => {
+		setOpen(false);
+		setTarget(null);
+	}, []);
+
+	return { open, target, openFor, close };
+}
+
+export const EXTEND_REASONS = [
+	{ value: "medical_emergency", label: "Medical emergency" },
+	{ value: "family_emergency", label: "Family emergency" },
+	{ value: "mental_health_emergency", label: "Mental health emergency" },
+	{ value: "essential_outage", label: "Power/Internet outage" },
+	{ value: "inclement_weather", label: "Inclement weather" },
+	{ value: "accessibility_accommodation", label: "Accessibility accommodation" },
+	{ value: "technical_issue", label: "Technical issue (LMS / upload / system outage)" },
+	{ value: "official_university_event", label: "Official university event / travel" },
+	{ value: "other", label: "Other (specify)" },
+] as const;
+
+type ReasonKey = (typeof EXTEND_REASONS)[number]["value"];
+
+type Args = {
+	weekId: number;
+	enrollmentId: string;
+	onSuccess?: () => void | Promise<void>;
+	onClose: () => void;
+};
+
+const OTHER_CAP = 100;
+
+function getTomorrowIsoNY(): string {
+	// input[type="date"] expects YYYY-MM-DD
+	const now = Temporal.Now.zonedDateTimeISO("America/New_York");
+	const tomorrow = now.add({ days: 1 }).toPlainDate();
+	return tomorrow.toString();
+}
+
+export function useExtendDeadlineModalForm({ weekId, enrollmentId, onSuccess, onClose }: Args) {
+	const [dateStr, setDateStr] = useState<string>("");
+	const [reasonKey, setReasonKey] = useState<ReasonKey>("medical_emergency");
+	const [otherTextRaw, setOtherTextRaw] = useState<string>("");
+
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	const minDate = useMemo(() => getTomorrowIsoNY(), []);
+
+	const isOther = reasonKey === "other";
+
+	const otherText = useMemo(() => otherTextRaw.slice(0, OTHER_CAP), [otherTextRaw]);
+	const otherRemaining = OTHER_CAP - otherText.length;
+
+	const selectedReasonLabel = useMemo(() => {
+		return EXTEND_REASONS.find((r) => r.value === reasonKey)?.label ?? "Other (specify)";
+	}, [reasonKey]);
+
+	const reasonFinal = useMemo(() => {
+		if (!isOther) return selectedReasonLabel;
+		const t = otherText.trim();
+		return t.length > 0 ? `Other: ${t}` : "";
+	}, [isOther, otherText, selectedReasonLabel]);
+
+	const canSubmit =
+		!saving &&
+		dateStr.trim().length > 0 &&
+		dateStr >= minDate && // string compare ok for YYYY-MM-DD
+		(isOther ? otherText.trim().length > 0 : true) &&
+		reasonFinal.trim().length > 0;
+
+	async function submit(): Promise<void> {
+		setError(null);
+
+		if (!canSubmit) {
+			setError("Pick a future date and provide a valid reason.");
+			return;
+		}
+
+		const extendTimestamp = isoDateToUnixStart(dateStr);
+		if (!Number.isFinite(extendTimestamp) || extendTimestamp <= 0) {
+			setError("Invalid date. Try again.");
+			return;
+		}
+
+		setSaving(true);
+		try {
+			await extendSubmissionDeadline({
+				weekId,
+				enrollmentId,
+				extendTimestamp,
+				reason: reasonFinal,
+			});
+
+			await onSuccess?.();
+			onClose();
+		} catch {
+			setError("Unable to extend deadline. Please try again.");
+		} finally {
+			setSaving(false);
+		}
+	}
+
+	return {
+		// fields
+		dateStr,
+		setDateStr,
+		minDate,
+
+		reasonKey,
+		setReasonKey,
+
+		isOther,
+		otherText,
+		setOtherTextRaw, // pass raw setter; hook enforces cap via derived otherText
+		otherRemaining,
+
+		// ui state
+		saving,
+		error,
+		setError,
+
+		// derived
+		canSubmit,
+
+		// actions
+		submit,
 	};
 }

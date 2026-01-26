@@ -3,7 +3,11 @@
 import type { Semester } from "../../../lib/types/semester.ts";
 import { WeeklyWorkupDropdown } from "./WeeklyWorkupDropdown.tsx";
 import type { SubmissionView } from "../../../lib/types/studentDeadlines.ts";
-import { useSubmissionDeadlines, useViewSubmissionModal } from "../hooks/submissionAndDeadlines.ts";
+import {
+	useExtendDeadlineModal,
+	useSubmissionDeadlines,
+	useViewSubmissionModal,
+} from "../hooks/submissionAndDeadlines.ts";
 import {
 	ActionChip,
 	btnSecondary,
@@ -12,6 +16,7 @@ import {
 } from "../../shared/SharedUI.tsx";
 import { ViewSubmissionModal } from "./ViewSubmissionModal.tsx";
 import { WorkupStatusPill } from "../../shared/WorkupStatusPill.tsx";
+import { ExtendDeadlineModal } from "./ExtendDeadlineModal.tsx";
 
 type Props = {
 	semester: Semester | null;
@@ -40,10 +45,12 @@ function Row({
 	item,
 	actionsDisabled,
 	onView,
+	onExtend,
 }: {
 	item: SubmissionView;
 	actionsDisabled: boolean;
 	onView: () => void;
+	onExtend: () => void;
 }) {
 	const canView = item.status === "grading" || item.status === "feedback_available";
 	const canExtend = item.status === "not_submitted"; // extend later with week end < now
@@ -77,10 +84,10 @@ function Row({
 						<ActionChip
 							label="Extend"
 							mobileLabel="Extend"
-							onClick={() => {}}
-							disabled
+							onClick={onExtend}
+							disabled={actionsDisabled}
 							ariaLabel={`Extend deadline for ${item.name}`}
-							title="Extend will be enabled after the deadline passes."
+							title="Extend the submission deadline for this student."
 						/>
 					) : (
 						<span
@@ -103,6 +110,7 @@ function Row({
 export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 	const s = useSubmissionDeadlines(semester);
 	const view = useViewSubmissionModal();
+	const extend = useExtendDeadlineModal();
 
 	return (
 		<div className="space-y-4 app-bg">
@@ -221,6 +229,7 @@ export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 										item={it}
 										actionsDisabled={s.actionsDisabled}
 										onView={() => view.openFor(it)}
+										onExtend={() => extend.openFor(it)}
 									/>
 								))}
 							</div>
@@ -237,6 +246,22 @@ export function StudentSubmissionsAndDeadlinesTab({ semester }: Props) {
 					studentEnrollmentId={view.target.enrollmentId}
 					status={view.target.status}
 					studentName={view.target.name}
+				/>
+			) : null}
+
+			{extend.target ? (
+				<ExtendDeadlineModal
+					open={extend.open}
+					onClose={extend.close}
+					weekId={extend.target.weekId}
+					enrollmentId={extend.target.enrollmentId}
+					studentName={extend.target.name}
+					// If your hook exposes a refetch, call it here. If not, omit.
+					onExtended={async () => {
+						// best-effort - depends on your hook API
+						// @ts-expect-error if your hook doesn't have it, remove this block
+						await s.refetch?.();
+					}}
 				/>
 			) : null}
 		</div>
