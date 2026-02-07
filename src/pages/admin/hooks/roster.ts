@@ -18,8 +18,13 @@ import {
 	normalizeYear,
 	parseCsvToStudents,
 } from "../../../lib/utils/functions.ts";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 /* ----------------- base hook (data + mutations) ----------------- */
+
+const rosterKey = (semesterId: number) => ["adminRoster", semesterId] as const;
+const THIRTY_MIN = 30 * 60 * 1000;
+const THIRTY_FIVE_MIN = 35 * 60 * 1000;
 
 export type UseRosterResult = {
 	loading: boolean;
@@ -52,7 +57,9 @@ export type UseRosterResult = {
 };
 
 export function useRoster(semester: Semester | null): UseRosterResult {
-	const [loading, setLoading] = useState(false);
+	const qc = useQueryClient();
+
+	// Keep local state for UI behavior (same as before)
 	const [saving, setSaving] = useState(false);
 
 	const [actionBusyKey, setActionBusyKey] = useState<string | null>(null);
@@ -70,9 +77,6 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 	const [pending, setPendingState] = useState<NewRosterStudent[]>([]);
 
 	const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(new Set());
-
-	// prevent stale async writes on quick semester switch
-	const loadToken = useRef(0);
 
 	function clearToastTimer() {
 		if (toastTimerRef.current) {
@@ -96,44 +100,46 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 		};
 	}, []);
 
+	// When semester changes, reset view state (same behavior you had)
 	useEffect(() => {
 		setError(null);
 		setActionToast(null);
 		setExisting([]);
 		setPendingState([]);
 		setSelectedEnrollmentIds(new Set());
-
-		const rosterSemesterId = semester?.id;
-		if (typeof rosterSemesterId !== "number") return;
-		const semesterId: number = rosterSemesterId;
-
-		let active = true;
-		const token = (loadToken.current += 1);
-
-		async function load(): Promise<void> {
-			setLoading(true);
-			setError(null);
-			try {
-				const resp = await fetchRoster(semesterId);
-				if (!active) return;
-				if (token !== loadToken.current) return;
-				setExisting(resp.students);
-			} catch (e) {
-				if (!active) return;
-				const msg =
-					e instanceof Error && e.message.trim() ? e.message : "Failed to load roster.";
-				setError(msg);
-			} finally {
-				if (active) setLoading(false);
-			}
-		}
-
-		void load();
-
-		return () => {
-			active = false;
-		};
 	}, [semester?.id]);
+
+	const semesterId = semester?.id;
+	const enabled = typeof semesterId === "number";
+
+	// TanStack Query handles fetch + caching (30 min)
+	const rosterQuery = useQuery({
+		queryKey: enabled ? rosterKey(semesterId) : ["adminRoster", "disabled"],
+		queryFn: () => fetchRoster(semesterId as number),
+		enabled,
+		staleTime: THIRTY_MIN, // "fresh" for 30 min
+		gcTime: THIRTY_FIVE_MIN, // keep in cache slightly longer than staleTime
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		retry: 1,
+	});
+
+	const loading = rosterQuery.isLoading || rosterQuery.isFetching;
+
+	// When query data arrives, hydrate local "existing"
+	useEffect(() => {
+		if (!enabled) return;
+		if (!rosterQuery.data) return;
+		setExisting(rosterQuery.data.students);
+	}, [enabled, rosterQuery.data]);
+
+	// Normalize query error to your existing string error
+	useEffect(() => {
+		if (!rosterQuery.error) return;
+		const e = rosterQuery.error;
+		const msg = e instanceof Error && e.message.trim() ? e.message : "Failed to load roster.";
+		setError(msg);
+	}, [rosterQuery.error]);
 
 	function setPending(fn: (prev: NewRosterStudent[]) => NewRosterStudent[]): void {
 		setPendingState((prev) => fn(prev));
@@ -162,6 +168,16 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 		return n;
 	}, [existing, selectedEnrollmentIds]);
 
+	// Keep query cache consistent with local state after mutations
+	function syncRosterCache(nextStudents: RosterStudent[]) {
+		if (!enabled) return;
+		qc.setQueryData(rosterKey(semesterId), (prev: RosterResponse | undefined) => {
+			return prev
+				? { ...prev, students: nextStudents }
+				: ({ students: nextStudents } as RosterResponse);
+		});
+	}
+
 	async function savePendingToDb(): Promise<void> {
 		if (!semester) return;
 		if (pending.length === 0) return;
@@ -176,7 +192,11 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 				students: pending,
 			});
 
-			setExisting((prev) => mergeRoster(prev, resp.students));
+			setExisting((prev) => {
+				const next = mergeRoster(prev, resp.students);
+				syncRosterCache(next);
+				return next;
+			});
 			setPendingState([]);
 			pushToast("success", "Students added.");
 		} catch (e) {
@@ -259,13 +279,15 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 			fn: async () => {
 				await deactivateUserAccount(s.userId);
 
-				setExisting((prev) =>
-					prev.map((x) =>
+				setExisting((prev) => {
+					const next = prev.map((x) =>
 						x.userId === s.userId
 							? { ...x, isActiveUser: false, isActiveSemester: false }
 							: x,
-					),
-				);
+					);
+					syncRosterCache(next);
+					return next;
+				});
 			},
 		});
 	}
@@ -278,11 +300,13 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 			fn: async () => {
 				await deactivateSemesterEnrollments([s.enrollmentId]);
 
-				setExisting((prev) =>
-					prev.map((x) =>
+				setExisting((prev) => {
+					const next = prev.map((x) =>
 						x.enrollmentId === s.enrollmentId ? { ...x, isActiveSemester: false } : x,
-					),
-				);
+					);
+					syncRosterCache(next);
+					return next;
+				});
 
 				setSelectedEnrollmentIds((prev) => {
 					const next = new Set(prev);
@@ -314,11 +338,13 @@ export function useRoster(semester: Semester | null): UseRosterResult {
 			fn: async () => {
 				await deactivateSemesterEnrollments(targets);
 
-				setExisting((prev) =>
-					prev.map((x) =>
+				setExisting((prev) => {
+					const next = prev.map((x) =>
 						targets.includes(x.enrollmentId) ? { ...x, isActiveSemester: false } : x,
-					),
-				);
+					);
+					syncRosterCache(next);
+					return next;
+				});
 
 				setSelectedEnrollmentIds((prev) => {
 					const next = new Set(prev);

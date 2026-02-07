@@ -8,8 +8,15 @@ import { z } from "zod";
  * Domain note:
  * - "locked" = future (editable)
  * - "available" = current/past (view-only)
+ * - "feedback_available" = results published
+ * - "grading" = the workups are being graded
  */
-export const WeeklyWorkupStatusSchema = z.enum(["locked", "available", "feedback_available"]);
+export const WeeklyWorkupStatusSchema = z.enum([
+	"locked",
+	"available",
+	"feedback_available",
+	"grading",
+]);
 export type WeeklyWorkupStatus = z.infer<typeof WeeklyWorkupStatusSchema>;
 
 export const WeeklyWorkupListItemSchema = z.object({
