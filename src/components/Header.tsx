@@ -1,72 +1,171 @@
-// src/components/Header.tsx
-import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { logout } from "../services/authApi";
+// file: src/components/Header.tsx
+
+import { type ReactNode } from "react";
+import { Menu, Moon, Settings2, SunMedium } from "lucide-react";
+import { useTheme } from "../providers/theme/useTheme";
+import CompanyLogo from "./CompanyLogo";
 
 type HeaderProps = {
-  title: string;
-  left?: ReactNode; // optional left slot (e.g., menu button)
-  right?: ReactNode; // optional extra actions
-  showLogout?: boolean; // if true, renders Logout with built-in logic
-  className?: string;
+	title: string;
+
+	/**
+	 * Optional slot to inject something on the left of the logo/title.
+	 * Example: back button, breadcrumb, etc.
+	 */
+	left?: ReactNode;
+
+	/**
+	 * Optional centered content (desktop only). Keep this lightweight.
+	 * Example: tabs, page title, filters.
+	 */
+	tabs?: ReactNode;
+
+	/**
+	 * Optional right-side content (desktop only). Example: user avatar.
+	 */
+	right?: ReactNode;
+
+	onSettingsClick?: () => void;
+
+	// Mobile drawer button
+	onOpenDrawer?: () => void;
+	isDrawerOpen?: boolean;
+
+	/**
+	 * Optional aria-controls target id for the drawer/dialog opened by the menu button.
+	 */
+	drawerControlsId?: string;
+
+	className?: string;
 };
 
 export default function Header({
-  title,
-  left,
-  right,
-  showLogout = false,
-  className = "",
+	title,
+	left,
+	tabs,
+	right,
+	onSettingsClick,
+	onOpenDrawer,
+	isDrawerOpen,
+	drawerControlsId = "app-drawer",
+	className = "",
 }: HeaderProps) {
-  const nav = useNavigate();
-  const [busy, setBusy] = useState(false);
+	const { theme, toggleTheme } = useTheme();
 
-  async function handleLogout() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await logout();
-      nav("/login", { replace: true });
-    } finally {
-      setBusy(false);
-    }
-  }
+	// Theme toggle label should describe the action.
+	const themeActionLabel = theme === "light" ? "Switch to dark theme" : "Switch to light theme";
 
-  return (
-    <header
-      className={`h-14 border-b bg-white text-gray-900 flex items-center gap-3 px-4 ${className}`}
-    >
-      {left ? <div className="shrink-0">{left}</div> : null}
+	return (
+		<header
+			className={[
+				"h-14 border-b border-subtle app-bg text-primary",
+				"px-4 shadow-sm",
+				className,
+			].join(" ")}
+		>
+			{/* One layout, responsive:
+                - Mobile: 2 columns (left, right)
+                - Desktop: 3 columns (left, center, right)
+            */}
+			<div className="h-full grid grid-cols-[1fr_auto] items-center md:grid-cols-[1fr_auto_1fr]">
+				{/* Left */}
+				<div className="flex items-center gap-3 min-w-0">
+					{left ? <div className="shrink-0">{left}</div> : null}
 
-      <div className="font-semibold">{title}</div>
+					{/* If the title is visible text, the logo is typically decorative.
+                        This avoids a screen reader reading "Company logo" + title twice.
+                    */}
+					<CompanyLogo size={24} alt="" aria-hidden="true" />
 
-      <div className="flex-1" />
+					<div className="font-semibold truncate">{title}</div>
+				</div>
 
-      {right ? <div className="flex items-center gap-2">{right}</div> : null}
+				{/* Center (desktop only) */}
+				<div className="hidden md:block justify-self-center">
+					{tabs ? <div className="inline-flex items-center gap-2">{tabs}</div> : null}
+				</div>
 
-      <button
-        onClick={() =>
-          window.open(
-            "https://outlook.office.com/mail/deeplink/compose?to=nirupomboseroy@uga.edu,rpalmer@uga.edu",
-            "_blank"
-          )
-        }
-        className="h-9 inline-flex items-center rounded-md bg-orange-200 text-black px-3 text-xs hover:opacity-90"
-        aria-label="Complaints"
-      >
-        Complaints&nbsp;?
-      </button>
+				{/* Right */}
+				<div className="justify-self-end flex items-center gap-2">
+					{/* Desktop actions */}
+					<div className="hidden md:flex items-center gap-2">
+						{right ? <div className="flex items-center gap-2">{right}</div> : null}
 
-      {showLogout ? (
-        <button
-          onClick={handleLogout}
-          disabled={busy}
-          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50 disabled:opacity-50"
-          aria-label="Logout"
-        >
-          {busy ? "Logging out..." : "Logout"}
-        </button>
-      ) : null}
-    </header>
-  );
+						<IconButton
+							ariaLabel={themeActionLabel}
+							onClick={toggleTheme}
+							// aria-pressed fits toggles. We expose the current state.
+							ariaPressed={theme === "dark"}
+						>
+							{theme === "light" ? (
+								<Moon className="h-4 w-4 text-muted" />
+							) : (
+								<SunMedium className="h-4 w-4 text-muted" />
+							)}
+						</IconButton>
+
+						{onSettingsClick ? (
+							<IconButton ariaLabel="Open settings" onClick={onSettingsClick}>
+								<Settings2 className="h-4 w-4 text-muted" />
+							</IconButton>
+						) : null}
+					</div>
+
+					{/* Mobile menu button */}
+					{onOpenDrawer ? (
+						<div className="md:hidden">
+							<IconButton
+								ariaLabel="Open menu"
+								onClick={onOpenDrawer}
+								ariaHaspopup="dialog"
+								ariaExpanded={isDrawerOpen ?? false}
+								ariaControls={drawerControlsId}
+							>
+								<Menu className="h-4 w-4 text-muted" />
+							</IconButton>
+						</div>
+					) : null}
+				</div>
+			</div>
+		</header>
+	);
+}
+
+/* ----------------- Internal UI primitive -----------------
+   Centralizes button styling and keeps Header markup clean.
+*/
+
+type IconButtonProps = {
+	ariaLabel: string;
+	onClick: () => void;
+	children: ReactNode;
+	ariaPressed?: boolean;
+	ariaHaspopup?: "dialog" | "menu" | "listbox";
+	ariaExpanded?: boolean;
+	ariaControls?: string;
+};
+
+function IconButton({
+	ariaLabel,
+	onClick,
+	children,
+	ariaPressed,
+	ariaHaspopup,
+	ariaExpanded,
+	ariaControls,
+}: IconButtonProps) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className="h-9 w-9 inline-flex items-center justify-center rounded-full border border-subtle bg-surface hover:bg-accent-soft transition-colors"
+			aria-label={ariaLabel}
+			aria-pressed={ariaPressed}
+			aria-haspopup={ariaHaspopup}
+			aria-expanded={ariaExpanded}
+			aria-controls={ariaControls}
+		>
+			{children}
+		</button>
+	);
 }
