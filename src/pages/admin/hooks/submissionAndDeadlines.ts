@@ -326,7 +326,9 @@ export function useExtendDeadlineModalForm({ weekId, enrollmentId, onSuccess, on
 			await onSuccess?.();
 			onClose();
 		} catch {
-			setError("Unable to extend deadline. Please try again.");
+			setError(
+				"Unable to extend deadline. Extension must be provided only after deadline has ended. Please try again.",
+			);
 		} finally {
 			setSaving(false);
 		}

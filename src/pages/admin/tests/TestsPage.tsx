@@ -6,14 +6,13 @@ import PromptEditor from "./PromptEditor";
 import OutputPanel from "../../shared/feedback/OutputPanel";
 import SubmissionList from "./SubmissionList";
 import SubmissionViewer from "./SubmissionViewer";
-
-import { useTestGrader, useTestSubmissions, useTestUI, } from "../hooks/tests";
-
+import { useTestGrader, useTestSubmissions, useTestUI } from "../hooks/tests";
 import type { ProblemFeedback } from "../../../lib/types/feedback";
 import type { TestSubmission } from "../../../lib/types/test";
 import { BrainCircuit } from "lucide-react";
 import { saveSession } from "../../../lib/utils/localSession.ts";
 import LocalSessionsModal from "./LocalSessionsModal";
+import { titleizeDiseaseName } from "../../../lib/utils/functions.ts";
 
 /**
  * Admin Tests Page
@@ -68,7 +67,7 @@ export default function TestsPage() {
 			subs.map((s: TestSubmission) => ({
 				id: s.id,
 				title: `${s.patientLastName} #${s.id}`,
-				subtitle: s.tags.join(", "),
+				subtitle: s.tags.map(titleizeDiseaseName).join(", "),
 			})),
 		[subs],
 	);

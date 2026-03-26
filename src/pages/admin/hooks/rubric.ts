@@ -1,6 +1,6 @@
 // file: src/pages/admin/hooks/rubric.ts
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
 	addRubric,
 	getAllRubricPatients,
@@ -17,6 +17,7 @@ import {
 import { canonicalizeAndValidate } from "../../../lib/utils/rubricEdit";
 import { normalizeKeysToCamelDeep } from "../../../lib/utils/functions.ts";
 import { ApiError } from "../../../lib/api/http.ts";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type RubricEditorMode = "idle" | "create" | "edit";
 export type OpenEditResult = "ok" | "not_found" | "error";
@@ -621,29 +622,37 @@ export function errMsg(e: unknown): string {
 	return "Something went wrong.";
 }
 
+const qkPatients = () => ["adminRubricPatients"] as const;
+const HOURS_24 = 24 * 60 * 60 * 1000;
+const HOURS_26 = 26 * 60 * 60 * 1000;
+
 export function usePatientLastNames() {
-	const [patients, setPatients] = useState<string[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const qc = useQueryClient();
 
-	const refresh = useCallback(async () => {
-		setLoading(true);
-		setError(null);
-		try {
+	const q = useQuery({
+		queryKey: qkPatients(),
+		queryFn: async () => {
 			const xs = await getAllRubricPatients();
-			const cleaned = (xs ?? []).map((s) => String(s).trim()).filter(Boolean);
-			setPatients(cleaned);
-		} catch (e) {
-			setPatients([]);
-			setError(errMsg(e));
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+			return (xs ?? []).map((s) => String(s).trim()).filter(Boolean);
+		},
+		staleTime: HOURS_24,
+		gcTime: HOURS_26,
+		refetchOnWindowFocus: false,
+		refetchOnMount: false,
+		retry: 1,
+	});
 
-	useEffect(() => {
-		void refresh();
-	}, [refresh]);
+	// Preserve your old shape: patients/loading/error/refresh
+	const patients = useMemo(() => q.data ?? [], [q.data]);
+	const loading = q.isLoading || q.isFetching;
+
+	// keep string error like before
+	const error = q.error ? errMsg(q.error) : null;
+
+	// keep refresh() like before
+	const refresh = useCallback(async () => {
+		await qc.invalidateQueries({ queryKey: qkPatients() });
+	}, [qc]);
 
 	return { patients, loading, error, refresh };
 }

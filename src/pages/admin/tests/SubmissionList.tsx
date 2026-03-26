@@ -53,7 +53,7 @@ export default function SubmissionList({
 									setSelected(it.id);
 									onSelect(it.id);
 								}}
-								className="text-left flex-1"
+								className="min-w-0 flex-1 text-left"
 							>
 								<div className="text-sm font-medium">
 									{(it.title ?? "").trim() || "(untitled)"}
