@@ -3,7 +3,17 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
-import { Bot, Check, CheckCircle2, Eye, EyeOff, Info, KeyRound, Lock, TriangleAlert, } from "lucide-react";
+import {
+	Bot,
+	Check,
+	CheckCircle2,
+	Eye,
+	EyeOff,
+	Info,
+	KeyRound,
+	Lock,
+	TriangleAlert,
+} from "lucide-react";
 import { useAccountActivation, useBootstrapUserRole } from "./hooks/auth";
 import { PasswordSchema, UserActivationRequest } from "../../lib/types/auth";
 import { ADMIN, STUDENT } from "../../routes.ts";
