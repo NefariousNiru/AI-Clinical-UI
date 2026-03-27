@@ -20,6 +20,7 @@ function getInitialTheme(): Theme {
 		// 2) Else prefer OS setting
 		const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 		if (prefersDark) return "dark";
+		return "light";
 	}
 
 	// 3) Fallback
