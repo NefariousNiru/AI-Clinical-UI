@@ -378,7 +378,7 @@ export default function DRPForm({
 										value={it.identification ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
-												identification: (v ?? "").trim() || undefined,
+												identification: v ?? "",
 											})
 										}
 										limit={FIELDS.identification.limit}
@@ -391,7 +391,7 @@ export default function DRPForm({
 										value={it.explanation ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
-												explanation: (v ?? "").trim() || undefined,
+												explanation: v ?? "",
 											})
 										}
 										limit={FIELDS.explanation.limit}
@@ -404,7 +404,7 @@ export default function DRPForm({
 										value={it.planRecommendation ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
-												planRecommendation: (v ?? "").trim() || undefined,
+												planRecommendation: v ?? "",
 											})
 										}
 										limit={FIELDS.planRecommendation.limit}
@@ -417,7 +417,7 @@ export default function DRPForm({
 										value={it.monitoring ?? ""}
 										onChange={(v) =>
 											setItem(idx, {
-												monitoring: (v ?? "").trim() || undefined,
+												monitoring: v ?? "",
 											})
 										}
 										limit={FIELDS.monitoring.limit}
